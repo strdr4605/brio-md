@@ -1,0 +1,14 @@
+{
+  "name": "brio-md",
+  "private": true,
+  "scripts": {
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "db:generate": "cd apps/web && npx drizzle-kit generate",
+    "db:push": "cd apps/web && npx drizzle-kit push",
+    "db:studio": "cd apps/web && npx drizzle-kit studio"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.0"
+  }
+}
