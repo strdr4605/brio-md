@@ -1,0 +1,86 @@
+# Kamal deployment config for Brio.md
+# Deploys 3 apps to brio.md, in.brio.md, learn.brio.md
+
+service: brio-md
+
+# Servers
+servers:
+  - name: production
+    # ip: <YOUR_SERVER_IP>
+    ssh:
+      user: root
+      keys:
+        - ~/.ssh/id_rsa
+
+# Docker registry (if using private registry)
+# registry:
+#   username: registry.hoolycrab.com
+#   password:
+#     - Kamal
+#     - <YOUR_REGISTRY_PASSWORD>
+
+# Build args and secrets
+build:
+  context: .
+  dockerfile: apps/landing/Dockerfile
+  args:
+    DATABASE_URL: <%= ENV["DATABASE_URL"] %>
+
+# Environment variables
+env:
+  secret:
+    - DATABASE_URL
+    - AUTH_SECRET
+  clear:
+    - AUTH_TRUST_HOST: "true"
+    - NODE_ENV: production
+
+# Accessories (PostgreSQL)
+accessories:
+  db:
+    image: postgres:16-alpine
+    roles:
+      - brio
+    env:
+      secret:
+        - POSTGRES_PASSWORD
+    port: 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    options:
+      "health-cmd": "pg_isready -U brio"
+      "health-interval": "10s"
+      "health-timeout": "5s"
+      "health-retries": "5"
+
+# Volumes
+volumes:
+  - postgres_data:/var/lib/postgresql/data
+
+# Traefik labels for subdomain routing
+labels:
+  traefik.enable: "true"
+
+# Health check
+healthcheck:
+  path: /
+  port: 3000
+  interval: 10s
+  timeout: 5s
+  retries: 3
+
+# Zero-downtime deploy
+roll_back:
+  on:
+    alarm: healthcheck-failure
+    limit: 3
+
+# Asset pipeline (optional)
+# asset_pipeline: esbuild
+
+# Builder (docker buildx)
+builder:
+  docker:
+    # Use buildx for multi-platform builds
+   arch: amd64
+    file: apps/portal/Dockerfile

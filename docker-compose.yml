@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: brio
+      POSTGRES_PASSWORD: briopassword
+      POSTGRES_DB: brio_md
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+
+  portal:
+    build:
+      context: .
+      dockerfile: apps/portal/Dockerfile
+    ports:
+      - "3002:3000"
+    environment:
+      DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://localhost:3002
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  learn:
+    build:
+      context: .
+      dockerfile: apps/learn/Dockerfile
+    ports:
+      - "3003:3000"
+    environment:
+      DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://localhost:3003
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

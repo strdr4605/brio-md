@@ -1,0 +1,22 @@
+{
+  "name": "brio-md",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:landing": "cd apps/landing && npm run dev",
+    "dev:portal": "cd apps/portal && npm run dev",
+    "dev:learn": "cd apps/learn && npm run dev",
+    "build": "npm run build:landing && npm run build:portal && npm run build:learn",
+    "build:landing": "cd apps/landing && npm run build",
+    "build:portal": "cd apps/portal && npm run build",
+    "build:learn": "cd apps/learn && npm run build",
+    "deploy": "kamal deploy"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.0"
+  }
+}

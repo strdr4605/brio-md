@@ -2,154 +2,212 @@
 
 ## Goal
 
-A working Next.js app with:
-- PostgreSQL database
-- Auth.js authentication  
-- tRPC + React Query
-- Role-based permissions (SuperAdmin, Admin, Teacher)
-- Docker + Kamal deployment
+Three Next.js apps deployed on single VPS with Kamal v2:
 
-**Not in scope:** All business logic (contracts, payments, attendance, etc.)
+| App | URL | Purpose |
+|-----|-----|---------|
+| Landing | `brio.md` | Public marketing page (hello world) |
+| Portal | `in.brio.md` | Admin/Teachers (Auth.js SSO) |
+| Learn | `learn.brio.md` | Students (Auth.js SSO) |
 
----
+- PostgreSQL database (`brio_md`)
+- Auth.js with SSO (users logged in once, access both portals)
+- PBAC permissions
+- Course assignments for teachers
 
-## Current State
-
-```
-apps/web/
-├── src/
-│   ├── app/                    # Pages
-│   │   ├── api/auth/           # NextAuth routes
-│   │   ├── (auth)/login/       # Login page
-│   │   └── (dashboard)/        # Dashboard pages
-│   ├── components/             # UI components
-│   ├── db/
-│   │   └── schema.ts           # Will be simplified
-│   └── lib/
-│       ├── auth.ts             # NextAuth config
-│       └── db.ts               # Drizzle connection
-├── docker-compose.yml          # MariaDB + app
-└── package.json
-```
-
-**Problems:**
-- Uses MariaDB (not PostgreSQL)
-- 15+ tables (need just 2-3)
-- No tRPC
-- Complex password migration (not needed)
-- No Kamal deploy
-- Role logic is unclear
+**Not in scope:** Business logic (contracts, payments, attendance, course content)
 
 ---
 
-## Plan
+## Decisions
 
-### Step 1: Clean Up Database Schema
+| Item | Decision |
+|------|----------|
+| Apps | 3 apps (landing + portal + learn) |
+| DB name | `brio_md` |
+| Deployment | Single VPS (Hostinger) + Kamal v2 |
+| Domains | `brio.md`, `in.brio.md`, `learn.brio.md` |
+| CSS | Tailwind CSS |
+| Auth | Auth.js with SSO (credentials provider) |
 
-Keep only what's needed for auth + user management:
+---
+
+## Architecture
+
+```
+                    ┌─────────────────────────┐
+                    │    PostgreSQL (brio_md) │
+                    └────────────┬────────────┘
+                                 │
+    ┌────────────────────────────┼────────────────────────────┐
+    │                            │                            │
+    ▼                            ▼                            ▼
+┌──────────┐            ┌──────────────┐            ┌──────────────┐
+│  Landing │            │    Portal    │            │    Learn     │
+│ brio.md  │            │  in.brio.md  │            │learn.brio.md │
+│  (hello  │            │ (Auth.js SSO)│            │ (Auth.js SSO)│
+│  world)  │            └──────┬───────┘            └──────┬───────┘
+└──────────┘                   │                             │
+                               └──────────┬──────────────────┘
+                                          │
+                                    ┌─────────────┐
+                                    │  Auth.js    │
+                                    │    SSO      │
+                                    └─────────────┘
+```
+
+### Landing (`brio.md`)
+- Simple hello world marketing page
+- Links to login for both portals
+
+### Portal (`in.brio.md`)
+- Admin/Teacher dashboard
+- Full management features
+- Permissions: `super`, `admin`, `teach`
+
+### Learn (`learn.brio.md`)
+- Teacher/Student course view
+- View assigned courses
+- For now: simple placeholder
+
+---
+
+## Database Schema
+
+### Tables
 
 ```sql
--- 1. Schools (for multi-tenant / admin assignment)
+-- 1. Schools (for admin assignment)
 CREATE TABLE schools (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. Users (simple, Auth.js compatible)
+-- 2. Courses (for teacher assignment - Phase 1 minimal)
+CREATE TABLE courses (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  school_id INTEGER REFERENCES schools(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 3. Users (Auth.js compatible + PBAC)
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  password_hash VARCHAR(255),
   name VARCHAR(255) NOT NULL,
-  permissions TEXT[] NOT NULL DEFAULT '{}',  -- ['super'], ['admin'], ['teach', 'view'], etc.
-  school_id INTEGER REFERENCES schools(id),      -- NULL for superusers
+  role TEXT DEFAULT 'teacher',              -- superadmin, admin, teacher
+  permissions TEXT[] DEFAULT '{}',         -- ['super'], ['admin'], ['view'], etc.
+  course_ids INTEGER[] DEFAULT '{}',       -- Courses this teacher can teach
+  school_id INTEGER REFERENCES schools(id),
+  phone VARCHAR(50),
+  info TEXT,
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 4. Students (separate table - may not have login yet)
+CREATE TABLE students (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  school_id INTEGER REFERENCES schools(id),
+  parent_name VARCHAR(255),
+  parent_phone VARCHAR(50),
+  info TEXT,
+  class_id INTEGER,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 5. Auth.js adapter tables (SSO)
+CREATE TABLE accounts (...);
+CREATE TABLE sessions (...);
+CREATE TABLE users_accounts (...);
+CREATE TABLE verification_tokens (...);
 ```
 
-### Step 2: Switch to PostgreSQL
+---
 
-- Update `docker-compose.yml` → PostgreSQL
-- Update `drizzle.config.ts` → postgres driver
-- Update `db.ts` → pg driver
+## Access Control
 
-### Step 3: Simplify Auth.js
+### User Viewing Permissions
 
-Remove password migration (SHA1 → bcrypt):
-- New users only use bcrypt
-- No legacy password support needed
+| Viewer | Can See |
+|--------|---------|
+| SuperAdmin | All users (all schools) |
+| Admin | Teachers and students (their school only) |
+| Teacher | Own profile only |
 
-### Step 4: Add tRPC
+### Course Assignment
 
-- Set up tRPC router
-- Add procedure for:
-  - `users.list` - filtered by role/permissions
-  - `users.create` - SuperAdmin only
-  - `users.get` - by ID
-- Protected procedures based on session
+- `course_ids` array on users table
+- Admin/SuperAdmin can assign courses to teachers
+- Teachers see only courses they are assigned to (in learn.brio.md)
 
-### Step 5: Role Permissions
-
-## Permissions (PBAC - Permission-Based Access Control)
-
-Each user has permissions (array):
+### Permissions (PBAC)
 
 | Permission | Description |
 |------------|-------------|
 | `super` | Full access to everything |
-| `admin` | Manage users in their school |
-| `teach` | View own profile |
+| `admin` | Manage school users and courses |
+| `teach` | Teach assigned courses |
 | `view` | View assigned data |
-
-Example:
-- SuperAdmin: `['super']` → full access
-- Admin: `['admin']` → manage school users
-- Teacher: `['teach', 'view']` → view self only
-
-A user can have multiple permissions.
-
-### Step 6: Dashboard Pages
-
-```
-/                       → redirect to /dashboard
-/login                  → Login form
-/dashboard              → Welcome + user info
-/dashboard/users        → User list (filtered by role)
-/dashboard/users/new    → Create user form
-```
-
-### Step 7: Docker + Kamal Deploy
-
-- `Dockerfile` - production build
-- `docker-compose.yml` - postgres + app
-- `config/deploy.yml` - Kamal config
 
 ---
 
-## Files to Change
+## Project Structure
 
-### New Files
-- `apps/web/src/server/routers/_app.ts` - tRPC root router
-- `apps/web/src/server/routers/user.ts` - user procedures
-- `apps/web/src/server/trpc.ts` - tRPC init
-- `apps/web/src/lib/trpc.tsx` - tRPC React provider
-- `apps/web/src/app/api/trpc/[trpc]/route.ts` - tRPC handler
-- `config/deploy.yml` - Kamal config
-
-### Modify Files
-- `apps/web/src/db/schema.ts` - simplify to 2 tables
-- `apps/web/src/lib/db.ts` - switch to pg driver
-- `apps/web/src/lib/auth.ts` - simplify (remove migration)
-- `apps/web/src/lib/trpc.ts` → move to server/
-- `docker-compose.yml` - PostgreSQL
-- `apps/web/Dockerfile` - production
-- `package.json` - add tRPC deps
-
-### Delete Files
-- Most existing API routes (clean slate)
-- Legacy Educurat tables
+```
+brio-md/
+├── apps/
+│   ├── landing/              # Landing page (brio.md)
+│   │   ├── src/
+│   │   │   └── app/
+│   │   │       └── page.tsx  # Hello world
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   │
+│   ├── portal/               # Admin/Teacher (in.brio.md)
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── page.tsx        # Login (front page)
+│   │   │   │   └── dashboard/
+│   │   │   │       └── page.tsx    # Dashboard (after login)
+│   │   │   ├── components/
+│   │   │   ├── db/
+│   │   │   ├── lib/
+│   │   │   └── server/
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   │
+│   └── learn/                # Teacher/Student (learn.brio.md)
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── page.tsx        # Login (front page)
+│       │   │   └── courses/
+│       │   │       └── page.tsx    # Courses (after login)
+│       │   ├── components/
+│       │   ├── db/
+│       │   ├── lib/
+│       │   └── server/
+│       ├── Dockerfile
+│       └── package.json
+│
+├── packages/
+│   └── db/                   # Shared database schema
+│       └── src/
+│           └── schema.ts    # Drizzle schema
+│
+├── packages/
+│   └── auth/                 # Shared Auth.js config
+│
+├── docker-compose.yml
+├── config/
+│   └── deploy.yml            # Kamal config (3 apps)
+└── package.json
+```
 
 ---
 
@@ -160,51 +218,131 @@ A user can have multiple permissions.
 | Framework | Next.js 16 |
 | Database | PostgreSQL 16 |
 | ORM | Drizzle ORM |
-| Auth | Auth.js v5 (credentials) |
+| Auth | Auth.js v5 (credentials + SSO) |
 | API | tRPC v11 |
 | State | React Query v5 |
-| Deploy | Docker + Kamal |
 | CSS | Tailwind v4 |
+| Deploy | Docker + Kamal v2 |
 
 ---
 
-## Dependencies to Add
+## Implementation Steps
 
-```json
-{
-  "@trpc/server": "^11.0.0",
-  "@trpc/client": "^11.0.0",
-  "@trpc/react-query": "^11.0.0",
-  "@trpc/next": "^11.0.0",
-  "postgres": "^3.4.0",
-  "@types/pg": "^8.0.0",
-  "drizzle-orm": "^0.30.0",
-  "superjson": "^2.0.0"
-}
-```
+### Step 1: Setup Workspace
+- [ ] Root `package.json` with npm workspaces
+- [ ] Shared packages (`packages/db`)
+- [ ] Install dependencies
+
+### Step 2: Database
+- [ ] `schools`, `courses`, `users`, `students` tables
+- [ ] Auth.js adapter tables
+- [ ] PostgreSQL connection
+
+### Step 3: Shared Auth Package
+- [ ] Auth.js configuration with SSO
+- [ ] Session callback with role + permissions + course_ids
+
+### Step 4: Portal App (`in.brio.md`)
+- [ ] Login page (front page)
+- [ ] Dashboard (SuperAdmin: all users, Admin: school users)
+- [ ] User management (set permissions, assign courses)
+- [ ] tRPC routes with PBAC
+
+### Step 5: Learn App (`learn.brio.md`)
+- [ ] Login page (front page, SSO)
+- [ ] Courses page (shows assigned courses based on course_ids)
+
+### Step 6: Landing Page (`brio.md`)
+- [ ] Simple hello world
+- [ ] Links to both portals
+
+### Step 7: Deploy
+- [ ] Dockerfiles for each app
+- [ ] docker-compose.yml
+- [ ] Kamal config (3 apps, 3 domains)
+
+---
+
+## Files to Create
+
+### Root
+| File | Purpose |
+|------|---------|
+| `package.json` | npm workspaces |
+| `docker-compose.yml` | All apps + postgres |
+| `config/deploy.yml` | Kamal (brio.md, in.brio.md, learn.brio.md) |
+
+### Shared Packages
+| File | Purpose |
+|------|---------|
+| `packages/db/src/schema.ts` | All tables |
+| `packages/auth/src/index.ts` | Auth.js SSO config |
+
+### Landing App
+| File | Purpose |
+|------|---------|
+| `apps/landing/src/app/page.tsx` | Hello world |
+| `apps/landing/Dockerfile` | Build |
+| `apps/landing/package.json` | Deps |
+
+### Portal App
+| File | Purpose |
+|------|---------|
+| `apps/portal/src/app/page.tsx` | Login (front page) |
+| `apps/portal/src/app/dashboard/page.tsx` | Dashboard (after login) |
+| `apps/portal/src/lib/trpc.tsx` | tRPC client |
+| `apps/portal/src/server/trpc.ts` | tRPC init |
+| `apps/portal/src/server/routers/_app.ts` | Root router |
+| `apps/portal/Dockerfile` | Build |
+| `apps/portal/package.json` | Deps |
+
+### Learn App
+| File | Purpose |
+|------|---------|
+| `apps/learn/src/app/page.tsx` | Login (front page) |
+| `apps/learn/src/app/courses/page.tsx` | Courses (after login) |
+| `apps/learn/Dockerfile` | Build |
+| `apps/learn/package.json` | Deps |
+
+---
+
+## Seed Data
+
+| Email | Password | Role | Permissions | course_ids | App Access |
+|-------|----------|------|-------------|------------|------------|
+| `admin@brio.md` | `admin123` | `superadmin` | `['super']` | `[]` | Both portals |
+| `admin@vibe.md` | `admin123` | `admin` | `['admin']` | `[]` | Both portals |
+| `teacher@vibe.md` | `teacher123` | `teacher` | `['teach']` | `[1]` | Both portals |
+
+Also create a test course:
+| ID | Name |
+|----|------|
+| 1 | English |
 
 ---
 
 ## Verification
 
-1. **Build passes:** `npm run build`
-2. **Dev works:** `npm run dev` → http://localhost:3000
-3. **Login works:** Login as superadmin
-4. **SuperAdmin sees all users:** Dashboard → Users
-5. **Admin sees only school teachers:** Login as admin
-6. **Create user works:** SuperAdmin can create users
-7. **Deploy works:** Kamal deploy to VPS
+1. **Build:** `npm run build` passes
+2. **Dev:** `docker compose up` → 3 apps on localhost
+3. **Deploy:** Kamal deploys to `brio.md`, `in.brio.md`, `learn.brio.md`
+4. **SSO:** Login once → access both portals
+5. **Permissions:** SuperAdmin sees all, Admin sees school only
+6. **Courses:** Teachers see only assigned courses
 
 ---
 
-## Questions
+## Future (Not in Phase 1)
 
-1. **Database name:** `brio_md` (confirmed)
-2. **Admin school assignment:** Admin can only manage their assigned school (confirmed)
-3. **Initial user:** Create seed data for first SuperAdmin login (confirmed)
-4. **Permissions:** PBAC instead of RBAC - users have array of permissions
+- Contracts & Payments
+- Class attendance
+- Student records
+- Teacher schedules
+- Tours management
+- Course content (presentations)
+- Student login to learn.brio.md
 
 ---
 
-*Plan created: 2025-05-18*
+*Plan updated: 2025-05-18*
 *Phase 1 of Brio.md*
