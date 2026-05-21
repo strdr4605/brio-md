@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@brio-md/auth';
+import { signOut } from '@/lib/auth';
 import Link from 'next/link';
 
 export default async function CoursesPage() {
@@ -24,6 +25,11 @@ export default async function CoursesPage() {
     ? courses.filter(c => courseIds.includes(c.id))
     : courses;
   
+  async function handleSignOut() {
+    'use server';
+    await signOut({ redirectTo: '/' });
+  }
+  
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -32,7 +38,7 @@ export default async function CoursesPage() {
           <h1 className="text-xl font-bold">Learning Portal</h1>
           <div className="flex items-center gap-4">
             <span>{user.name}</span>
-            <form action="/api/auth/signout" method="POST">
+            <form action={handleSignOut}>
               <button type="submit" className="text-sm underline">
                 Sign Out
               </button>
