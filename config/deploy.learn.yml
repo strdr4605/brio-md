@@ -1,0 +1,16 @@
+# Learn app destination
+# Deploys to: learn.brio.md
+
+image: strdr4605/brio-md-learn
+
+builder:
+  dockerfile: apps/learn/Dockerfile
+
+proxy:
+  ssl: true
+  hosts:
+    - learn.brio.md
+  healthcheck:
+    path: /
+    interval: 10
+    timeout: 5

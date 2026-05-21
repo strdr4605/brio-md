@@ -1,0 +1,16 @@
+# Portal app destination
+# Deploys to: in.brio.md
+
+image: strdr4605/brio-md-portal
+
+builder:
+  dockerfile: apps/portal/Dockerfile
+
+proxy:
+  ssl: true
+  hosts:
+    - in.brio.md
+  healthcheck:
+    path: /
+    interval: 10
+    timeout: 5

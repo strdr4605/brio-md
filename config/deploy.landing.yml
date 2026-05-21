@@ -1,0 +1,17 @@
+# Landing app destination
+# Deploys to: brio.md
+
+image: strdr4605/brio-md-landing
+
+builder:
+  dockerfile: apps/landing/Dockerfile
+
+proxy:
+  ssl: true
+  hosts:
+    - brio.md
+    - www.brio.md
+  healthcheck:
+    path: /
+    interval: 10
+    timeout: 5
