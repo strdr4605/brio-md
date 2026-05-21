@@ -33,6 +33,7 @@ services:
       - "3002:3000"
     environment:
       DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3002
     depends_on:
@@ -48,6 +49,7 @@ services:
       - "3003:3000"
     environment:
       DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3003
     depends_on:

@@ -1,7 +1,14 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { eq } from 'drizzle-orm';
+import { users } from '@brio-md/db';
 
-// Simple auth config without DB - will be enhanced later
+const sql = postgres(process.env.DATABASE_URL || 'postgres://brio:briopassword@localhost:5432/brio_md', { max: 1 });
+const db = drizzle(sql, { schema: { users } });
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -10,52 +17,53 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // TODO: Add real DB check
-        // For now, accept any credentials and return mock user
         if (!credentials?.email || !credentials?.password) {
+          console.log('[Auth] Missing credentials');
           return null;
         }
 
-        // Mock user for development
         const email = credentials.email as string;
-        
-        if (email === 'admin@brio.md' && credentials.password === 'admin123') {
-          return {
-            id: '1',
-            email: 'admin@brio.md',
-            name: 'Super Admin',
-            role: 'superadmin',
-            permissions: ['super'],
-            courseIds: [],
-            schoolId: null,
-          };
+        const password = credentials.password as string;
+
+        console.log('[Auth] Login attempt for:', email);
+
+        // Get user from DB
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (!user) {
+          console.log('[Auth] User not found:', email);
+          return null;
         }
 
-        if (email === 'admin@vibe.md' && credentials.password === 'admin123') {
-          return {
-            id: '2',
-            email: 'admin@vibe.md',
-            name: 'School Admin',
-            role: 'admin',
-            permissions: ['admin'],
-            courseIds: [],
-            schoolId: 1,
-          };
+        if (!user.passwordHash) {
+          console.log('[Auth] No password hash for:', email);
+          return null;
         }
 
-        if (email === 'teacher@vibe.md' && credentials.password === 'teacher123') {
-          return {
-            id: '3',
-            email: 'teacher@vibe.md',
-            name: 'John Teacher',
-            role: 'teacher',
-            permissions: ['teach'],
-            courseIds: [1],
-            schoolId: 1,
-          };
+        console.log('[Auth] User found, checking password...');
+        console.log('[Auth] Hash in DB:', user.passwordHash.substring(0, 30) + '...');
+
+        // Verify password
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+        console.log('[Auth] Password valid:', isValid);
+
+        if (!isValid) {
+          return null;
         }
 
-        return null;
+        return {
+          id: String(user.id),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          permissions: user.permissions || [],
+          courseIds: user.courseIds || [],
+          schoolId: user.schoolId,
+        };
       },
     }),
   ],

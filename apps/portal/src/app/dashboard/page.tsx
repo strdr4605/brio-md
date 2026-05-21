@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@brio-md/auth';
+import { signOut } from '@/lib/auth';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -14,6 +15,11 @@ export default async function DashboardPage() {
   const isSuper = permissions.includes('super');
   const isAdmin = permissions.includes('admin') || isSuper;
   
+  async function handleSignOut() {
+    'use server';
+    await signOut({ redirectTo: '/' });
+  }
+  
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -25,7 +31,7 @@ export default async function DashboardPage() {
             <span className="px-2 py-1 bg-neutral-100 text-neutral-600 text-sm rounded">
               {user.role}
             </span>
-            <form action="/api/auth/signout" method="POST">
+            <form action={handleSignOut}>
               <button type="submit" className="text-sm text-red-600 hover:underline">
                 Sign Out
               </button>

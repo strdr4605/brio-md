@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { hash } from 'bcryptjs';
-import { schools, users, courses } from '@/db/schema';
+import { schools, users, courses } from '@brio-md/db';
 
 const sql = postgres(process.env.DATABASE_URL!);
 const db = drizzle(sql);

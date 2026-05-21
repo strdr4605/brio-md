@@ -37,13 +37,16 @@ ENV AUTH_TRUST_HOST=true
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone output and static files
-COPY --from=builder /app/apps/portal/.next/standalone ./
-COPY --from=builder /app/apps/portal/.next/static ./.next/static
+# Copy standalone output: apps/portal/server.js and .next directory
+COPY --from=builder /app/apps/portal/.next/standalone/apps/portal/. /app/apps/portal/
+# Copy static files to /app/apps/portal/.next/ (where server.js expects them)
+COPY --from=builder /app/apps/portal/.next/static /app/apps/portal/.next/static
+
+# Copy all node_modules from builder (includes next, react, etc.)
+COPY --from=builder /app/node_modules /app/node_modules
 
 USER nextjs
 
 EXPOSE 3000
 
-# Next.js standalone uses server.js in apps/portal directory
 CMD ["node", "apps/portal/server.js"]
