@@ -1,16 +1,66 @@
-# Portal app destination
-# Deploys to: in.brio.md
+# Kamal deployment config for Brio.md Portal (deploys DB)
+service: brio-portal
 
-image: strdr4605/brio-md-portal
+servers:
+  web:
+    - 187.127.89.56
 
 builder:
+  arch: amd64
   dockerfile: apps/portal/Dockerfile
+
+image: strdr4605/brio-portal
+
+registry:
+  username: strdr4605
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - DATABASE_URL
+    - AUTH_SECRET
+    - POSTGRES_PASSWORD
+  clear:
+    NODE_ENV: production
+    AUTH_TRUST_HOST: "true"
 
 proxy:
   ssl: true
-  hosts:
-    - in.brio.md
+  host: in.brio.md
+  app_port: 3000
   healthcheck:
     path: /
-    interval: 10
-    timeout: 5
+    interval: 3
+    timeout: 3
+
+accessories:
+  db:
+    image: postgres:16-alpine
+    port: 5432
+    roles:
+      - web
+    volumes:
+      - /var/data/brio-md/postgres:/var/lib/postgresql/data
+    env:
+      clear:
+        POSTGRES_USER: brio
+        POSTGRES_DB: brio_md
+      secret:
+        - POSTGRES_PASSWORD
+    options:
+      health-cmd: pg_isready -U brio
+
+  drizzle:
+    image: drizzleorm/drizzle-studio:latest
+    port: 4990
+    roles:
+      - web
+    env:
+      clear:
+        DATABASE_URL: postgresql://brio@187.127.89.56:5432/brio_md
+      secret:
+        - POSTGRES_PASSWORD
+
+volumes:
+  - /var/data/brio-md/postgres:/var/lib/postgresql/data

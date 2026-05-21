@@ -1,17 +1,30 @@
-# Landing app destination
-# Deploys to: brio.md
+# Kamal deployment config for Brio.md Landing (static site)
+service: brio-landing
 
-image: strdr4605/brio-md-landing
+servers:
+  web:
+    - 187.127.89.56
 
 builder:
+  arch: amd64
   dockerfile: apps/landing/Dockerfile
+
+image: strdr4605/brio-landing
+
+registry:
+  username: strdr4605
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    NODE_ENV: production
 
 proxy:
   ssl: true
-  hosts:
-    - brio.md
-    - www.brio.md
+  host: brio.md
+  app_port: 3000
   healthcheck:
     path: /
-    interval: 10
-    timeout: 5
+    interval: 3
+    timeout: 3

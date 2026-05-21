@@ -1,16 +1,35 @@
-# Learn app destination
-# Deploys to: learn.brio.md
+# Kamal deployment config for Brio.md Learn (connects to portal DB)
+service: brio-learn
 
-image: strdr4605/brio-md-learn
+servers:
+  web:
+    - 187.127.89.56
 
 builder:
+  arch: amd64
   dockerfile: apps/learn/Dockerfile
+
+image: strdr4605/brio-learn
+
+registry:
+  username: strdr4605
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - AUTH_SECRET
+    - POSTGRES_PASSWORD
+  clear:
+    NODE_ENV: production
+    AUTH_TRUST_HOST: "true"
+    DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
 
 proxy:
   ssl: true
-  hosts:
-    - learn.brio.md
+  host: learn.brio.md
+  app_port: 3000
   healthcheck:
     path: /
-    interval: 10
-    timeout: 5
+    interval: 3
+    timeout: 3
