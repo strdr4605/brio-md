@@ -14,6 +14,7 @@
     "build:landing": "cd apps/landing && npm run build",
     "build:portal": "cd apps/portal && npm run build",
     "build:learn": "cd apps/learn && npm run build",
+    "studio": "cd packages/db && npx drizzle-kit studio",
     "deploy": "kamal deploy"
   },
   "devDependencies": {
