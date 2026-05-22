@@ -18,12 +18,12 @@ registry:
 
 env:
   secret:
+    - DATABASE_URL
     - AUTH_SECRET
     - POSTGRES_PASSWORD
   clear:
     NODE_ENV: production
     AUTH_TRUST_HOST: "true"
-    DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
 
 proxy:
   ssl: true
