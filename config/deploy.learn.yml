@@ -6,15 +6,9 @@ servers:
     - 187.127.89.56
 
 builder:
-  arch: amd64
   dockerfile: apps/learn/Dockerfile
 
 image: strdr4605/brio-learn
-
-registry:
-  username: strdr4605
-  password:
-    - KAMAL_REGISTRY_PASSWORD
 
 env:
   secret:

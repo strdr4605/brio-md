@@ -1,0 +1,8 @@
+# Base Kamal config - shared settings for all Brio.md apps
+builder:
+  arch: amd64
+
+registry:
+  username: strdr4605
+  password:
+    - KAMAL_REGISTRY_PASSWORD
