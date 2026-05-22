@@ -11,6 +11,9 @@ COPY package.json package-lock.json* ./
 COPY packages/db/package.json ./packages/db/package.json
 COPY packages/auth/package.json ./packages/auth/package.json
 
+# Copy app package.json for workspace resolution
+COPY apps/portal/package.json ./apps/portal/package.json
+
 # Install all workspaces
 RUN npm ci
 
