@@ -1,25 +1,25 @@
-import { redirect } from 'next/navigation';
-import { auth } from '@brio-md/auth';
-import { signOut } from '@/lib/auth';
-import Link from 'next/link';
+import { redirect } from "next/navigation";
+import { auth } from "@brio-md/auth";
+import { signOut } from "@/lib/auth";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const session = await auth();
-  
+
   if (!session?.user) {
-    redirect('/');
+    redirect("/");
   }
-  
+
   const user = session.user as any;
   const permissions = user.permissions || [];
-  const isSuper = permissions.includes('super');
-  const isAdmin = permissions.includes('admin') || isSuper;
-  
+  const isSuper = permissions.includes("super");
+  const isAdmin = permissions.includes("admin") || isSuper;
+
   async function handleSignOut() {
-    'use server';
-    await signOut({ redirectTo: '/' });
+    "use server";
+    await signOut({ redirectTo: "/" });
   }
-  
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -39,11 +39,11 @@ export default async function DashboardPage() {
           </div>
         </div>
       </header>
-      
+
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
-        
+
         {/* User Info Card */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Your Profile</h3>
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
             </div>
             <div>
               <span className="text-neutral-500 text-sm">School</span>
-              <p className="font-medium">{user.schoolId || 'N/A'}</p>
+              <p className="font-medium">{user.schoolId || "N/A"}</p>
             </div>
           </div>
           <div className="mt-4">
@@ -76,25 +76,28 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Admin/SuperAdmin Section */}
         {(isSuper || isAdmin) && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">User Management</h3>
             <p className="text-neutral-600 mb-4">
-              {isSuper 
-                ? 'You can view and manage all users across all schools.' 
-                : 'You can view and manage users in your school.'}
+              {isSuper
+                ? "You can view and manage all users across all schools."
+                : "You can view and manage users in your school."}
             </p>
             <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
               Manage Users
             </button>
           </div>
         )}
-        
+
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="https://learn.brio.md" className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition">
+          <Link
+            href="https://learn.brio.md"
+            className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition"
+          >
             <h4 className="font-semibold text-lg mb-2">Learning Portal</h4>
             <p className="text-neutral-600 text-sm">View courses and materials</p>
           </Link>

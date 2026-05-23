@@ -1,8 +1,12 @@
-'use server';
+"use server";
 
-import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from '@brio-md/auth';
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "@brio-md/auth";
 
-export async function signIn(provider: string, credentials?: Record<string, string>, options?: { redirectTo?: string }) {
+export async function signIn(
+  provider: string,
+  credentials?: Record<string, string>,
+  options?: { redirectTo?: string },
+) {
   return nextAuthSignIn(provider, credentials, options);
 }
 

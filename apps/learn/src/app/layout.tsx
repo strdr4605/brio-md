@@ -1,11 +1,7 @@
-import { Providers } from '@/components/providers';
-import './globals.css';
+import { Providers } from "@/components/providers";
+import "./globals.css";
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <head>

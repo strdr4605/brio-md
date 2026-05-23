@@ -15,11 +15,13 @@
 **Ekattor School Management System** (Codecanyon PHP script) - a generic school management system, heavily customized for Vibe Academy.
 
 ### Current Stack
+
 - PHP (CodeIgniter framework)
 - MariaDB
 - ~60 tables (most you don't need)
 
 ### What Educurat Does Well
+
 - ✅ User management (admin, teacher, student, parent)
 - ✅ Basic class/program management
 - ✅ Simple attendance (by class + section)
@@ -28,15 +30,15 @@
 
 ### What Educurat Doesn't Support
 
-| Feature | Vibe Academy Needs | Educurat Has |
-|---------|-------------------|--------------|
-| Yearly contracts | ✅ | ❌ |
-| 4-8 classes/month requirement | ✅ | ❌ |
-| Teacher pay per class taught | ✅ | ❌ |
-| Schedule-based attendance | ✅ | ❌ (by section only) |
-| Summer tours (1-2 weeks, full day) | ✅ | ❌ |
-| Payment method (card/cash/transfer) | ✅ | ❌ (basic only) |
-| Monthly billing automation | ✅ | ❌ (manual) |
+| Feature                             | Vibe Academy Needs | Educurat Has         |
+| ----------------------------------- | ------------------ | -------------------- |
+| Yearly contracts                    | ✅                 | ❌                   |
+| 4-8 classes/month requirement       | ✅                 | ❌                   |
+| Teacher pay per class taught        | ✅                 | ❌                   |
+| Schedule-based attendance           | ✅                 | ❌ (by section only) |
+| Summer tours (1-2 weeks, full day)  | ✅                 | ❌                   |
+| Payment method (card/cash/transfer) | ✅                 | ❌ (basic only)      |
+| Monthly billing automation          | ✅                 | ❌ (manual)          |
 
 ---
 
@@ -67,16 +69,16 @@ daily_attendances (attendance)
 
 ### Key Tables Explained
 
-| Table | Purpose | Problem |
-|-------|---------|---------|
-| `users` | All people (role = admin/teacher/student/parent) | Passwords SHA1, not bcrypt |
-| `students` | Links to users, stores parent_id | Not a real entity |
-| `classes` | Programs like "Robotică Distractivă" | Name OK |
-| `sections` | Time slots like "Monday 6pm" | Just a text name, not structured |
-| `enrols` | Links student → class → section + price | No contract info |
-| `invoices` | Payments (total, paid, status) | Manual, no method tracking |
-| `daily_attendances` | By class_id + section_id + date | Wrong granularity |
-| `teacher_permissions` | Who can access what | Access only, not teaching history |
+| Table                 | Purpose                                          | Problem                           |
+| --------------------- | ------------------------------------------------ | --------------------------------- |
+| `users`               | All people (role = admin/teacher/student/parent) | Passwords SHA1, not bcrypt        |
+| `students`            | Links to users, stores parent_id                 | Not a real entity                 |
+| `classes`             | Programs like "Robotică Distractivă"             | Name OK                           |
+| `sections`            | Time slots like "Monday 6pm"                     | Just a text name, not structured  |
+| `enrols`              | Links student → class → section + price          | No contract info                  |
+| `invoices`            | Payments (total, paid, status)                   | Manual, no method tracking        |
+| `daily_attendances`   | By class_id + section_id + date                  | Wrong granularity                 |
+| `teacher_permissions` | Who can access what                              | Access only, not teaching history |
 
 ---
 
@@ -85,25 +87,31 @@ daily_attendances (attendance)
 ### 1. Attendance is Wrong
 
 **Current (wrong):**
+
 ```sql
 WHERE class_id = 54 AND section_id = 131 AND date = '2025-01-18'
 ```
+
 All students in "Saturday 10am" group get same attendance on all Saturdays.
 
 **Should be:**
+
 ```sql
 WHERE class_id = 54 AND section_id = 131 AND date = '2025-01-18'
 ```
+
 Wait, this is the same... Let me clarify:
 
-**Problem:** `daily_attendances` stores by section, but a section like "Saturday 10am" might happen 4 times in January. There's no link to which *specific schedule slot* was taught.
+**Problem:** `daily_attendances` stores by section, but a section like "Saturday 10am" might happen 4 times in January. There's no link to which _specific schedule slot_ was taught.
 
 ### 2. No Teacher Salary Tracking
 
 `teacher_permissions` shows:
+
 - "Teacher Maria can access class Robotică"
 
 But nothing shows:
+
 - "Teacher Maria taught Robotică on Monday, January 20, 2025"
 
 ### 3. No Contracts
@@ -243,16 +251,16 @@ tour_attendance (
 
 ## Comparison
 
-| Aspect | Educurat | Brio.md |
-|--------|----------|---------|
-| Tables | ~60 | 8 |
-| Schema complexity | High | Low |
-| Contracts | ❌ | ✅ |
-| Teacher salary | ❌ | ✅ |
-| Payment methods | ❌ | ✅ |
-| Tours | ❌ | ✅ |
-| Your understanding | ❌ | ✅ |
-| Migrate data from Educurat | Later | Later |
+| Aspect                     | Educurat | Brio.md |
+| -------------------------- | -------- | ------- |
+| Tables                     | ~60      | 8       |
+| Schema complexity          | High     | Low     |
+| Contracts                  | ❌       | ✅      |
+| Teacher salary             | ❌       | ✅      |
+| Payment methods            | ❌       | ✅      |
+| Tours                      | ❌       | ✅      |
+| Your understanding         | ❌       | ✅      |
+| Migrate data from Educurat | Later    | Later   |
 
 ---
 
@@ -284,39 +292,39 @@ Later:   Export from Educurat, transform, import to Brio.md
 
 These Educurat tables are NOT needed for Brio.md:
 
-| Table | Reason |
-|-------|--------|
-| `addons` | CodeIgniter plugin system |
-| `assignments` | Homework (not needed) |
-| `assignment_answers` | Homework submissions |
-| `assignment_questions` | Homework questions |
-| `assignment_remarks` | Homework feedback |
-| `assign_students` | Transport (not needed) |
-| `books` | Library (not needed) |
-| `book_issues` | Library (not needed) |
-| `departments` | Not used |
-| `drivers` | Transport (not needed) |
-| `event_calendars` | Events (maybe later) |
-| `exams` | Tests (not needed) |
-| `expense_categories` | Expenses (not needed) |
-| `expenses` | Expenses (not needed) |
-| `frontend_*` | Website (not needed) |
-| `grades` | Grade system (not needed) |
-| `lesson` | LMS (not needed) |
-| `live_classes` | Zoom/Meet (maybe later) |
-| `marks` | Student marks (not needed) |
-| `menus` | CMS (not needed) |
-| `notifications` | In-app messages (maybe later) |
-| `question` | Quiz system (not needed) |
-| `routines` | Class schedule (replaced by schedules) |
-| `sessions` | Academic years (simplify) |
-| `settings` | Config (simplify) |
-| `sms_settings` | SMS (not needed) |
-| `smtp_settings` | Email config |
-| `syllabuses` | Course content (not needed) |
-| `teacher_permissions` | Access control (simplify) |
-| `trips` | Transport (not needed) |
-| `vehicles` | Transport (not needed) |
+| Table                  | Reason                                 |
+| ---------------------- | -------------------------------------- |
+| `addons`               | CodeIgniter plugin system              |
+| `assignments`          | Homework (not needed)                  |
+| `assignment_answers`   | Homework submissions                   |
+| `assignment_questions` | Homework questions                     |
+| `assignment_remarks`   | Homework feedback                      |
+| `assign_students`      | Transport (not needed)                 |
+| `books`                | Library (not needed)                   |
+| `book_issues`          | Library (not needed)                   |
+| `departments`          | Not used                               |
+| `drivers`              | Transport (not needed)                 |
+| `event_calendars`      | Events (maybe later)                   |
+| `exams`                | Tests (not needed)                     |
+| `expense_categories`   | Expenses (not needed)                  |
+| `expenses`             | Expenses (not needed)                  |
+| `frontend_*`           | Website (not needed)                   |
+| `grades`               | Grade system (not needed)              |
+| `lesson`               | LMS (not needed)                       |
+| `live_classes`         | Zoom/Meet (maybe later)                |
+| `marks`                | Student marks (not needed)             |
+| `menus`                | CMS (not needed)                       |
+| `notifications`        | In-app messages (maybe later)          |
+| `question`             | Quiz system (not needed)               |
+| `routines`             | Class schedule (replaced by schedules) |
+| `sessions`             | Academic years (simplify)              |
+| `settings`             | Config (simplify)                      |
+| `sms_settings`         | SMS (not needed)                       |
+| `smtp_settings`        | Email config                           |
+| `syllabuses`           | Course content (not needed)            |
+| `teacher_permissions`  | Access control (simplify)              |
+| `trips`                | Transport (not needed)                 |
+| `vehicles`             | Transport (not needed)                 |
 
 ---
 
@@ -324,14 +332,14 @@ These Educurat tables are NOT needed for Brio.md:
 
 Only if you need historical data later:
 
-| Table | Import? |
-|-------|---------|
-| `users` | Maybe (parents, teachers) |
-| `students` | Maybe (existing students) |
-| `classes` | Yes (programs) |
-| `sections` | Maybe (schedule templates) |
-| `enrols` | Maybe (enrollment history) |
-| `invoices` | Maybe (payment history) |
+| Table               | Import?                    |
+| ------------------- | -------------------------- |
+| `users`             | Maybe (parents, teachers)  |
+| `students`          | Maybe (existing students)  |
+| `classes`           | Yes (programs)             |
+| `sections`          | Maybe (schedule templates) |
+| `enrols`            | Maybe (enrollment history) |
+| `invoices`          | Maybe (payment history)    |
 | `daily_attendances` | Maybe (attendance history) |
 
 ---
@@ -346,5 +354,5 @@ Only if you need historical data later:
 
 ---
 
-*Document created: 2025-05-18*
-*Analysis by: Claude Code*
+_Document created: 2025-05-18_
+_Analysis by: Claude Code_
