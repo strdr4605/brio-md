@@ -14,8 +14,10 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
   const [, startTransition] = useTransition();
   const focusRing = variant === "blue" ? "focus:ring-blue-500" : "focus:ring-green-500";
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsPending(true);
+    const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
         await onSubmit(formData);
@@ -26,7 +28,7 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
           {error}
