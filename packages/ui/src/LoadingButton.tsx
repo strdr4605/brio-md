@@ -1,10 +1,9 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
-
 interface LoadingButtonProps {
   children: React.ReactNode;
   variant: "blue" | "green";
+  isPending?: boolean;
   formAction?: (formData: FormData) => void;
   className?: string;
 }
@@ -23,16 +22,16 @@ const variants = {
 export function LoadingButton({
   children,
   variant = "blue",
+  isPending = false,
   formAction,
   className = "",
 }: LoadingButtonProps) {
-  const { pending } = useFormStatus();
   const v = variants[variant];
 
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={isPending}
       formAction={formAction}
       className={`
         w-full py-2 px-4 text-white font-medium rounded transition
@@ -41,7 +40,7 @@ export function LoadingButton({
         ${v.base} ${className}
       `}
     >
-      {pending ? (
+      {isPending ? (
         <span className="flex items-center justify-center gap-2">
           <svg
             className="animate-spin h-5 w-5"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useTransition } from "react";
 import { LoadingButton } from "./LoadingButton";
 
 interface LoginFormProps {
@@ -10,11 +10,23 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
-  const [_state, formAction] = useActionState(onSubmit, null);
+  const [isPending, setIsPending] = useState(false);
+  const [, startTransition] = useTransition();
   const focusRing = variant === "blue" ? "focus:ring-blue-500" : "focus:ring-green-500";
 
+  function handleSubmit(formData: FormData) {
+    setIsPending(true);
+    startTransition(async () => {
+      try {
+        await onSubmit(formData);
+      } finally {
+        setIsPending(false);
+      }
+    });
+  }
+
   return (
-    <form action={formAction}>
+    <form action={handleSubmit}>
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
           {error}
@@ -49,7 +61,9 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
         />
       </div>
 
-      <LoadingButton variant={variant}>Sign In</LoadingButton>
+      <LoadingButton variant={variant} isPending={isPending}>
+        Sign In
+      </LoadingButton>
     </form>
   );
 }
