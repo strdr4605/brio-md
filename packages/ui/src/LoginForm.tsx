@@ -16,7 +16,7 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
     <form action={formAction}>
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-          Invalid credentials. Please try again.
+          {error}
         </div>
       )}
 
