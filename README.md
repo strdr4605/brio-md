@@ -34,7 +34,15 @@ pkill -f drizzle-kit
 
 ## Deployment
 
-Deploy to Hostinger VPS using Kamal 2.
+Deploy to VPS using Kamal 2 with kamal-proxy for SSL termination and host-based routing.
+
+### URLs
+
+| App | URL | Description |
+|-----|-----|-------------|
+| Landing | https://brio.md | Marketing page |
+| Portal | https://in.brio.md | Staff management |
+| Learn | https://learn.brio.md | Learning portal |
 
 ### Prerequisites
 
@@ -45,11 +53,21 @@ Deploy to Hostinger VPS using Kamal 2.
    CNAME learn.brio.md → brio.md
    ```
 
-2. **Secrets** - Create `.kamal/secrets`:
+2. **Secrets** - Create `.kamal/secrets-common`:
    ```
    KAMAL_REGISTRY_PASSWORD=your_dockerhub_password
-   POSTGRES_PASSWORD=your_postgres_password
    AUTH_SECRET=your_auth_secret
+   POSTGRES_PASSWORD=your_postgres_password
+   ```
+
+   Create `.kamal/secrets` (portal-specific):
+   ```
+   DATABASE_URL=postgres://brio:POSTGRES_PASSWORD@brio-portal-db:5432/brio_md
+   ```
+
+   Create `.kamal/secrets.learn` (learn-specific):
+   ```
+   DATABASE_URL=postgres://brio:POSTGRES_PASSWORD@brio-portal-db:5432/brio_md
    ```
 
 3. **SSH key added**:
@@ -66,14 +84,16 @@ Deploy to Hostinger VPS using Kamal 2.
 
 ### Deploy
 
-```bash
-# 1. Setup (portal deploys DB, Drizzle, kamal-proxy) - MUST run first
-kamal -c config/deploy.portal.yml setup
-kamal -c config/deploy.portal.yml deploy
+Portal MUST be deployed first (includes DB accessory):
 
-# 2. Deploy landing + learn
-kamal -c config/deploy.learn.yml deploy
-kamal -c config/deploy.landing.yml deploy
+```bash
+# 1. Setup and deploy portal (includes DB)
+kamal setup -d portal
+kamal deploy -d portal
+
+# 2. Deploy other apps
+kamal deploy -d landing
+kamal deploy -d learn
 ```
 
 ### Verify
@@ -84,24 +104,28 @@ curl https://in.brio.md
 curl https://learn.brio.md
 ```
 
-### Drizzle Studio
-
-Accessible via SSH tunnel:
-```bash
-ssh -L 4990:localhost:4990 root@SERVER_IP
-# Then open http://localhost:4990
-```
-
 ### Rollback
 
 ```bash
-kamal -c config/deploy.portal.yml rollback -r portal
-kamal -c config/deploy.learn.yml rollback -r learn
-kamal -c config/deploy.landing.yml rollback -r landing
+kamal rollback -d portal
+kamal rollback -d landing
+kamal rollback -d learn
+```
+
+### Direct Database Access
+
+From host machine:
+
+```bash
+# Connect to DB via external port
+DATABASE_URL='postgres://brio:PASSWORD@SERVER_IP:5432/brio_md' psql
+
+# Or with Drizzle Kit
+DATABASE_URL='postgres://brio:PASSWORD@SERVER_IP:5432/brio_md' npx drizzle-kit studio
 ```
 
 ## Apps
 
 - **Landing** - Marketing page
-- **Portal** - Staff management
-- **Learn** - Learning/courses portal
+- **Portal** - Staff management (owns the database)
+- **Learn** - Learning/courses portal (connects to portal DB)
