@@ -1,7 +1,7 @@
-import { signIn } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { auth } from '@brio-md/auth';
+import { signIn } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { auth } from "@brio-md/auth";
 
 export default async function LoginPage({
   searchParams,
@@ -11,46 +11,50 @@ export default async function LoginPage({
   // If already logged in, redirect to dashboard
   const session = await auth();
   if (session?.user) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
-  
+
   const params = await searchParams;
   const error = params.error;
-  
+
   async function handleLogin(formData: FormData) {
-    'use server';
-    
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    
+    "use server";
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
     try {
-      await signIn('credentials', {
-        email,
-        password,
-      }, {
-        redirectTo: '/dashboard',
-      });
+      await signIn(
+        "credentials",
+        {
+          email,
+          password,
+        },
+        {
+          redirectTo: "/dashboard",
+        },
+      );
     } catch (error: any) {
       // Check if it's a redirect (Auth.js throws on redirect)
-      if (error?.digest?.includes('NEXT_REDIRECT')) {
+      if (error?.digest?.includes("NEXT_REDIRECT")) {
         throw error; // Re-throw the redirect
       }
       // Otherwise redirect to error page
-      redirect('/?error=Invalid+credentials');
+      redirect("/?error=Invalid+credentials");
     }
   }
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Staff Portal</h1>
-        
+
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
             Invalid credentials. Please try again.
           </div>
         )}
-        
+
         <form action={handleLogin}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -65,7 +69,7 @@ export default async function LoginPage({
               placeholder="admin@brio.md"
             />
           </div>
-          
+
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
               Password
@@ -79,7 +83,7 @@ export default async function LoginPage({
               placeholder="••••••••"
             />
           </div>
-          
+
           <button
             type="submit"
             className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
@@ -87,7 +91,7 @@ export default async function LoginPage({
             Sign In
           </button>
         </form>
-        
+
         <div className="mt-4 text-center">
           <Link href="https://learn.brio.md" className="text-sm text-blue-600 hover:underline">
             Go to Learning Portal →

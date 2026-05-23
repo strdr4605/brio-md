@@ -26,11 +26,11 @@ pkill -f drizzle-kit
 
 ## Default Users
 
-| Email | Password | Role |
-|-------|----------|------|
-| admin@brio.md | admin123 | SuperAdmin |
-| admin@vibe.md | admin123 | Admin |
-| teacher@vibe.md | teacher123 | Teacher |
+| Email           | Password   | Role       |
+| --------------- | ---------- | ---------- |
+| admin@brio.md   | admin123   | SuperAdmin |
+| admin@vibe.md   | admin123   | Admin      |
+| teacher@vibe.md | teacher123 | Teacher    |
 
 ## Deployment
 
@@ -38,15 +38,16 @@ Deploy to VPS using Kamal 2 with kamal-proxy for SSL termination and host-based 
 
 ### URLs
 
-| App | URL | Description |
-|-----|-----|-------------|
-| Landing | https://brio.md | Marketing page |
-| Portal | https://in.brio.md | Staff management |
-| Learn | https://learn.brio.md | Learning portal |
+| App     | URL                   | Description      |
+| ------- | --------------------- | ---------------- |
+| Landing | https://brio.md       | Marketing page   |
+| Portal  | https://in.brio.md    | Staff management |
+| Learn   | https://learn.brio.md | Learning portal  |
 
 ### Prerequisites
 
 1. **DNS (Cloudflare)** - Grey cloud (DNS only, no proxy):
+
    ```
    A     brio.md       → SERVER_IP
    CNAME in.brio.md    → brio.md
@@ -54,6 +55,7 @@ Deploy to VPS using Kamal 2 with kamal-proxy for SSL termination and host-based 
    ```
 
 2. **Secrets** - Create `.kamal/secrets-common`:
+
    ```
    KAMAL_REGISTRY_PASSWORD=your_dockerhub_password
    AUTH_SECRET=your_auth_secret
@@ -61,21 +63,25 @@ Deploy to VPS using Kamal 2 with kamal-proxy for SSL termination and host-based 
    ```
 
    Create `.kamal/secrets` (portal-specific):
+
    ```
    DATABASE_URL=postgres://brio:POSTGRES_PASSWORD@brio-portal-db:5432/brio_md
    ```
 
    Create `.kamal/secrets.learn` (learn-specific):
+
    ```
    DATABASE_URL=postgres://brio:POSTGRES_PASSWORD@brio-portal-db:5432/brio_md
    ```
 
 3. **SSH key added**:
+
    ```bash
    ssh-add ~/.ssh/id_rsa
    ```
 
 4. **Docker Hub logged in**:
+
    ```bash
    docker login -u strdr4605
    ```

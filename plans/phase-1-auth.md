@@ -4,11 +4,11 @@
 
 Three Next.js apps deployed on single VPS with Kamal v2:
 
-| App | URL | Purpose |
-|-----|-----|---------|
-| Landing | `brio.md` | Public marketing page (hello world) |
-| Portal | `in.brio.md` | Admin/Teachers (Auth.js SSO) |
-| Learn | `learn.brio.md` | Students (Auth.js SSO) |
+| App     | URL             | Purpose                             |
+| ------- | --------------- | ----------------------------------- |
+| Landing | `brio.md`       | Public marketing page (hello world) |
+| Portal  | `in.brio.md`    | Admin/Teachers (Auth.js SSO)        |
+| Learn   | `learn.brio.md` | Students (Auth.js SSO)              |
 
 - PostgreSQL database (`brio_md`)
 - Auth.js with SSO (users logged in once, access both portals)
@@ -21,14 +21,14 @@ Three Next.js apps deployed on single VPS with Kamal v2:
 
 ## Decisions
 
-| Item | Decision |
-|------|----------|
-| Apps | 3 apps (landing + portal + learn) |
-| DB name | `brio_md` |
-| Deployment | Single VPS (Hostinger) + Kamal v2 |
-| Domains | `brio.md`, `in.brio.md`, `learn.brio.md` |
-| CSS | Tailwind CSS |
-| Auth | Auth.js with SSO (credentials provider) |
+| Item       | Decision                                 |
+| ---------- | ---------------------------------------- |
+| Apps       | 3 apps (landing + portal + learn)        |
+| DB name    | `brio_md`                                |
+| Deployment | Single VPS (Hostinger) + Kamal v2        |
+| Domains    | `brio.md`, `in.brio.md`, `learn.brio.md` |
+| CSS        | Tailwind CSS                             |
+| Auth       | Auth.js with SSO (credentials provider)  |
 
 ---
 
@@ -57,15 +57,18 @@ Three Next.js apps deployed on single VPS with Kamal v2:
 ```
 
 ### Landing (`brio.md`)
+
 - Simple hello world marketing page
 - Links to login for both portals
 
 ### Portal (`in.brio.md`)
+
 - Admin/Teacher dashboard
 - Full management features
 - Permissions: `super`, `admin`, `teach`
 
 ### Learn (`learn.brio.md`)
+
 - Teacher/Student course view
 - View assigned courses
 - For now: simple placeholder
@@ -134,11 +137,11 @@ CREATE TABLE verification_tokens (...);
 
 ### User Viewing Permissions
 
-| Viewer | Can See |
-|--------|---------|
-| SuperAdmin | All users (all schools) |
-| Admin | Teachers and students (their school only) |
-| Teacher | Own profile only |
+| Viewer     | Can See                                   |
+| ---------- | ----------------------------------------- |
+| SuperAdmin | All users (all schools)                   |
+| Admin      | Teachers and students (their school only) |
+| Teacher    | Own profile only                          |
 
 ### Course Assignment
 
@@ -148,12 +151,12 @@ CREATE TABLE verification_tokens (...);
 
 ### Permissions (PBAC)
 
-| Permission | Description |
-|------------|-------------|
-| `super` | Full access to everything |
-| `admin` | Manage school users and courses |
-| `teach` | Teach assigned courses |
-| `view` | View assigned data |
+| Permission | Description                     |
+| ---------- | ------------------------------- |
+| `super`    | Full access to everything       |
+| `admin`    | Manage school users and courses |
+| `teach`    | Teach assigned courses          |
+| `view`     | View assigned data              |
 
 ---
 
@@ -213,50 +216,57 @@ brio-md/
 
 ## Tech Stack
 
-| Layer | Choice |
-|-------|--------|
-| Framework | Next.js 16 |
-| Database | PostgreSQL 16 |
-| ORM | Drizzle ORM |
-| Auth | Auth.js v5 (credentials + SSO) |
-| API | tRPC v11 |
-| State | React Query v5 |
-| CSS | Tailwind v4 |
-| Deploy | Docker + Kamal v2 |
+| Layer     | Choice                         |
+| --------- | ------------------------------ |
+| Framework | Next.js 16                     |
+| Database  | PostgreSQL 16                  |
+| ORM       | Drizzle ORM                    |
+| Auth      | Auth.js v5 (credentials + SSO) |
+| API       | tRPC v11                       |
+| State     | React Query v5                 |
+| CSS       | Tailwind v4                    |
+| Deploy    | Docker + Kamal v2              |
 
 ---
 
 ## Implementation Steps
 
 ### Step 1: Setup Workspace
+
 - [ ] Root `package.json` with npm workspaces
 - [ ] Shared packages (`packages/db`)
 - [ ] Install dependencies
 
 ### Step 2: Database
+
 - [ ] `schools`, `courses`, `users`, `students` tables
 - [ ] Auth.js adapter tables
 - [ ] PostgreSQL connection
 
 ### Step 3: Shared Auth Package
+
 - [ ] Auth.js configuration with SSO
 - [ ] Session callback with role + permissions + course_ids
 
 ### Step 4: Portal App (`in.brio.md`)
+
 - [ ] Login page (front page)
 - [ ] Dashboard (SuperAdmin: all users, Admin: school users)
 - [ ] User management (set permissions, assign courses)
 - [ ] tRPC routes with PBAC
 
 ### Step 5: Learn App (`learn.brio.md`)
+
 - [ ] Login page (front page, SSO)
 - [ ] Courses page (shows assigned courses based on course_ids)
 
 ### Step 6: Landing Page (`brio.md`)
+
 - [ ] Simple hello world
 - [ ] Links to both portals
 
 ### Step 7: Deploy
+
 - [ ] Dockerfiles for each app
 - [ ] docker-compose.yml
 - [ ] Kamal config (3 apps, 3 domains)
@@ -266,53 +276,58 @@ brio-md/
 ## Files to Create
 
 ### Root
-| File | Purpose |
-|------|---------|
-| `package.json` | npm workspaces |
-| `docker-compose.yml` | All apps + postgres |
-| `config/deploy.yml` | Kamal (brio.md, in.brio.md, learn.brio.md) |
+
+| File                 | Purpose                                    |
+| -------------------- | ------------------------------------------ |
+| `package.json`       | npm workspaces                             |
+| `docker-compose.yml` | All apps + postgres                        |
+| `config/deploy.yml`  | Kamal (brio.md, in.brio.md, learn.brio.md) |
 
 ### Shared Packages
-| File | Purpose |
-|------|---------|
-| `packages/db/src/schema.ts` | All tables |
+
+| File                         | Purpose            |
+| ---------------------------- | ------------------ |
+| `packages/db/src/schema.ts`  | All tables         |
 | `packages/auth/src/index.ts` | Auth.js SSO config |
 
 ### Landing App
-| File | Purpose |
-|------|---------|
+
+| File                            | Purpose     |
+| ------------------------------- | ----------- |
 | `apps/landing/src/app/page.tsx` | Hello world |
-| `apps/landing/Dockerfile` | Build |
-| `apps/landing/package.json` | Deps |
+| `apps/landing/Dockerfile`       | Build       |
+| `apps/landing/package.json`     | Deps        |
 
 ### Portal App
-| File | Purpose |
-|------|---------|
-| `apps/portal/src/app/page.tsx` | Login (front page) |
+
+| File                                     | Purpose                 |
+| ---------------------------------------- | ----------------------- |
+| `apps/portal/src/app/page.tsx`           | Login (front page)      |
 | `apps/portal/src/app/dashboard/page.tsx` | Dashboard (after login) |
-| `apps/portal/src/lib/trpc.tsx` | tRPC client |
-| `apps/portal/src/server/trpc.ts` | tRPC init |
-| `apps/portal/src/server/routers/_app.ts` | Root router |
-| `apps/portal/Dockerfile` | Build |
-| `apps/portal/package.json` | Deps |
+| `apps/portal/src/lib/trpc.tsx`           | tRPC client             |
+| `apps/portal/src/server/trpc.ts`         | tRPC init               |
+| `apps/portal/src/server/routers/_app.ts` | Root router             |
+| `apps/portal/Dockerfile`                 | Build                   |
+| `apps/portal/package.json`               | Deps                    |
 
 ### Learn App
-| File | Purpose |
-|------|---------|
-| `apps/learn/src/app/page.tsx` | Login (front page) |
+
+| File                                  | Purpose               |
+| ------------------------------------- | --------------------- |
+| `apps/learn/src/app/page.tsx`         | Login (front page)    |
 | `apps/learn/src/app/courses/page.tsx` | Courses (after login) |
-| `apps/learn/Dockerfile` | Build |
-| `apps/learn/package.json` | Deps |
+| `apps/learn/Dockerfile`               | Build                 |
+| `apps/learn/package.json`             | Deps                  |
 
 ---
 
 ## Seed Data
 
-| Email | Password | Role | Permissions | course_ids | App Access |
-|-------|----------|------|-------------|------------|------------|
-| `admin@brio.md` | `admin123` | `superadmin` | `['super']` | `[]` | Both portals |
-| `admin@vibe.md` | `admin123` | `admin` | `['admin']` | `[]` | Both portals |
-| `teacher@vibe.md` | `teacher123` | `teacher` | `['teach']` | `[1]` | Both portals |
+| Email             | Password     | Role         | Permissions | course_ids | App Access   |
+| ----------------- | ------------ | ------------ | ----------- | ---------- | ------------ |
+| `admin@brio.md`   | `admin123`   | `superadmin` | `['super']` | `[]`       | Both portals |
+| `admin@vibe.md`   | `admin123`   | `admin`      | `['admin']` | `[]`       | Both portals |
+| `teacher@vibe.md` | `teacher123` | `teacher`    | `['teach']` | `[1]`      | Both portals |
 
 Also create a test course:
 | ID | Name |
@@ -344,5 +359,5 @@ Also create a test course:
 
 ---
 
-*Plan updated: 2025-05-18*
-*Phase 1 of Brio.md*
+_Plan updated: 2025-05-18_
+_Phase 1 of Brio.md_

@@ -1,20 +1,23 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { eq } from 'drizzle-orm';
-import { users } from '@brio-md/db';
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { eq } from "drizzle-orm";
+import { users } from "@brio-md/db";
 
-const sql = postgres(process.env.DATABASE_URL || 'postgres://brio:briopassword@localhost:5432/brio_md', { max: 1 });
+const sql = postgres(
+  process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md",
+  { max: 1 },
+);
 const db = drizzle(sql, { schema: { users } });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -25,11 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials.password as string;
 
         // Get user from DB
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email))
-          .limit(1);
+        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
         if (!user || !user.passwordHash) {
           return null;
@@ -77,10 +76,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    signIn: '/',
+    signIn: "/",
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   trustHost: true,
 });

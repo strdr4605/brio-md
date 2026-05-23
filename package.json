@@ -15,11 +15,15 @@
     "build:portal": "cd apps/portal && npm run build",
     "build:learn": "cd apps/learn && npm run build",
     "studio": "cd packages/db && npx drizzle-kit studio",
-    "deploy": "kamal deploy"
+    "deploy": "kamal deploy",
+    "lint": "oxlint .",
+    "format": "prettier --write . --list-different"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
     "drizzle-kit": "^0.30.0",
+    "oxlint": "^1.66.0",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.1"
   }
 }

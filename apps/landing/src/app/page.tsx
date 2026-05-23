@@ -1,25 +1,23 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-20">
-        <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">
-          Brio.md
-        </h1>
+        <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">Brio.md</h1>
         <p className="text-xl text-center text-gray-600 mb-12 max-w-2xl mx-auto">
           Modern school management platform for Vibe Academy
         </p>
-        
+
         <div className="flex justify-center gap-4">
-          <Link 
+          <Link
             href="https://in.brio.md"
             className="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
           >
             Staff Portal
           </Link>
-          <Link 
+          <Link
             href="https://learn.brio.md"
             className="px-8 py-3 bg-white text-blue-600 font-medium rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition"
           >
