@@ -25,11 +25,6 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-// Context creator
-export async function createContext(): Promise<Context> {
-  return { user: null };
-}
-
 // Protected procedure middleware
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.user) {
@@ -64,13 +59,3 @@ const hasAdmin = t.middleware(({ ctx, next }) => {
 });
 
 export const adminProcedure = t.procedure.use(hasAdmin);
-
-// Teach permission middleware
-const hasTeach = t.middleware(({ ctx, next }) => {
-  if (!ctx.user?.permissions.includes('teach') && !ctx.user?.permissions.includes('super')) {
-    throw new TRPCError({ code: 'FORBIDDEN' });
-  }
-  return next({ ctx });
-});
-
-export const teachProcedure = t.procedure.use(hasTeach);

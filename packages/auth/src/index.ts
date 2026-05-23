@@ -18,14 +18,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log('[Auth] Missing credentials');
           return null;
         }
 
         const email = credentials.email as string;
         const password = credentials.password as string;
-
-        console.log('[Auth] Login attempt for:', email);
 
         // Get user from DB
         const [user] = await db
@@ -34,22 +31,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .where(eq(users.email, email))
           .limit(1);
 
-        if (!user) {
-          console.log('[Auth] User not found:', email);
+        if (!user || !user.passwordHash) {
           return null;
         }
-
-        if (!user.passwordHash) {
-          console.log('[Auth] No password hash for:', email);
-          return null;
-        }
-
-        console.log('[Auth] User found, checking password...');
-        console.log('[Auth] Hash in DB:', user.passwordHash.substring(0, 30) + '...');
 
         // Verify password
         const isValid = await bcrypt.compare(password, user.passwordHash);
-        console.log('[Auth] Password valid:', isValid);
 
         if (!isValid) {
           return null;

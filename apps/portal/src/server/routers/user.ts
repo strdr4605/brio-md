@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { router, publicProcedure, protectedProcedure, superProcedure, adminProcedure } from '../trpc';
-import { eq, and, ilike } from 'drizzle-orm';
-import { users, schools, courses } from '@/db/schema';
-import { hash } from 'bcryptjs';
+import { router, protectedProcedure, superProcedure } from '../trpc';
+import { eq, ilike } from 'drizzle-orm';
+import { users } from '@/db/schema';
 import { TRPCError } from '@trpc/server';
 
 export const userRouter = router({
