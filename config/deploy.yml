@@ -6,3 +6,6 @@ registry:
   username: strdr4605
   password:
     - KAMAL_REGISTRY_PASSWORD
+
+aliases:
+  apps: server exec docker exec kamal-proxy kamal-proxy list
