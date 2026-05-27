@@ -1,0 +1,44 @@
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm run dev --workspace=@brio-md/portal"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://localhost:3002
+    ports:
+      - "3002:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  learn:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm run dev --workspace=@brio-md/learn"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://brio:briopassword@db:5432/brio_md
+      AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://localhost:3003
+    ports:
+      - "3003:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  landing:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm run dev --workspace=@brio-md/landing"
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3001:3000"
