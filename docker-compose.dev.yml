@@ -10,6 +10,11 @@ services:
       AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3002
+    volumes:
+      - ./apps/portal/src:/app/apps/portal/src
+      - ./packages/ui/src:/app/packages/ui/src
+      - ./packages/db/src:/app/packages/db/src
+      - ./packages/auth/src:/app/packages/auth/src
     ports:
       - "3002:3000"
     depends_on:
@@ -27,6 +32,11 @@ services:
       AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3003
+    volumes:
+      - ./apps/learn/src:/app/apps/learn/src
+      - ./packages/ui/src:/app/packages/ui/src
+      - ./packages/db/src:/app/packages/db/src
+      - ./packages/auth/src:/app/packages/auth/src
     ports:
       - "3003:3000"
     depends_on:
@@ -40,5 +50,7 @@ services:
     command: sh -c "npm run dev --workspace=@brio-md/landing"
     environment:
       NODE_ENV: development
+    volumes:
+      - ./apps/landing/src:/app/apps/landing/src
     ports:
       - "3001:3000"
