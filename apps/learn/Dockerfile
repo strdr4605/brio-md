@@ -10,6 +10,7 @@ COPY package.json package-lock.json* ./
 # Copy all packages first
 COPY packages/db/package.json ./packages/db/package.json
 COPY packages/auth/package.json ./packages/auth/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 
 # Install all workspaces
 RUN npm ci
