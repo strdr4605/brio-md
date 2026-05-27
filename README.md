@@ -5,13 +5,8 @@ School management platform for Vibe Academy (Moldova).
 ## Quick Start
 
 ```bash
-# Start all services
+# Start all services with hot reload
 npm run dev
-
-# Or run individually
-npm run dev:landing  # http://localhost:3001
-npm run dev:portal    # http://localhost:3002
-npm run dev:learn     # http://localhost:3003
 ```
 
 ## Development
