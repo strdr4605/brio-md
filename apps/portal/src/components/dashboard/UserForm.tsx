@@ -100,7 +100,7 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
               />
             </div>
 
-            {isEditing && isSuperAdmin && (
+            {isEditing && (isSuperAdmin || isAdmin) && (
               <div>
                 <label className="block text-sm font-medium mb-1">Parolă Nouă</label>
                 <input

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, protectedProcedure, superProcedure } from "../trpc";
+import { router, protectedProcedure, superProcedure, adminProcedure } from "../trpc";
 import { eq, ilike, and } from "drizzle-orm";
 import { users, schools, courses } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
@@ -118,8 +118,8 @@ export const userRouter = router({
     return null; // Mock
   }),
 
-  // Create user (SuperAdmin only)
-  create: superProcedure
+  // Create user (Admin or SuperAdmin)
+  create: adminProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -142,8 +142,8 @@ export const userRouter = router({
       };
     }),
 
-  // Update user (SuperAdmin only)
-  update: superProcedure
+  // Update user (Admin or SuperAdmin)
+  update: adminProcedure
     .input(
       z.object({
         id: z.number(),
