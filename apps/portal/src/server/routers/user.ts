@@ -5,6 +5,7 @@ import { users, schools, courses } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { hash } from "bcryptjs";
 
 const sql = postgres(process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md", { max: 1 });
 const db = drizzle(sql, { schema: { users } });
@@ -153,11 +154,21 @@ export const userRouter = router({
         courseIds: z.array(z.number()).optional(),
         schoolId: z.number().nullable().optional(),
         active: z.boolean().optional(),
+        password: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { id, ...updates } = input;
-      return { id, ...updates };
+      const { id, password, ...updates } = input;
+      if (password) {
+        (updates as any).passwordHash = await hash(password, 12);
+      }
+      const [result] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+
+      return result;
     }),
 
   // List schools

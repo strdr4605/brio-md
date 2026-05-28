@@ -57,7 +57,7 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
     e.preventDefault();
     if (isEditing) {
       const { password, ...rest } = formData;
-      updateMutation.mutate({ id: user.id!, ...rest } as any);
+      updateMutation.mutate({ id: user.id!, ...rest, ...(password ? { password } : {}) } as any);
     } else {
       createMutation.mutate(formData as any);
     }
@@ -99,6 +99,20 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
                 className="w-full px-3 py-2 border rounded-lg"
               />
             </div>
+
+            {isEditing && isSuperAdmin && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Parolă Nouă</label>
+                <input
+                  type="password"
+                  minLength={8}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Lasă gol pentru a păstra parola actuală"
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+            )}
 
             {!isEditing && (
               <div>
