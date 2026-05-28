@@ -1,8 +1,13 @@
 import { z } from "zod";
 import { router, protectedProcedure, superProcedure } from "../trpc";
-import { eq, ilike } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { eq, ilike, and } from "drizzle-orm";
+import { users, schools, courses } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+
+const sql = postgres(process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md", { max: 1 });
+const db = drizzle(sql, { schema: { users } });
 
 export const userRouter = router({
   // Get current user
@@ -69,8 +74,26 @@ export const userRouter = router({
         conditions.push(eq(users.role, input.role));
       }
 
-      // For now, return mock data since db is not connected
-      return [];
+      const result = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          role: users.role,
+          permissions: users.permissions,
+          courseIds: users.courseIds,
+          schoolId: users.schoolId,
+          phone: users.phone,
+          info: users.info,
+          active: users.active,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .limit(input?.limit ?? 50)
+        .offset(input?.offset ?? 0);
+
+      return result;
     }),
 
   // Get user by ID
@@ -139,8 +162,8 @@ export const userRouter = router({
 
   // List schools
   listSchools: protectedProcedure.query(async () => {
-    // Mock
-    return [{ id: 1, name: "Vibe Academy" }];
+    const result = await db.select().from(schools);
+    return result;
   }),
 
   // List courses
@@ -152,8 +175,10 @@ export const userRouter = router({
         })
         .optional(),
     )
-    .query(async () => {
-      // Mock
-      return [{ id: 1, name: "English" }];
+    .query(async ({ input }) => {
+      if (input?.schoolId) {
+        return db.select().from(courses).where(eq(courses.schoolId, input.schoolId));
+      }
+      return db.select().from(courses);
     }),
 });
