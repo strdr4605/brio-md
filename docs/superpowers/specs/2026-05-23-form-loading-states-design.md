@@ -24,11 +24,13 @@ Create `packages/ui` shared package containing reusable form components. Both ap
 Client component using `useFormStatus()` to detect pending state.
 
 **Props:**
+
 - `children` — button label (shown when not loading)
 - `variant` — `"blue" | "green"` for app-specific colors
 - `formAction` — optional form action handler
 
 **States:**
+
 - Default: enabled, normal text
 - Pending: disabled, spinner visible, text = "Signing in..."
 
@@ -37,10 +39,12 @@ Client component using `useFormStatus()` to detect pending state.
 Client component wrapping login form logic.
 
 **Props:**
+
 - `variant` — `"blue" | "green"` passed to LoadingButton
 - `error` — optional error message to display
 
 **Behavior:**
+
 - Uses `useActionState` to handle form submission
 - Calls server action `handleLogin`
 - Shows error banner when auth fails
@@ -78,6 +82,7 @@ Each app keeps its own `handleLogin` server action (in page.tsx or separate file
 ## Extensibility
 
 `LoadingButton` reusable across any form. Future forms:
+
 1. Import `LoadingButton` from `@brio-md/ui`
 2. Wrap in component using `useActionState`
 3. Pass custom `formAction`

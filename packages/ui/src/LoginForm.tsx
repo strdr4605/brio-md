@@ -45,13 +45,13 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
           type="email"
           required
           className={`w-full px-3 py-2 border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 ${focusRing}`}
-          placeholder={variant === "blue" ? "admin@brio.md" : "teacher@vibe.md"}
+          placeholder={"@brio.md"}
         />
       </div>
 
       <div className="mb-6">
         <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
-          Password
+          Parolă
         </label>
         <input
           id="password"
@@ -64,7 +64,7 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
       </div>
 
       <LoadingButton variant={variant} isPending={isPending}>
-        Sign In
+        Autentificare
       </LoadingButton>
     </form>
   );
