@@ -45,7 +45,7 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
           type="email"
           required
           className={`w-full px-3 py-2 border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 ${focusRing}`}
-          placeholder={variant === "blue" ? "admin@brio.md" : "teacher@vibe.md"}
+          placeholder={"@brio.md"}
         />
       </div>
 
@@ -69,3 +69,4 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
     </form>
   );
 }
+
