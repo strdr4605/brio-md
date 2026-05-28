@@ -61,16 +61,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.permissions = (user as any).permissions;
         token.courseIds = (user as any).courseIds;
         token.schoolId = (user as any).schoolId;
-        token.passwordLastChanged = (user as any).passwordLastChanged;
+        token.lastChangedAt = (user as any).lastChangedAt;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         const [dbUser] = await db.select().from(users).where(eq(users.id, parseInt(token.id as string))).limit(1);
-        if (dbUser && (dbUser as any).passwordLastChanged && token.passwordLastChanged) {
+        if (dbUser && (dbUser as any).lastChangedAt && token.lastChangedAt) {
           const tokenIssuedAt = new Date(token.iat! * 1000);
-          if ((dbUser as any).passwordLastChanged > tokenIssuedAt) {
+          if ((dbUser as any).lastChangedAt > tokenIssuedAt) {
             return { ...session, user: { ...session.user, id: token.id, expired: true } as any };
           }
         }
