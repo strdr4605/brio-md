@@ -6,9 +6,9 @@ import { signOut } from "next-auth/react";
 
 const navItems = [
   { href: "/dashboard", icon: "🏠", label: "Dashboard" },
-  { href: "/dashboard/utilizatori", icon: "👥", label: "Utilizatori" },
-  { href: "/dashboard/studenti", icon: "👨‍🎓", label: "Studenţi" },
-  { href: "/dashboard/setari", icon: "⚙️", label: "Setări" },
+  { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
+  { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
+  { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
 ];
 
 export function Nav({ userName }: { userName?: string }) {
