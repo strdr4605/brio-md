@@ -100,21 +100,18 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
               />
             </div>
 
-            {isEditing && (isSuperAdmin || isAdmin) && (
+            {isEditing ? (
               <div>
-                <label className="block text-sm font-medium mb-1">Parolă Nouă</label>
+                <label className="block text-sm font-medium mb-1">Parolă</label>
                 <input
-                  type="password"
-                  minLength={8}
+                  type="text"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Lasă gol pentru a păstra parola actuală"
+                  placeholder="Introdu nouă parolă sau lasă gol"
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
-            )}
-
-            {!isEditing && (
+            ) : (
               <div>
                 <label className="block text-sm font-medium mb-1">Parolă</label>
                 <input
