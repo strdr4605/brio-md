@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure, superProcedure, adminProcedure } from "../trpc";
 import { eq, ilike, and } from "drizzle-orm";
-import { users, schools, courses } from "@/db/schema";
+import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -161,6 +161,8 @@ export const userRouter = router({
       const { id, password, ...updates } = input;
       if (password) {
         (updates as any).passwordHash = await hash(password, 12);
+        (updates as any).passwordLastChanged = new Date();
+        await db.delete(sessions).where(eq(sessions.userId, id));
       }
       const [result] = await db
         .update(users)
