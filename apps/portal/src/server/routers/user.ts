@@ -134,12 +134,24 @@ export const userRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      // Mock implementation - will connect to DB later
-      return {
-        id: 1,
-        ...input,
-        active: true,
-      };
+      const passwordHash = await hash(input.password, 12);
+      const [result] = await db
+        .insert(users)
+        .values({
+          email: input.email,
+          passwordHash,
+          name: input.name,
+          role: input.role,
+          permissions: input.permissions,
+          courseIds: input.courseIds || [],
+          schoolId: input.schoolId,
+          phone: input.phone,
+          info: input.info,
+          active: true,
+        })
+        .returning();
+
+      return result;
     }),
 
   // Update user (Admin or SuperAdmin)
