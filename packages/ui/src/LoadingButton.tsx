@@ -41,9 +41,7 @@ export function LoadingButton({
       `}
     >
       {isPending ? (
-        <span className="flex items-center justify-center">
-          Signing in...
-        </span>
+        <span className="flex items-center justify-center">Se autentifică...</span>
       ) : (
         children
       )}

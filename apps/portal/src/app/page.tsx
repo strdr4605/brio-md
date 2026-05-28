@@ -45,13 +45,13 @@ export default async function LoginPage({
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Staff Portal</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Portal Personal</h1>
 
         <LoginForm variant="blue" error={error} onSubmit={handleLogin} />
 
         <div className="mt-4 text-center">
           <Link href="https://learn.brio.md" className="text-sm text-blue-600 hover:underline">
-            Go to Learning Portal →
+            Accesează Portalul de Învățare →
           </Link>
         </div>
       </div>

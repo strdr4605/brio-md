@@ -51,7 +51,7 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
 
       <div className="mb-6">
         <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
-          Password
+          Parolă
         </label>
         <input
           id="password"
@@ -64,9 +64,8 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
       </div>
 
       <LoadingButton variant={variant} isPending={isPending}>
-        Sign In
+        Autentificare
       </LoadingButton>
     </form>
   );
 }
-
