@@ -3,12 +3,8 @@ import { router, protectedProcedure, superProcedure, adminProcedure } from "../t
 import { eq, ilike, and } from "drizzle-orm";
 import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
 import { hash } from "bcryptjs";
-
-const sql = postgres(process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md", { max: 1 });
-const db = drizzle(sql, { schema: { users } });
+import { db } from "@/lib/db";
 
 export const userRouter = router({
   // Get current user
@@ -133,8 +129,9 @@ export const userRouter = router({
         info: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const passwordHash = await hash(input.password, 12);
+      const schoolId = input.schoolId ?? ctx.user!.schoolId;
       const [result] = await db
         .insert(users)
         .values({
@@ -144,7 +141,7 @@ export const userRouter = router({
           role: input.role,
           permissions: input.permissions,
           courseIds: input.courseIds || [],
-          schoolId: input.schoolId,
+          schoolId,
           phone: input.phone,
           info: input.info,
           active: true,

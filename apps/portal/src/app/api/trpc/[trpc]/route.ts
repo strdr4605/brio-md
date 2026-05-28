@@ -1,6 +1,9 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "@/server/routers/_app";
 import { auth } from "@brio-md/auth";
+import { db } from "@/lib/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 const handler = (req: Request) =>
   fetchRequestHandler({
@@ -9,8 +12,23 @@ const handler = (req: Request) =>
     router: appRouter,
     createContext: async () => {
       const session = await auth();
+      if (!session?.user) {
+        return { user: null, db };
+      }
+
+      const userId = parseInt(session.user.id as string);
+      const [dbUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+
       return {
-        user: session?.user ? {
+        user: dbUser ? {
+          id: String(dbUser.id),
+          email: dbUser.email || "",
+          name: dbUser.name || "",
+          role: dbUser.role || "teacher",
+          permissions: dbUser.permissions || [],
+          courseIds: dbUser.courseIds || [],
+          schoolId: dbUser.schoolId || null,
+        } : {
           id: String(session.user.id),
           email: session.user.email || "",
           name: session.user.name || "",
@@ -18,8 +36,8 @@ const handler = (req: Request) =>
           permissions: (session.user as any).permissions || [],
           courseIds: (session.user as any).courseIds || [],
           schoolId: (session.user as any).schoolId || null,
-        } : null,
-        db: null,
+        },
+        db,
       };
     },
   });
