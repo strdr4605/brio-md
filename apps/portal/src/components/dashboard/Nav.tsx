@@ -56,9 +56,7 @@ export function Nav({ userName }: { userName?: string }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-neutral-600 hover:bg-neutral-100"
+                  isActive ? "bg-blue-50 text-blue-700" : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>

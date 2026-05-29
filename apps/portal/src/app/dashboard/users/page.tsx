@@ -64,17 +64,19 @@ export default function UsersPage() {
                     <td className="px-4 py-3">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        user.role === "superadmin" ? "bg-purple-100 text-purple-700" :
-                        user.role === "admin" ? "bg-blue-100 text-blue-700" :
-                        "bg-green-100 text-green-700"
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          user.role === "superadmin"
+                            ? "bg-purple-100 text-purple-700"
+                            : user.role === "admin"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700"
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
-                    {isSuperAdmin && (
-                      <td className="px-4 py-3">{school?.name || "-"}</td>
-                    )}
+                    {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
                     <td className="px-4 py-3">
                       {user.active ? (
                         <span className="text-green-600">Activ</span>

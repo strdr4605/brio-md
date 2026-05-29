@@ -38,6 +38,7 @@ apps/portal/src/
 ### Task 1: Create dashboard folder structure
 
 **Files:**
+
 - Create: `apps/portal/src/app/dashboard/utilizatori/page.tsx`
 - Create: `apps/portal/src/app/dashboard/studenti/page.tsx`
 - Create: `apps/portal/src/app/dashboard/setari/page.tsx`
@@ -93,6 +94,7 @@ git commit -m "feat(portal): add placeholder pages for dashboard nav"
 ### Task 2: Create responsive nav component
 
 **Files:**
+
 - Create: `apps/portal/src/components/dashboard/Nav.tsx`
 
 - [ ] **Step 1: Write Nav component**
@@ -148,9 +150,7 @@ export function Nav() {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-neutral-600 hover:bg-neutral-100"
+                  isActive ? "bg-blue-50 text-blue-700" : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>
@@ -177,6 +177,7 @@ git commit -m "feat(portal): add responsive Nav component"
 ### Task 3: Create dashboard layout
 
 **Files:**
+
 - Create: `apps/portal/src/app/dashboard/layout.tsx`
 - Modify: `apps/portal/src/app/dashboard/page.tsx:23-113` (move content to page.tsx)
 
@@ -208,9 +209,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </header>
 
       {/* Main content - pushed right on desktop, above bottom nav on mobile */}
-      <main className="md:ml-[200px] pb-20 md:pb-0 pt-0 md:pt-[65px]">
-        {children}
-      </main>
+      <main className="md:ml-[200px] pb-20 md:pb-0 pt-0 md:pt-[65px]">{children}</main>
     </div>
   );
 }

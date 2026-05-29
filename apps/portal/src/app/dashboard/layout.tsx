@@ -13,9 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen bg-neutral-50">
       <Nav userName={(session.user as any).name} />
 
-      <main className="md:ml-[200px] pb-20 md:pb-0 pt-0">
-        {children}
-      </main>
+      <main className="md:ml-[200px] pb-20 md:pb-0 pt-0">{children}</main>
     </div>
   );
 }

@@ -173,11 +173,7 @@ export const userRouter = router({
         (updates as any).lastChangedAt = new Date();
         await db.delete(sessions).where(eq(sessions.userId, id));
       }
-      const [result] = await db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, id))
-        .returning();
+      const [result] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
 
       return result;
     }),

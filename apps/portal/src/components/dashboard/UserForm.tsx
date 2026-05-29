@@ -22,7 +22,14 @@ interface Props {
   currentUserSchoolId?: number;
 }
 
-export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, currentUserSchoolId }: Props) {
+export function UserFormDrawer({
+  user,
+  schools,
+  isSuperAdmin,
+  isAdmin,
+  onClose,
+  currentUserSchoolId,
+}: Props) {
   const utils = trpc.useUtils();
   const isEditing = !!user?.id;
 
@@ -44,7 +51,7 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
     name: user?.name || "",
     email: user?.email || "",
     password: "",
-    role: user?.role || "teacher" as "teacher" | "admin" | "superadmin",
+    role: user?.role || ("teacher" as "teacher" | "admin" | "superadmin"),
     schoolId: user?.schoolId || currentUserSchoolId || null,
     permissions: user?.permissions || [],
     active: user?.active ?? true,
@@ -115,9 +122,9 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
               <div>
                 <label className="block text-sm font-medium mb-1">Parolă</label>
                 <input
-                  type="password"
+                  type="text"
                   required
-                  minLength={8}
+                  minLength={6}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
@@ -145,7 +152,9 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
                 <label className="block text-sm font-medium mb-1">Şcoală</label>
                 <select
                   value={formData.schoolId || ""}
-                  onChange={(e) => setFormData({ ...formData, schoolId: Number(e.target.value) || null })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, schoolId: Number(e.target.value) || null })
+                  }
                   className="w-full px-3 py-2 border rounded-lg"
                 >
                   <option value="">Selectează şcoală</option>
@@ -185,8 +194,8 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
                 {createMutation.isPending || updateMutation.isPending
                   ? "Se salvează..."
                   : isEditing
-                  ? "Salvează Modificările"
-                  : "Creează Utilizator"}
+                    ? "Salvează Modificările"
+                    : "Creează Utilizator"}
               </button>
               <button
                 type="button"

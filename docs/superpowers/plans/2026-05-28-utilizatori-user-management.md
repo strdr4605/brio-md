@@ -1,8 +1,8 @@
-# Utilizatori User Management Implementation Plan
+# User Management Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add user management page with list, create/edit forms. Superadmin sees all users; school admin sees only their school's users.
+**Goal:** Add user management page at `/dashboard/users` with list and create/edit forms. Superadmin sees all users; school admin sees only their school's users.
 
 **Architecture:** tRPC backend (user router already exists), React frontend with side drawer for create/edit forms.
 
@@ -12,7 +12,7 @@
 
 ## File Structure
 
-- **Modify:** `apps/portal/src/app/dashboard/utilizatori/page.tsx` - Main page with list + drawer
+- **Modify:** `apps/portal/src/app/dashboard/users/page.tsx` - Main page with list + drawer
 - **Create:** `apps/portal/src/components/dashboard/UserForm.tsx` - Create/Edit user form component
 - **Modify:** `apps/portal/src/server/routers/user.ts` - Update CRUD implementations (mock → real DB)
 
@@ -21,7 +21,8 @@
 ## Task 1: User List Component
 
 **Files:**
-- Modify: `apps/portal/src/app/dashboard/utilizatori/page.tsx`
+
+- Modify: `apps/portal/src/app/dashboard/users/page.tsx`
 
 - [ ] **Step 1: Replace placeholder with list component**
 
@@ -32,7 +33,7 @@ import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
-export default function UtilizatoriPage() {
+export default function UsersPage() {
   const { data: session } = useSession();
   const permissions = (session?.user as any)?.permissions || [];
   const isSuperAdmin = permissions.includes("super");
@@ -69,7 +70,7 @@ export default function UtilizatoriPage() {
       {isLoading ? (
         <p>Se încarcă...</p>
       ) : users.length === 0 ? (
-        <p className="text-neutral-600">Nu există utilizatori.</p>
+        <p className="text-neutral-600">Nu există users.</p>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
@@ -91,17 +92,19 @@ export default function UtilizatoriPage() {
                     <td className="px-4 py-3">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        user.role === "superadmin" ? "bg-purple-100 text-purple-700" :
-                        user.role === "admin" ? "bg-blue-100 text-blue-700" :
-                        "bg-green-100 text-green-700"
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          user.role === "superadmin"
+                            ? "bg-purple-100 text-purple-700"
+                            : user.role === "admin"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700"
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
-                    {isSuperAdmin && (
-                      <td className="px-4 py-3">{school?.name || "-"}</td>
-                    )}
+                    {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
                     <td className="px-4 py-3">
                       {user.active ? (
                         <span className="text-green-600">Activ</span>
@@ -146,8 +149,8 @@ export default function UtilizatoriPage() {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add apps/portal/src/app/dashboard/utilizatori/page.tsx
-git commit -m "feat(portal): add user list component to utilizatori page"
+git add apps/portal/src/app/dashboard/users/page.tsx
+git commit -m "feat(portal): add user list component to users page"
 ```
 
 ---
@@ -155,6 +158,7 @@ git commit -m "feat(portal): add user list component to utilizatori page"
 ## Task 2: User Create/Edit Form Drawer
 
 **Files:**
+
 - Create: `apps/portal/src/components/dashboard/UserForm.tsx`
 
 - [ ] **Step 1: Create UserForm.tsx**
@@ -184,7 +188,14 @@ interface Props {
   currentUserSchoolId?: number;
 }
 
-export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, currentUserSchoolId }: Props) {
+export function UserFormDrawer({
+  user,
+  schools,
+  isSuperAdmin,
+  isAdmin,
+  onClose,
+  currentUserSchoolId,
+}: Props) {
   const utils = trpc.useUtils();
   const isEditing = !!user?.id;
 
@@ -295,7 +306,9 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
                 <label className="block text-sm font-medium mb-1">Şcoală</label>
                 <select
                   value={formData.schoolId || ""}
-                  onChange={(e) => setFormData({ ...formData, schoolId: Number(e.target.value) || null })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, schoolId: Number(e.target.value) || null })
+                  }
                   className="w-full px-3 py-2 border rounded-lg"
                 >
                   <option value="">Selectează şcoală</option>
@@ -335,8 +348,8 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
                 {createMutation.isPending || updateMutation.isPending
                   ? "Se salvează..."
                   : isEditing
-                  ? "Salvează Modificările"
-                  : "Creează Utilizator"}
+                    ? "Salvează Modificările"
+                    : "Creează Utilizator"}
               </button>
               <button
                 type="button"
@@ -360,9 +373,10 @@ export function UserFormDrawer({ user, schools, isSuperAdmin, isAdmin, onClose, 
 import { useState } from "react";
 ```
 
-- [ ] **Step 3: Update utilizatori page to import UserFormDrawer**
+- [ ] **Step 3: Update users page to import UserFormDrawer**
 
 Add import at top of page.tsx:
+
 ```tsx
 import { UserFormDrawer } from "@/components/dashboard/UserForm";
 ```
@@ -370,7 +384,7 @@ import { UserFormDrawer } from "@/components/dashboard/UserForm";
 - [ ] **Step 4: Commit**
 
 ```bash
-git add apps/portal/src/components/dashboard/UserForm.tsx apps/portal/src/app/dashboard/utilizatori/page.tsx
+git add apps/portal/src/components/dashboard/UserForm.tsx apps/portal/src/app/dashboard/users/page.tsx
 git commit -m "feat(portal): add user create/edit form drawer"
 ```
 
@@ -379,6 +393,7 @@ git commit -m "feat(portal): add user create/edit form drawer"
 ## Task 3: Update tRPC Router with Real DB Implementation
 
 **Files:**
+
 - Modify: `apps/portal/src/server/routers/user.ts`
 
 - [ ] **Step 1: Update user router with real DB implementation**
@@ -549,11 +564,7 @@ export const userRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, ...updates } = input;
-      const [result] = await ctx.db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, id))
-        .returning();
+      const [result] = await ctx.db.update(users).set(updates).where(eq(users.id, id)).returning();
 
       return result;
     }),
@@ -607,6 +618,7 @@ git commit -m "feat(portal): implement real DB operations in user router"
 ## Task 4: Wire Up School Admin Permissions
 
 **Files:**
+
 - Modify: `apps/portal/src/components/dashboard/UserForm.tsx`
 
 - [ ] **Step 1: Update UserForm to support admin permissions for editing**
@@ -617,6 +629,7 @@ git commit -m "feat(portal): implement real DB operations in user router"
 ```
 
 For admin users, they should be able to:
+
 - Edit name, email, active status
 - NOT change role, school, or permissions (those require superadmin)
 

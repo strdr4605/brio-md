@@ -10,6 +10,7 @@ Mobile-first responsive layout for the portal dashboard app with adaptive naviga
 ## Layout Structure
 
 ### Mobile (<768px)
+
 - Fixed bottom navigation bar
 - Icons only (no text labels on mobile)
 - 4 items: Dashboard, Utilizatori, Studenţi, Setări
@@ -17,6 +18,7 @@ Mobile-first responsive layout for the portal dashboard app with adaptive naviga
 - Content area fills remaining viewport height
 
 ### Tablet+ (≥768px)
+
 - Fixed left sidebar (200px width)
 - Icon + label for each nav item
 - Sidebar pushes content (no overlay)
@@ -24,12 +26,12 @@ Mobile-first responsive layout for the portal dashboard app with adaptive naviga
 
 ## Navigation Items
 
-| Icon | Label | Route (planned) |
-|------|-------|-----------------|
-| 🏠 | Dashboard | /dashboard |
-| 👥 | Utilizatori | /dashboard/utilizatori |
-| 👨‍🎓 | Studenţi | /dashboard/studenti |
-| ⚙️ | Setări | /dashboard/setari |
+| Icon | Label       | Route (planned)        |
+| ---- | ----------- | ---------------------- |
+| 🏠   | Dashboard   | /dashboard             |
+| 👥   | Utilizatori | /dashboard/utilizatori |
+| 👨‍🎓   | Studenţi    | /dashboard/studenti    |
+| ⚙️   | Setări      | /dashboard/setari      |
 
 ## Technical Approach
 
@@ -55,9 +57,9 @@ app/
 
 ## Responsive Behavior
 
-| Breakpoint | Nav Type | Sidebar |
-|-----------|----------|---------|
-| <768px (mobile) | Fixed bottom bar, icons only | None |
+| Breakpoint       | Nav Type                       | Sidebar     |
+| ---------------- | ------------------------------ | ----------- |
+| <768px (mobile)  | Fixed bottom bar, icons only   | None        |
 | ≥768px (tablet+) | Left sidebar with icons+labels | 200px fixed |
 
 ## Next Steps

@@ -67,7 +67,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        const [dbUser] = await db.select().from(users).where(eq(users.id, parseInt(token.id as string))).limit(1);
+        const [dbUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, parseInt(token.id as string)))
+          .limit(1);
         if (dbUser && (dbUser as any).lastChangedAt && token.lastChangedAt) {
           const tokenIssuedAt = new Date(token.iat! * 1000);
           if ((dbUser as any).lastChangedAt > tokenIssuedAt) {
