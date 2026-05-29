@@ -11,7 +11,9 @@ export default function UsersPage() {
   const isSuperAdmin = permissions.includes("super");
   const isAdmin = permissions.includes("admin");
 
-  const { data: users = [], isLoading } = trpc.user.list.useQuery({});
+  const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+
+  const { data: users = [], isLoading } = trpc.user.list.useQuery({ active: activeFilter });
   const { data: schools = [] } = trpc.user.listSchools.useQuery();
 
   const [showForm, setShowForm] = useState(false);
@@ -38,66 +40,95 @@ export default function UsersPage() {
           + Adaugă Utilizator
         </button>
       </div>
+      <div className="flex gap-2 mb-4">
+        <select
+          value={activeFilter === undefined ? "all" : activeFilter ? "active" : "inactive"}
+          onChange={(e) => {
+            const val = e.target.value;
+            setActiveFilter(val === "all" ? undefined : val === "active");
+          }}
+          className="px-3 py-2 border rounded-lg"
+        >
+          <option value="all">Toți</option>
+          <option value="active">Activ</option>
+          <option value="inactive">Inactiv</option>
+        </select>
+      </div>
 
       {isLoading ? (
         <p>Se încarcă...</p>
       ) : users.length === 0 ? (
         <p className="text-neutral-600">Nu există utilizatori.</p>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-neutral-100">
-              <tr>
-                <th className="px-4 py-3 text-left">Nume</th>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Rol</th>
-                {isSuperAdmin && <th className="px-4 py-3 text-left">Şcoală</th>}
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => {
-                const school = schools.find((s: any) => s.id === user.schoolId);
-                return (
-                  <tr key={user.id} className="border-t">
-                    <td className="px-4 py-3">{user.name}</td>
-                    <td className="px-4 py-3">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded text-sm ${
-                          user.role === "superadmin"
-                            ? "bg-purple-100 text-purple-700"
-                            : user.role === "admin"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
-                    <td className="px-4 py-3">
-                      {user.active ? (
-                        <span className="text-green-600">Activ</span>
-                      ) : (
-                        <span className="text-red-600">Inactiv</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Editează
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="md:hidden bg-white rounded-lg shadow divide-y">
+            {users.map((user) => (
+              <div key={user.id} className="p-3 flex justify-between items-center">
+                <span className="text-sm truncate">{user.email}</span>
+                <button
+                  onClick={() => handleEdit(user)}
+                  className="text-blue-600 p-2 border border-blue-200 rounded hover:bg-blue-50"
+                >
+                  ✏️
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:block bg-white rounded-lg shadow">
+            <table className="w-full">
+              <thead className="bg-neutral-100">
+                <tr>
+                  <th className="px-4 py-3 text-left">Nume</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Rol</th>
+                  {isSuperAdmin && <th className="px-4 py-3 text-left">Şcoală</th>}
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const school = schools.find((s: any) => s.id === user.schoolId);
+                  return (
+                    <tr key={user.id} className="border-t">
+                      <td className="px-4 py-3">{user.name}</td>
+                      <td className="px-4 py-3">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 rounded text-sm ${
+                            user.role === "superadmin"
+                              ? "bg-purple-100 text-purple-700"
+                              : user.role === "admin"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      </td>
+                      {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
+                      <td className="px-4 py-3">
+                        {user.active ? (
+                          <span className="text-green-600">Activ</span>
+                        ) : (
+                          <span className="text-red-600">Inactiv</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Editează
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {showForm && (
