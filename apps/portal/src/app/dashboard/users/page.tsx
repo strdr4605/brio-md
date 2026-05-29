@@ -11,7 +11,9 @@ export default function UsersPage() {
   const isSuperAdmin = permissions.includes("super");
   const isAdmin = permissions.includes("admin");
 
-  const { data: users = [], isLoading } = trpc.user.list.useQuery({});
+  const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+
+  const { data: users = [], isLoading } = trpc.user.list.useQuery({ active: activeFilter });
   const { data: schools = [] } = trpc.user.listSchools.useQuery();
 
   const [showForm, setShowForm] = useState(false);
@@ -31,12 +33,26 @@ export default function UsersPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Utilizatori</h1>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          + Adaugă Utilizator
-        </button>
+        <div className="flex gap-2">
+          <select
+            value={activeFilter === undefined ? "all" : activeFilter ? "active" : "inactive"}
+            onChange={(e) => {
+              const val = e.target.value;
+              setActiveFilter(val === "all" ? undefined : val === "active");
+            }}
+            className="px-3 py-2 border rounded-lg"
+          >
+            <option value="all">Toți</option>
+            <option value="active">Activ</option>
+            <option value="inactive">Inactiv</option>
+          </select>
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            + Adaugă Utilizator
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

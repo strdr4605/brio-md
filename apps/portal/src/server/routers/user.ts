@@ -22,6 +22,7 @@ export const userRouter = router({
           search: z.string().optional(),
           schoolId: z.number().optional(),
           role: z.string().optional(),
+          active: z.boolean().optional(),
           limit: z.number().min(1).max(100).default(50),
           offset: z.number().min(0).default(0),
         })
@@ -69,6 +70,9 @@ export const userRouter = router({
       }
       if (input?.role) {
         conditions.push(eq(users.role, input.role));
+      }
+      if (input?.active !== undefined) {
+        conditions.push(eq(users.active, input.active));
       }
 
       const result = await db
