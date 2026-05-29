@@ -67,7 +67,7 @@ export default function UsersPage() {
                 <span className="text-sm truncate">{user.email}</span>
                 <button
                   onClick={() => handleEdit(user)}
-                  className="text-blue-600 p-2"
+                  className="text-blue-600 p-2 border border-blue-200 rounded hover:bg-blue-50"
                 >
                   ✏️
                 </button>
