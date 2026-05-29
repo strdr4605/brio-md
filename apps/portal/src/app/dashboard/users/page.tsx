@@ -64,11 +64,11 @@ export default function UsersPage() {
           <table className="w-full min-w-[600px]">
             <thead className="bg-neutral-100">
               <tr>
-                <th className="px-4 py-3 text-left">Nume</th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">Nume</th>
                 <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Rol</th>
-                {isSuperAdmin && <th className="px-4 py-3 text-left">Şcoală</th>}
-                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">Rol</th>
+                {isSuperAdmin && <th className="px-4 py-3 text-left hidden md:table-cell">Şcoală</th>}
+                <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
                 <th className="px-4 py-3 text-left"></th>
               </tr>
             </thead>
@@ -77,9 +77,9 @@ export default function UsersPage() {
                 const school = schools.find((s: any) => s.id === user.schoolId);
                 return (
                   <tr key={user.id} className="border-t">
-                    <td className="px-4 py-3">{user.name}</td>
+                    <td className="px-4 py-3 hidden md:table-cell">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <span
                         className={`px-2 py-1 rounded text-sm ${
                           user.role === "superadmin"
@@ -92,8 +92,8 @@ export default function UsersPage() {
                         {user.role}
                       </span>
                     </td>
-                    {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
-                    <td className="px-4 py-3">
+                    {isSuperAdmin && <td className="px-4 py-3 hidden md:table-cell">{school?.name || "-"}</td>}
+                    <td className="px-4 py-3 hidden md:table-cell">
                       {user.active ? (
                         <span className="text-green-600">Activ</span>
                       ) : (
