@@ -60,8 +60,8 @@ export default function UsersPage() {
       ) : users.length === 0 ? (
         <p className="text-neutral-600">Nu există utilizatori.</p>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-neutral-100">
               <tr>
                 <th className="px-4 py-3 text-left">Nume</th>
