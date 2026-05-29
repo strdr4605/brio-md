@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { router, protectedProcedure, superProcedure } from "../trpc";
-import { eq, ilike } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { router, protectedProcedure, superProcedure, adminProcedure } from "../trpc";
+import { eq, ilike, and } from "drizzle-orm";
+import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
+import { hash } from "bcryptjs";
+import { db } from "@/lib/db";
 
 export const userRouter = router({
   // Get current user
@@ -69,8 +71,26 @@ export const userRouter = router({
         conditions.push(eq(users.role, input.role));
       }
 
-      // For now, return mock data since db is not connected
-      return [];
+      const result = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          role: users.role,
+          permissions: users.permissions,
+          courseIds: users.courseIds,
+          schoolId: users.schoolId,
+          phone: users.phone,
+          info: users.info,
+          active: users.active,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .limit(input?.limit ?? 50)
+        .offset(input?.offset ?? 0);
+
+      return result;
     }),
 
   // Get user by ID
@@ -94,8 +114,8 @@ export const userRouter = router({
     return null; // Mock
   }),
 
-  // Create user (SuperAdmin only)
-  create: superProcedure
+  // Create user (Admin or SuperAdmin)
+  create: adminProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -109,17 +129,30 @@ export const userRouter = router({
         info: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      // Mock implementation - will connect to DB later
-      return {
-        id: 1,
-        ...input,
-        active: true,
-      };
+    .mutation(async ({ ctx, input }) => {
+      const passwordHash = await hash(input.password, 12);
+      const schoolId = input.schoolId ?? ctx.user!.schoolId;
+      const [result] = await db
+        .insert(users)
+        .values({
+          email: input.email,
+          passwordHash,
+          name: input.name,
+          role: input.role,
+          permissions: input.permissions,
+          courseIds: input.courseIds || [],
+          schoolId,
+          phone: input.phone,
+          info: input.info,
+          active: true,
+        })
+        .returning();
+
+      return result;
     }),
 
-  // Update user (SuperAdmin only)
-  update: superProcedure
+  // Update user (Admin or SuperAdmin)
+  update: adminProcedure
     .input(
       z.object({
         id: z.number(),
@@ -130,17 +163,25 @@ export const userRouter = router({
         courseIds: z.array(z.number()).optional(),
         schoolId: z.number().nullable().optional(),
         active: z.boolean().optional(),
+        password: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { id, ...updates } = input;
-      return { id, ...updates };
+      const { id, password, ...updates } = input;
+      if (password) {
+        (updates as any).passwordHash = await hash(password, 12);
+        (updates as any).lastChangedAt = new Date();
+        await db.delete(sessions).where(eq(sessions.userId, id));
+      }
+      const [result] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+
+      return result;
     }),
 
   // List schools
   listSchools: protectedProcedure.query(async () => {
-    // Mock
-    return [{ id: 1, name: "Vibe Academy" }];
+    const result = await db.select().from(schools);
+    return result;
   }),
 
   // List courses
@@ -152,8 +193,10 @@ export const userRouter = router({
         })
         .optional(),
     )
-    .query(async () => {
-      // Mock
-      return [{ id: 1, name: "English" }];
+    .query(async ({ input }) => {
+      if (input?.schoolId) {
+        return db.select().from(courses).where(eq(courses.schoolId, input.schoolId));
+      }
+      return db.select().from(courses);
     }),
 });

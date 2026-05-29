@@ -34,6 +34,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        if (!user.active) {
+          return null;
+        }
+
         // Verify password
         const isValid = await bcrypt.compare(password, user.passwordHash);
 
@@ -61,11 +65,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.permissions = (user as any).permissions;
         token.courseIds = (user as any).courseIds;
         token.schoolId = (user as any).schoolId;
+        token.lastChangedAt = (user as any).lastChangedAt;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
+        const [dbUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, parseInt(token.id as string)))
+          .limit(1);
+        if (dbUser && (dbUser as any).lastChangedAt && token.lastChangedAt) {
+          const tokenIssuedAt = new Date(token.iat! * 1000);
+          if ((dbUser as any).lastChangedAt > tokenIssuedAt) {
+            return { ...session, user: { ...session.user, id: token.id, expired: true } as any };
+          }
+        }
         session.user.id = token.id as string;
         (session.user as any).role = token.role;
         (session.user as any).permissions = token.permissions;
