@@ -13,6 +13,9 @@ export function Nav({ userName, permissions }: { userName?: string; permissions?
     { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
     { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
     ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(permissions?.includes("open-front-door") || isSuperAdmin
+      ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
+      : []),
     { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
   ];
 
