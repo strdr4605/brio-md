@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, protectedProcedure, superProcedure, adminProcedure } from "../trpc";
+import { router, protectedProcedure, adminProcedure } from "../trpc";
 import { eq, ilike, and } from "drizzle-orm";
 import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
@@ -172,14 +172,15 @@ export const userRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, password, ...updates } = input;
+      const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = { ...updates };
       if (password) {
-        (updates as any).passwordHash = await hash(password, 12);
+        updateData.passwordHash = await hash(password, 12);
       }
       if (password || "permissions" in updates) {
-        (updates as any).lastChangedAt = new Date();
+        updateData.lastChangedAt = new Date();
         await db.delete(sessions).where(eq(sessions.userId, id));
       }
-      const [result] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+      const [result] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
 
       return result;
     }),

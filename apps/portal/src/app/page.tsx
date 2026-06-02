@@ -34,8 +34,8 @@ export default async function LoginPage({
           redirectTo: "/dashboard",
         },
       );
-    } catch (error: any) {
-      if (error?.digest?.includes("NEXT_REDIRECT")) {
+    } catch (error) {
+      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.includes("NEXT_REDIRECT")) {
         throw error;
       }
       redirect("/?error=Invalid+credentials");

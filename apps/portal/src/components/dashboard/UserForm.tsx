@@ -3,21 +3,32 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 
-interface User {
+type Role = "teacher" | "admin" | "superadmin";
+
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+  schoolId: number | null;
+  permissions: string[];
+  active: boolean;
+}
+
+export interface UserFormUser {
   id?: number;
   name?: string;
-  email?: string;
-  role?: string;
+  email?: string | null;
+  role?: string | null;
   schoolId?: number | null;
-  permissions?: string[];
-  active?: boolean;
+  permissions?: string[] | null;
+  active?: boolean | null;
 }
 
 interface Props {
-  user: User | null;
+  user: UserFormUser | null;
   schools: { id: number; name: string }[];
   isSuperAdmin: boolean;
-  isAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
 }
@@ -26,7 +37,6 @@ export function UserFormDrawer({
   user,
   schools,
   isSuperAdmin,
-  isAdmin,
   onClose,
   currentUserSchoolId,
 }: Props) {
@@ -51,11 +61,11 @@ export function UserFormDrawer({
     },
   });
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: user?.name || "",
     email: user?.email || "",
     password: "",
-    role: user?.role || ("teacher" as "teacher" | "admin" | "superadmin"),
+    role: (user?.role as Role) || "teacher",
     schoolId: user?.schoolId || currentUserSchoolId || null,
     permissions: user?.permissions || [],
     active: user?.active ?? true,
@@ -77,10 +87,15 @@ export function UserFormDrawer({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
-      const { password, ...rest } = formData;
-      updateMutation.mutate({ id: user.id!, ...rest, ...(password ? { password } : {}) } as any);
+      const { password, ...fields } = formData;
+      updateMutation.mutate({
+        id: user.id!,
+        ...fields,
+        ...(password ? { password } : {}),
+      });
     } else {
-      createMutation.mutate(formData as any);
+      const { active: _active, ...fields } = formData;
+      createMutation.mutate(fields);
     }
   };
 
@@ -151,7 +166,7 @@ export function UserFormDrawer({
                 <label className="block text-sm font-medium mb-1">Rol</label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
                   <option value="teacher">Profesor</option>

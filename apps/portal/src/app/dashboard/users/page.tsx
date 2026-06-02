@@ -1,15 +1,14 @@
 "use client";
 
-import { UserFormDrawer } from "@/components/dashboard/UserForm";
+import { UserFormDrawer, type UserFormUser } from "@/components/dashboard/UserForm";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
 export default function UsersPage() {
   const { data: session } = useSession();
-  const permissions = (session?.user as any)?.permissions || [];
+  const permissions = (session?.user?.permissions ?? []) as string[];
   const isSuperAdmin = permissions.includes("super");
-  const isAdmin = permissions.includes("admin");
 
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
 
@@ -17,9 +16,9 @@ export default function UsersPage() {
   const { data: schools = [] } = trpc.user.listSchools.useQuery();
 
   const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<typeof users[number] | null>(null);
 
-  const handleEdit = (user: any) => {
+  const handleEdit = (user: typeof users[number]) => {
     setEditingUser(user);
     setShowForm(true);
   };
@@ -88,7 +87,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => {
-                  const school = schools.find((s: any) => s.id === user.schoolId);
+                  const school = schools.find((s) => s.id === user.schoolId);
                   return (
                     <tr key={user.id} className="border-t">
                       <td className="px-4 py-3">{user.name}</td>
@@ -133,12 +132,11 @@ export default function UsersPage() {
 
       {showForm && (
         <UserFormDrawer
-          user={editingUser}
+          user={editingUser as UserFormUser}
           schools={schools}
           isSuperAdmin={isSuperAdmin}
-          isAdmin={isAdmin}
           onClose={() => setShowForm(false)}
-          currentUserSchoolId={(session?.user as any)?.schoolId}
+          currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
       )}
     </div>

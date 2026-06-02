@@ -35,10 +35,9 @@ export default async function LoginPage({
           redirectTo: "/courses",
         },
       );
-    } catch (error: any) {
-      // Check if it's a redirect (Auth.js throws on redirect)
-      if (error?.digest?.includes("NEXT_REDIRECT")) {
-        throw error; // Re-throw the redirect
+    } catch (error) {
+      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.includes("NEXT_REDIRECT")) {
+        throw error;
       }
       // Otherwise redirect to error page
       redirect("/?error=Invalid+credentials");
