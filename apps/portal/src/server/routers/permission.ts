@@ -18,10 +18,7 @@ export const permissionDefinitionRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const [result] = await db
-        .insert(permissionDefinitions)
-        .values(input)
-        .returning();
+      const [result] = await db.insert(permissionDefinitions).values(input).returning();
       return result;
     }),
 
@@ -43,10 +40,8 @@ export const permissionDefinitionRouter = router({
       return result;
     }),
 
-  delete: superProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      await db.delete(permissionDefinitions).where(eq(permissionDefinitions.id, input.id));
-      return { success: true };
-    }),
+  delete: superProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    await db.delete(permissionDefinitions).where(eq(permissionDefinitions.id, input.id));
+    return { success: true };
+  }),
 });

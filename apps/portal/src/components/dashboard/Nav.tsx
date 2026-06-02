@@ -4,13 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-export function Nav({
-  userName,
-  permissions,
-}: {
-  userName?: string;
-  permissions?: string[];
-}) {
+export function Nav({ userName, permissions }: { userName?: string; permissions?: string[] }) {
   const pathname = usePathname();
   const isSuperAdmin = permissions?.includes("super");
 
@@ -18,9 +12,7 @@ export function Nav({
     { href: "/dashboard", icon: "🏠", label: "Dashboard" },
     { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
     { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
-    ...(isSuperAdmin
-      ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }]
-      : []),
+    ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
     { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
   ];
 
@@ -41,9 +33,7 @@ export function Nav({
                 }`}
               >
                 <span className="text-xl">{item.icon}</span>
-                <span className={`text-xs ${isActive ? "font-bold" : ""}`}>
-                  {item.label}
-                </span>
+                <span className={`text-xs ${isActive ? "font-bold" : ""}`}>{item.label}</span>
               </Link>
             );
           })}
@@ -73,9 +63,7 @@ export function Nav({
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-neutral-600 hover:bg-neutral-100"
+                  isActive ? "bg-blue-50 text-blue-700" : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>

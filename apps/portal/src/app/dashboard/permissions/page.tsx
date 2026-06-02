@@ -10,10 +10,9 @@ export default function PermissionsPage() {
   const isSuperAdmin = permissions.includes("super");
 
   const utils = trpc.useUtils();
-  const { data: definitions = [], isLoading } =
-    trpc.permissionDefinition.list.useQuery(undefined, {
-      enabled: isSuperAdmin,
-    });
+  const { data: definitions = [], isLoading } = trpc.permissionDefinition.list.useQuery(undefined, {
+    enabled: isSuperAdmin,
+  });
 
   const createMutation = trpc.permissionDefinition.create.useMutation({
     onSuccess: () => {

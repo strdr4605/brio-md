@@ -40,10 +40,9 @@ export function UserFormDrawer({
     },
   });
 
-  const { data: permissionDefs = [] } =
-    trpc.permissionDefinition.list.useQuery(undefined, {
-      enabled: isSuperAdmin,
-    });
+  const { data: permissionDefs = [] } = trpc.permissionDefinition.list.useQuery(undefined, {
+    enabled: isSuperAdmin,
+  });
 
   const updateMutation = trpc.user.update.useMutation({
     onSuccess: () => {
