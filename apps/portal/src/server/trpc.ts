@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
 // Session user type
-interface SessionUser {
+type SessionUser = {
   id: string;
   email?: string | null;
   name?: string | null;
@@ -13,7 +13,7 @@ interface SessionUser {
 }
 
 // Context type
-interface Context {
+type Context = {
   user: SessionUser | null;
 }
 

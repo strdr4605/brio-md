@@ -8,8 +8,7 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const user = session.user as any;
-  const permissions = user.permissions || [];
+  const permissions = session.user.permissions || [];
 
   return (
     <div className="p-6">
@@ -19,19 +18,19 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className="text-neutral-500 text-sm">Nume</span>
-            <p className="font-medium">{user.name}</p>
+            <p className="font-medium">{session.user.name}</p>
           </div>
           <div>
             <span className="text-neutral-500 text-sm">Email</span>
-            <p className="font-medium">{user.email}</p>
+            <p className="font-medium">{session.user.email}</p>
           </div>
           <div>
             <span className="text-neutral-500 text-sm">Rol</span>
-            <p className="font-medium">{user.role}</p>
+            <p className="font-medium">{session.user.role}</p>
           </div>
           <div>
             <span className="text-neutral-500 text-sm">Şcoală</span>
-            <p className="font-medium">{user.schoolId || "N/A"}</p>
+            <p className="font-medium">{session.user.schoolId || "N/A"}</p>
           </div>
         </div>
         <div className="mt-4">

@@ -1,3 +1,5 @@
+/// <reference types="./next-auth.d.ts" />
+
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -27,7 +29,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        // Get user from DB
         const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
         if (!user || !user.passwordHash) {
@@ -38,7 +39,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Verify password
         const isValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isValid) {
@@ -53,6 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           permissions: user.permissions || [],
           courseIds: user.courseIds || [],
           schoolId: user.schoolId,
+          lastChangedAt: user.lastChangedAt,
         };
       },
     }),
@@ -60,33 +61,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.permissions = (user as any).permissions;
-        token.courseIds = (user as any).courseIds;
-        token.schoolId = (user as any).schoolId;
-        token.lastChangedAt = (user as any).lastChangedAt;
+        token.id = user.id as string;
+        token.role = user.role ?? null;
+        token.permissions = user.permissions ?? null;
+        token.courseIds = user.courseIds ?? null;
+        token.schoolId = user.schoolId ?? null;
+        token.lastChangedAt = user.lastChangedAt ?? null;
       }
       return token;
     },
-    async session({ session, token }) {
+async session({ session, token }) {
       if (session.user) {
         const [dbUser] = await db
           .select()
           .from(users)
           .where(eq(users.id, parseInt(token.id as string)))
           .limit(1);
-        if (dbUser && (dbUser as any).lastChangedAt && token.lastChangedAt) {
+        if (dbUser?.lastChangedAt && token.lastChangedAt) {
           const tokenIssuedAt = new Date(token.iat! * 1000);
-          if ((dbUser as any).lastChangedAt > tokenIssuedAt) {
-            return { ...session, user: { ...session.user, id: token.id, expired: true } as any };
+          if (dbUser.lastChangedAt > tokenIssuedAt) {
+            session.user.id = token.id as string;
+            session.user.expired = true;
+            return session;
           }
         }
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
-        (session.user as any).permissions = token.permissions;
-        (session.user as any).courseIds = token.courseIds;
-        (session.user as any).schoolId = token.schoolId;
+        session.user.role = token.role as typeof session.user.role;
+        session.user.permissions = token.permissions as typeof session.user.permissions;
+        session.user.courseIds = token.courseIds as typeof session.user.courseIds;
+        session.user.schoolId = token.schoolId as typeof session.user.schoolId;
       }
       return session;
     },

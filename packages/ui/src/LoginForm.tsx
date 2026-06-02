@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { LoadingButton } from "./LoadingButton";
 
-interface LoginFormProps {
+type LoginFormProps = {
   variant: "blue" | "green";
   error?: string | null;
   onSubmit: (formData: FormData) => Promise<void>;

@@ -10,8 +10,7 @@ export default async function CoursesPage() {
     redirect("/");
   }
 
-  const user = session.user as any;
-  const courseIds = user.courseIds || [];
+  const courseIds = session.user.courseIds || [];
 
   // Mock courses data - in production, this would come from the database
   const courses = [
@@ -36,7 +35,7 @@ export default async function CoursesPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Learning Portal</h1>
           <div className="flex items-center gap-4">
-            <span>{user.name}</span>
+            <span>{session.user.name}</span>
             <form action={handleSignOut}>
               <button type="submit" className="text-sm underline">
                 Sign Out
