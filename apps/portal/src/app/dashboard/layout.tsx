@@ -9,9 +9,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/");
   }
 
+  const userData = session.user as any;
+
   return (
     <div className="min-h-screen bg-neutral-50">
-      <Nav userName={(session.user as any).name} />
+      <Nav userName={userData.name} permissions={userData.permissions || []} />
 
       <main className="md:ml-[200px] pb-20 md:pb-0 pt-0">{children}</main>
     </div>

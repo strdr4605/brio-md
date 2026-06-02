@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { hash } from "bcryptjs";
-import { schools, users, courses } from "@brio-md/db";
+import { schools, users, courses, permissionDefinitions } from "@brio-md/db";
 
 const sql = postgres(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -27,6 +27,27 @@ async function seed() {
     })
     .returning();
   console.log("✅ Created course:", course.name);
+
+  // Create permission definitions
+  const [permSuper] = await db
+    .insert(permissionDefinitions)
+    .values({
+      key: "super",
+      label: "Super Administrator",
+      description: "Acces complet la sistem. Poate gestiona școli, utilizatori și permisiuni.",
+    })
+    .returning();
+  console.log("✅ Created permission:", permSuper.key);
+
+  const [permAdmin] = await db
+    .insert(permissionDefinitions)
+    .values({
+      key: "admin",
+      label: "Admin Școală",
+      description: "Gestionează utilizatorii și cursurile din școala sa.",
+    })
+    .returning();
+  console.log("✅ Created permission:", permAdmin.key);
 
   // Create SuperAdmin
   const superadminHash = await hash("admin123", 12);

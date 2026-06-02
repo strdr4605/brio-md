@@ -174,6 +174,8 @@ export const userRouter = router({
       const { id, password, ...updates } = input;
       if (password) {
         (updates as any).passwordHash = await hash(password, 12);
+      }
+      if (password || "permissions" in updates) {
         (updates as any).lastChangedAt = new Date();
         await db.delete(sessions).where(eq(sessions.userId, id));
       }
