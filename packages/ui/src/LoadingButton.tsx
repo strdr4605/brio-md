@@ -1,6 +1,6 @@
 "use client";
 
-interface LoadingButtonProps {
+type LoadingButtonProps = {
   children: React.ReactNode;
   variant: "blue" | "green";
   isPending?: boolean;

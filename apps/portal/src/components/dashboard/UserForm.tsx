@@ -5,7 +5,7 @@ import { useState } from "react";
 
 type Role = "teacher" | "admin" | "superadmin";
 
-interface FormData {
+type FormData = {
   name: string;
   email: string;
   password: string;
@@ -13,9 +13,9 @@ interface FormData {
   schoolId: number | null;
   permissions: string[];
   active: boolean;
-}
+};
 
-export interface UserFormUser {
+export type UserFormUser = {
   id?: number;
   name?: string;
   email?: string | null;
@@ -25,7 +25,7 @@ export interface UserFormUser {
   active?: boolean | null;
 }
 
-interface Props {
+type Props = {
   user: UserFormUser | null;
   schools: { id: number; name: string }[];
   isSuperAdmin: boolean;
