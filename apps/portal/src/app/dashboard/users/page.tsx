@@ -141,7 +141,7 @@ export default function UsersPage() {
         <UserFormDrawer
           user={editingUser as UserFormUser}
           schools={schools}
-          isSuperOrAdmin={isSuperOrAdmin}
+          isSuperAdmin={permissions.includes("super")}
           onClose={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />

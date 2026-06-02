@@ -28,7 +28,7 @@ export type UserFormUser = {
 type Props = {
   user: UserFormUser | null;
   schools: { id: number; name: string }[];
-  isSuperOrAdmin: boolean;
+  isSuperAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
 };
@@ -36,7 +36,7 @@ type Props = {
 export function UserFormDrawer({
   user,
   schools,
-  isSuperOrAdmin,
+  isSuperAdmin,
   onClose,
   currentUserSchoolId,
 }: Props) {
@@ -51,7 +51,7 @@ export function UserFormDrawer({
   });
 
   const { data: permissionDefs = [] } = trpc.permissionDefinition.list.useQuery(undefined, {
-    enabled: isSuperOrAdmin,
+    enabled: isSuperAdmin,
   });
 
   const updateMutation = trpc.user.update.useMutation({
@@ -71,8 +71,8 @@ export function UserFormDrawer({
     active: user?.active ?? true,
   });
 
-  const canSelectSchool = isSuperOrAdmin;
-  const canSelectRole = isSuperOrAdmin;
+  const canSelectSchool = isSuperAdmin;
+  const canSelectRole = isSuperAdmin;
 
   const togglePermission = (key: string) => {
     setFormData((prev) => {
@@ -196,7 +196,7 @@ export function UserFormDrawer({
               </div>
             )}
 
-            {isSuperOrAdmin && permissionDefs.length > 0 && (
+            {isSuperAdmin && permissionDefs.length > 0 && (
               <div>
                 <label className="block text-sm font-medium mb-2">Permisiuni</label>
                 <div className="space-y-2">
