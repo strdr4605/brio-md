@@ -10,6 +10,10 @@ services:
       AUTH_SECRET: +vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3002
+      TASMOTA_IP: ${TASMOTA_IP:-192.168.1.100}
+      TASMOTA_PORT: ${TASMOTA_PORT:-1883}
+      TASMOTA_USER: ${TASMOTA_USER:-admin}
+      TASMOTA_PASSWORD: ${TASMOTA_PASSWORD:-yourpassword}
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/ui/src:/app/packages/ui/src
