@@ -6,13 +6,20 @@ import { signOut } from "next-auth/react";
 
 export function Nav({ userName, permissions }: { userName?: string; permissions?: string[] }) {
   const pathname = usePathname();
-  const isSuperAdmin = permissions?.includes("super");
+  const isSuperOrAdmin = permissions?.includes("super") || permissions?.includes("admin");
 
   const navItems = [
     { href: "/dashboard", icon: "🏠", label: "Dashboard" },
-    { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
-    { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
-    ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(isSuperOrAdmin
+      ? [
+          { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
+          { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
+        ]
+      : []),
+    ...(isSuperOrAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(permissions?.includes("open-front-door") || isSuperOrAdmin
+      ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
+      : []),
     { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
   ];
 

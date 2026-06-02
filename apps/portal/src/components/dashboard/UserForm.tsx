@@ -23,7 +23,7 @@ export type UserFormUser = {
   schoolId?: number | null;
   permissions?: string[] | null;
   active?: boolean | null;
-}
+};
 
 type Props = {
   user: UserFormUser | null;
@@ -31,7 +31,7 @@ type Props = {
   isSuperAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
-}
+};
 
 export function UserFormDrawer({
   user,

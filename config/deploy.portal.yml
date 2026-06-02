@@ -15,9 +15,13 @@ env:
     - DATABASE_URL
     - AUTH_SECRET
     - POSTGRES_PASSWORD
+    - TASMOTA_IP
+    - TASMOTA_USER
+    - TASMOTA_PASSWORD
   clear:
     NODE_ENV: production
     AUTH_TRUST_HOST: "true"
+    TASMOTA_PORT: "1883"
 
 proxy:
   ssl: true
