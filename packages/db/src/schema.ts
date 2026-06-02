@@ -15,6 +15,15 @@ export const courses = pgTable("courses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Permission definitions table
+export const permissionDefinitions = pgTable("permission_definitions", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  label: varchar("label", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Users table (Auth.js compatible + PBAC)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -84,3 +93,4 @@ export type School = typeof schools.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Student = typeof students.$inferSelect;
+export type PermissionDefinition = typeof permissionDefinitions.$inferSelect;
