@@ -4,22 +4,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const navItems = [
-  { href: "/dashboard", icon: "🏠", label: "Dashboard" },
-  { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
-  { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
-  { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
-];
-
-export function Nav({ userName }: { userName?: string }) {
+export function Nav({
+  userName,
+  permissions,
+}: {
+  userName?: string;
+  permissions?: string[];
+}) {
   const pathname = usePathname();
+  const isSuperAdmin = permissions?.includes("super");
+
+  const navItems = [
+    { href: "/dashboard", icon: "🏠", label: "Dashboard" },
+    { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
+    { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
+    ...(isSuperAdmin
+      ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }]
+      : []),
+    { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
+  ];
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 md:hidden z-50">
         <div className="flex justify-around py-3 px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
@@ -29,7 +41,9 @@ export function Nav({ userName }: { userName?: string }) {
                 }`}
               >
                 <span className="text-xl">{item.icon}</span>
-                <span className={`text-xs ${isActive ? "font-bold" : ""}`}>{item.label}</span>
+                <span className={`text-xs ${isActive ? "font-bold" : ""}`}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -51,13 +65,17 @@ export function Nav({ userName }: { userName?: string }) {
         </div>
         <nav className="flex-1 p-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 ${
-                  isActive ? "bg-blue-50 text-blue-700" : "text-neutral-600 hover:bg-neutral-100"
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>
