@@ -10,6 +10,13 @@ export default function UsersPage() {
   const permissions = (session?.user?.permissions ?? []) as string[];
   const isSuperOrAdmin = permissions.includes("super") || permissions.includes("admin");
 
+  const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+  const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<typeof users[number] | null>(null);
+
+  const { data: users = [], isLoading } = trpc.user.list.useQuery({ active: activeFilter });
+  const { data: schools = [] } = trpc.user.listSchools.useQuery();
+
   if (!isSuperOrAdmin) {
     return (
       <div className="p-6">
@@ -17,14 +24,6 @@ export default function UsersPage() {
       </div>
     );
   }
-
-  const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
-
-  const { data: users = [], isLoading } = trpc.user.list.useQuery({ active: activeFilter });
-  const { data: schools = [] } = trpc.user.listSchools.useQuery();
-
-  const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<typeof users[number] | null>(null);
 
   const handleEdit = (user: typeof users[number]) => {
     setEditingUser(user);
