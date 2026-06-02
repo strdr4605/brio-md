@@ -40,6 +40,11 @@ export function UserFormDrawer({
     },
   });
 
+  const { data: permissionDefs = [] } =
+    trpc.permissionDefinition.list.useQuery(undefined, {
+      enabled: isSuperAdmin,
+    });
+
   const updateMutation = trpc.user.update.useMutation({
     onSuccess: () => {
       utils.user.list.invalidate();
@@ -59,6 +64,16 @@ export function UserFormDrawer({
 
   const canSelectSchool = isSuperAdmin;
   const canSelectRole = isSuperAdmin;
+
+  const togglePermission = (key: string) => {
+    setFormData((prev) => {
+      const current = prev.permissions;
+      if (current.includes(key)) {
+        return { ...prev, permissions: current.filter((p) => p !== key) };
+      }
+      return { ...prev, permissions: [...current, key] };
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +179,33 @@ export function UserFormDrawer({
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {isSuperAdmin && permissionDefs.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Permisiuni</label>
+                <div className="space-y-2">
+                  {permissionDefs.map((def) => (
+                    <label
+                      key={def.key}
+                      className="flex items-start gap-3 min-h-[44px] py-1 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.includes(def.key)}
+                        onChange={() => togglePermission(def.key)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="text-sm font-medium">{def.label}</p>
+                        {def.description && (
+                          <p className="text-xs text-neutral-500">{def.description}</p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
 
