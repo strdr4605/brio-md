@@ -3,9 +3,17 @@
 import { useSession } from "next-auth/react";
 
 export default function StudentiPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
   const isSuperOrAdmin = permissions.includes("super") || permissions.includes("admin");
+
+  if (status === "loading") {
+    return (
+      <div className="p-6">
+        <p className="text-neutral-600">Se încarcă...</p>
+      </div>
+    );
+  }
 
   if (!isSuperOrAdmin) {
     return (
