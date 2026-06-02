@@ -13,7 +13,7 @@
     "build:learn": "cd apps/learn && npm run build",
     "studio": "cd packages/db && npx drizzle-kit studio",
     "deploy": "kamal deploy",
-    "lint": "oxlint .",
+    "lint": "oxlint -c oxlintrc.json .",
     "format": "prettier --write . --list-different"
   },
   "devDependencies": {
