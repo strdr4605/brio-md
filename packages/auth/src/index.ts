@@ -62,11 +62,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string;
-        token.role = user.role ?? null;
-        token.permissions = user.permissions ?? null;
-        token.courseIds = user.courseIds ?? null;
-        token.schoolId = user.schoolId ?? null;
-        token.lastChangedAt = user.lastChangedAt ?? null;
+        token.role = (user as { role?: string | null }).role ?? null;
+        token.permissions = (user as { permissions?: string[] | null }).permissions ?? null;
+        token.courseIds = (user as { courseIds?: number[] | null }).courseIds ?? null;
+        token.schoolId = (user as { schoolId?: number | null }).schoolId ?? null;
+        token.lastChangedAt = (user as { lastChangedAt?: Date | null }).lastChangedAt ?? null;
       }
       return token;
     },
