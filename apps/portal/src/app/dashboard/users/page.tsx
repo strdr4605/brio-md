@@ -8,7 +8,15 @@ import { useState } from "react";
 export default function UsersPage() {
   const { data: session } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
-  const isSuperAdmin = permissions.includes("super");
+  const isSuperOrAdmin = permissions.includes("super") || permissions.includes("admin");
+
+  if (!isSuperOrAdmin) {
+    return (
+      <div className="p-6">
+        <p className="text-neutral-600">Nu ai permisiunea să accesezi această pagină.</p>
+      </div>
+    );
+  }
 
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
 
@@ -80,7 +88,7 @@ export default function UsersPage() {
                   <th className="px-4 py-3 text-left">Nume</th>
                   <th className="px-4 py-3 text-left">Email</th>
                   <th className="px-4 py-3 text-left">Rol</th>
-                  {isSuperAdmin && <th className="px-4 py-3 text-left">Şcoală</th>}
+                  {isSuperOrAdmin && <th className="px-4 py-3 text-left">Şcoală</th>}
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-left"></th>
                 </tr>
@@ -105,7 +113,7 @@ export default function UsersPage() {
                           {user.role}
                         </span>
                       </td>
-                      {isSuperAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
+                      {isSuperOrAdmin && <td className="px-4 py-3">{school?.name || "-"}</td>}
                       <td className="px-4 py-3">
                         {user.active ? (
                           <span className="text-green-600">Activ</span>
@@ -134,7 +142,7 @@ export default function UsersPage() {
         <UserFormDrawer
           user={editingUser as UserFormUser}
           schools={schools}
-          isSuperAdmin={isSuperAdmin}
+          isSuperOrAdmin={isSuperOrAdmin}
           onClose={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
