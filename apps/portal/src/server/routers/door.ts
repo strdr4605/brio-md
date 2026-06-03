@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 const doorPermissionProcedure = protectedProcedure.use(({ ctx, next }) => {
   const hasPermission =
     ctx.user.permissions.includes("open-front-door") || ctx.user.permissions.includes("super");
+  console.log(`[door] permission check for user ${ctx.user.id}: ${JSON.stringify(ctx.user.permissions)}, hasPermission: ${hasPermission}`);
   if (!hasPermission) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Lipsă permisiunea de a deschide ușa" });
   }
@@ -14,8 +15,9 @@ const doorPermissionProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const doorRouter = router({
   toggle: doorPermissionProcedure
     .input(z.object({ action: z.enum(["open", "close"]) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { action } = input;
+      console.log(`[door] toggle request: ${action} by user ${ctx.user.id}`);
 
       const tasmotaIP = process.env.TASMOTA_IP;
       const tasmotaPort = process.env.TASMOTA_PORT || "1883";
@@ -32,8 +34,12 @@ export const doorRouter = router({
       const cmd = action === "open" ? 3 : 2;
       const url = `http://${tasmotaIP}:${tasmotaPort}/cm?user=${tasmotaUser}&password=${tasmotaPassword}&cmnd=Power${cmd}%20On`;
 
+      console.log(`[door] ${action} request to ${url}`);
+
       try {
         const response = await fetch(url, { method: "GET" });
+
+        console.log(`[door] response status: ${response.status}`);
 
         if (!response.ok) {
           throw new TRPCError({
@@ -44,6 +50,7 @@ export const doorRouter = router({
 
         return { success: true, action };
       } catch (error) {
+        console.error(`[door] error:`, error);
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
