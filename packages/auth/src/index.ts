@@ -14,6 +14,17 @@ const sql = postgres(
 );
 const db = drizzle(sql, { schema: { users } });
 
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  role?: string | null;
+  permissions?: string[] | null;
+  courseIds?: number[] | null;
+  schoolId?: number | null;
+  lastChangedAt?: Date | null;
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -54,19 +65,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           courseIds: user.courseIds || [],
           schoolId: user.schoolId,
           lastChangedAt: user.lastChangedAt,
-        };
+        } as AuthUser;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = (user as { role?: string | null }).role ?? null;
-        token.permissions = (user as { permissions?: string[] | null }).permissions ?? null;
-        token.courseIds = (user as { courseIds?: number[] | null }).courseIds ?? null;
-        token.schoolId = (user as { schoolId?: number | null }).schoolId ?? null;
-        token.lastChangedAt = (user as { lastChangedAt?: Date | null }).lastChangedAt ?? null;
+      if (user && "role" in user) {
+        const u = user as AuthUser;
+        token.id = u.id as string;
+        token.role = u.role ?? null;
+        token.permissions = u.permissions ?? null;
+        token.courseIds = u.courseIds ?? null;
+        token.schoolId = u.schoolId ?? null;
+        token.lastChangedAt = u.lastChangedAt ?? null;
       }
       return token;
     },
