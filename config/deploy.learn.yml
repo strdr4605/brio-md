@@ -18,6 +18,7 @@ env:
   clear:
     NODE_ENV: production
     AUTH_TRUST_HOST: "true"
+    AUTH_URL: "https://learn.brio.md"
 
 proxy:
   ssl: true
