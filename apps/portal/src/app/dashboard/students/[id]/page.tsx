@@ -1,18 +1,23 @@
 "use client";
 
 import { use, useState } from "react";
+import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 
 export default function StudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const studentId = Number(id);
+  const { data: session, status } = useSession();
+  const permissions = (session?.user?.permissions ?? []) as string[];
+  const isAdmin = permissions.includes("super") || permissions.includes("admin");
   const [tab, setTab] = useState<"enrollments" | "attendance">("enrollments");
 
   const { data, isLoading } = trpc.student.getWithHistory.useQuery({ id: studentId });
-  const { data: groups = [] } = trpc.group.list.useQuery();
-  const { data: courses = [] } = trpc.course.list.useQuery();
+  const { data: groups = [] } = trpc.group.list.useQuery(undefined, { enabled: isAdmin });
+  const { data: courses = [] } = trpc.course.list.useQuery(undefined, { enabled: isAdmin });
 
-  if (isLoading) return <div className="p-6">Se încarcă...</div>;
+  if (status === "loading" || isLoading) return <div className="p-6">Se încarcă...</div>;
+  if (!isAdmin) return <div className="p-6">Nu ai permisiunea.</div>;
   if (!data) return <div className="p-6">Elevul nu există.</div>;
 
   const { student, enrollments, attendances } = data;

@@ -29,7 +29,7 @@ export const studentRouter = router({
       const enr = await db
         .select()
         .from(enrollments)
-        .where(eq(enrollments.studentId, input.id))
+        .where(and(eq(enrollments.studentId, input.id), eq(enrollments.schoolId, ctx.user!.schoolId!)))
         .orderBy(desc(enrollments.startDate));
 
       const att = await db
@@ -42,7 +42,7 @@ export const studentRouter = router({
         })
         .from(attendances)
         .innerJoin(groupSessions, eq(attendances.groupSessionId, groupSessions.id))
-        .where(eq(attendances.studentId, input.id))
+        .where(and(eq(attendances.studentId, input.id), eq(groupSessions.schoolId, ctx.user!.schoolId!)))
         .orderBy(desc(groupSessions.date))
         .limit(90);
 
