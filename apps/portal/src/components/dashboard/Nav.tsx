@@ -14,11 +14,18 @@ export function Nav({ userName, permissions }: { userName?: string; permissions?
       ? [
           { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
           { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
+          { href: "/dashboard/courses", icon: "📚", label: "Cursuri" },
+          { href: "/dashboard/groups", icon: "🏫", label: "Grupe" },
         ]
       : []),
-    ...(isSuperOrAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(isSuperOrAdmin
+      ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }]
+      : []),
     ...(permissions?.includes("open-front-door") || isSuperOrAdmin
       ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
+      : []),
+    ...(permissions && !isSuperOrAdmin
+      ? [{ href: "/dashboard/teacher", icon: "✏️", label: "Lecție nouă" }]
       : []),
     { href: "/dashboard/settings", icon: "⚙️", label: "Setări" },
   ];
