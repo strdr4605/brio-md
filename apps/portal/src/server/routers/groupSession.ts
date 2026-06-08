@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { router, protectedProcedure, adminProcedure } from "../trpc";
 import { db } from "@/lib/db";
-import { groupSessions, attendances } from "@/db/schema";
+import { groupSessions, attendances, groups } from "@/db/schema";
 
 export const groupSessionRouter = router({
   listByGroup: protectedProcedure
@@ -58,12 +58,27 @@ export const groupSessionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Teacher ownership check: must be group's teacher OR have course in courseIds
+      const u = ctx.user!;
+      const isAdmin = u.permissions?.includes("admin") || u.permissions?.includes("super");
+      if (!isAdmin) {
+        const [g] = await db
+          .select({ teacherId: groups.teacherId, courseId: groups.courseId })
+          .from(groups)
+          .where(and(eq(groups.id, input.groupId), eq(groups.schoolId, u.schoolId!)))
+          .limit(1);
+        if (!g) throw new TRPCError({ code: "NOT_FOUND" });
+        const ownsGroup =
+          g.teacherId === parseInt(u.id) ||
+          (u.courseIds ?? []).includes(g.courseId);
+        if (!ownsGroup) throw new TRPCError({ code: "FORBIDDEN" });
+      }
       try {
         const [row] = await db
           .insert(groupSessions)
           .values({
             groupId: input.groupId,
-            schoolId: ctx.user!.schoolId!,
+            schoolId: u.schoolId!,
             date: input.date,
             teacherId: input.teacherId,
             notes: input.notes,

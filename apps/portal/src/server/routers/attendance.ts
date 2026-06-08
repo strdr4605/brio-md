@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, lte, or, sql } from "drizzle-orm";
 import { router, protectedProcedure } from "../trpc";
 import { db } from "@/lib/db";
 import { attendances, enrollments, groupSessions } from "@/db/schema";
 
-async function resolveEnrollment(studentId: number, groupId: number): Promise<number | null> {
+async function resolveEnrollment(
+  studentId: number,
+  groupId: number,
+  sessionDate: string,
+): Promise<number | null> {
   const [row] = await db
     .select({ id: enrollments.id })
     .from(enrollments)
@@ -14,6 +18,8 @@ async function resolveEnrollment(studentId: number, groupId: number): Promise<nu
         eq(enrollments.studentId, studentId),
         eq(enrollments.groupId, groupId),
         eq(enrollments.status, "active"),
+        lte(enrollments.startDate, sessionDate),
+        or(isNull(enrollments.endDate), sql`${enrollments.endDate} >= ${sessionDate}`),
       ),
     )
     .orderBy(desc(enrollments.startDate))
@@ -25,7 +31,14 @@ async function resolveEnrollment(studentId: number, groupId: number): Promise<nu
 export const attendanceRouter = router({
   listBySession: protectedProcedure
     .input(z.object({ groupSessionId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const [session] = await db
+        .select({ schoolId: groupSessions.schoolId })
+        .from(groupSessions)
+        .where(eq(groupSessions.id, input.groupSessionId))
+        .limit(1);
+      if (!session) return [];
+      if (session.schoolId !== ctx.user!.schoolId) return [];
       return db
         .select()
         .from(attendances)
@@ -45,7 +58,7 @@ export const attendanceRouter = router({
         ),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const [session] = await db
         .select()
         .from(groupSessions)
@@ -54,12 +67,19 @@ export const attendanceRouter = router({
       if (!session) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Lecția nu există" });
       }
+      if (session.schoolId !== ctx.user!.schoolId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
 
       const saved: number[] = [];
       const rejected: Array<{ studentId: number; reason: string }> = [];
 
       for (const row of input.rows) {
-        const enrollmentId = await resolveEnrollment(row.studentId, session.groupId);
+        const enrollmentId = await resolveEnrollment(
+          row.studentId,
+          session.groupId,
+          session.date,
+        );
         if (!enrollmentId) {
           rejected.push({ studentId: row.studentId, reason: "no_active_enrollment" });
           continue;
@@ -83,3 +103,4 @@ export const attendanceRouter = router({
       return { saved: saved.length, rejected };
     }),
 });
+

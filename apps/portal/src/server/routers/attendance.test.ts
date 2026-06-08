@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockState: {
-  sessions: Array<{ id: number; groupId: number; date: string }>;
+  sessions: Array<{ id: number; groupId: number; date: string; schoolId: number }>;
   enrollments: Array<{
     id: number;
     studentId: number;
@@ -19,7 +19,7 @@ const mockState: {
     notes: string | null;
   }>;
 } = {
-  sessions: [{ id: 10, groupId: 1, date: "2026-06-08" }],
+  sessions: [{ id: 10, groupId: 1, date: "2026-06-08", schoolId: 1 }],
   enrollments: [
     {
       id: 100,

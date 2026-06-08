@@ -172,7 +172,9 @@ export const userRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, password, ...updates } = input;
-      const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = { ...updates };
+      const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = {
+        ...updates,
+      };
       if (password) {
         updateData.passwordHash = await hash(password, 12);
       }
