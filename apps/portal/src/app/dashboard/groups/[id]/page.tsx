@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { GroupFormDrawer } from "@/components/dashboard/GroupForm";
 import { EnrollmentFormDrawer } from "@/components/dashboard/EnrollmentForm";
+import { SessionFormDrawer } from "@/components/dashboard/SessionForm";
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -15,6 +16,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [showEnrollForm, setShowEnrollForm] = useState(false);
+  const [showSessionForm, setShowSessionForm] = useState(false);
 
   const { data: group } = trpc.group.get.useQuery({ id: groupId });
   const { data: course } = trpc.course.get.useQuery(
@@ -115,6 +117,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       <div>
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-semibold">Lecții</h2>
+          <button
+            onClick={() => setShowSessionForm(true)}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm"
+          >
+            + Lecție nouă
+          </button>
         </div>
         {sessions.length === 0 ? (
           <p className="text-neutral-600">Nicio lecție.</p>
@@ -152,6 +160,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         <EnrollmentFormDrawer
           groupId={groupId}
           onClose={() => setShowEnrollForm(false)}
+        />
+      )}
+      {showSessionForm && (
+        <SessionFormDrawer
+          groupId={groupId}
+          onClose={() => setShowSessionForm(false)}
         />
       )}
     </div>
