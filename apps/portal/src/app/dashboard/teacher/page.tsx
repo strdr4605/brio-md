@@ -51,7 +51,9 @@ export default function TeacherLanding() {
               {courses
                 .filter((c) => myGroups.some((g) => g.courseId === c.id))
                 .map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
             </select>
           </div>
@@ -65,7 +67,9 @@ export default function TeacherLanding() {
             >
               <option value="">Alege grupă</option>
               {filteredGroups.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
               ))}
             </select>
           </div>

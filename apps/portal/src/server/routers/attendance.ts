@@ -75,11 +75,7 @@ export const attendanceRouter = router({
       const rejected: Array<{ studentId: number; reason: string }> = [];
 
       for (const row of input.rows) {
-        const enrollmentId = await resolveEnrollment(
-          row.studentId,
-          session.groupId,
-          session.date,
-        );
+        const enrollmentId = await resolveEnrollment(row.studentId, session.groupId, session.date);
         if (!enrollmentId) {
           rejected.push({ studentId: row.studentId, reason: "no_active_enrollment" });
           continue;
@@ -103,4 +99,3 @@ export const attendanceRouter = router({
       return { saved: saved.length, rejected };
     }),
 });
-

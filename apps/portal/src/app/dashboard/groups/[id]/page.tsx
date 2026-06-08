@@ -43,11 +43,19 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
             <h1 className="text-2xl font-bold">{group.name}</h1>
             <p className="text-neutral-600">{course?.name}</p>
             <p className="text-sm mt-2">
-              Status: {group.active ? <span className="text-green-600">Activă</span> : <span className="text-red-600">Inactivă</span>}
+              Status:{" "}
+              {group.active ? (
+                <span className="text-green-600">Activă</span>
+              ) : (
+                <span className="text-red-600">Inactivă</span>
+              )}
             </p>
           </div>
           <div className="flex gap-2">
-            <a href={`/dashboard/groups/${groupId}/calendar`} className="px-3 py-2 border rounded-lg text-sm">
+            <a
+              href={`/dashboard/groups/${groupId}/calendar`}
+              className="px-3 py-2 border rounded-lg text-sm"
+            >
               Calendar
             </a>
             <button
@@ -98,7 +106,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                       <td className="px-4 py-3">
                         <button
                           onClick={() => {
-                            if (confirm("Ștergi înscrierea?")) removeEnrollment.mutate({ id: e.id });
+                            if (confirm("Ștergi înscrierea?"))
+                              removeEnrollment.mutate({ id: e.id });
                           }}
                           className="text-red-600 hover:underline text-sm"
                         >
@@ -157,16 +166,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
       {showGroupForm && <GroupFormDrawer group={group} onClose={() => setShowGroupForm(false)} />}
       {showEnrollForm && (
-        <EnrollmentFormDrawer
-          groupId={groupId}
-          onClose={() => setShowEnrollForm(false)}
-        />
+        <EnrollmentFormDrawer groupId={groupId} onClose={() => setShowEnrollForm(false)} />
       )}
       {showSessionForm && (
-        <SessionFormDrawer
-          groupId={groupId}
-          onClose={() => setShowSessionForm(false)}
-        />
+        <SessionFormDrawer groupId={groupId} onClose={() => setShowSessionForm(false)} />
       )}
     </div>
   );

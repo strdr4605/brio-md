@@ -25,9 +25,7 @@ export function GroupFormDrawer({ group, defaultCourseId, onClose, onSaved }: Pr
   const { data: courses = [] } = trpc.course.list.useQuery({ active: true });
   const { data: teachers = [] } = trpc.user.list.useQuery({ role: "teacher", active: true });
 
-  const [courseId, setCourseId] = useState<number | "">(
-    group?.courseId ?? defaultCourseId ?? "",
-  );
+  const [courseId, setCourseId] = useState<number | "">(group?.courseId ?? defaultCourseId ?? "");
   const [name, setName] = useState(group?.name ?? "");
   const [teacherId, setTeacherId] = useState<number | "">(group?.teacherId ?? "");
   const [active, setActive] = useState(group?.active ?? true);
@@ -62,7 +60,12 @@ export function GroupFormDrawer({ group, defaultCourseId, onClose, onSaved }: Pr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
-      update.mutate({ id: group!.id!, name, teacherId: teacherId === "" ? undefined : Number(teacherId), active });
+      update.mutate({
+        id: group!.id!,
+        name,
+        teacherId: teacherId === "" ? undefined : Number(teacherId),
+        active,
+      });
     } else {
       create.mutate({ name, courseId: Number(courseId), teacherId: Number(teacherId), active });
     }
@@ -76,7 +79,9 @@ export function GroupFormDrawer({ group, defaultCourseId, onClose, onSaved }: Pr
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">{isEditing ? "Editează grupă" : "Grupă nouă"}</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-black">✕</button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-black">
+            ✕
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isEditing && (
@@ -90,7 +95,9 @@ export function GroupFormDrawer({ group, defaultCourseId, onClose, onSaved }: Pr
               >
                 <option value="">Alege curs</option>
                 {courses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -115,7 +122,9 @@ export function GroupFormDrawer({ group, defaultCourseId, onClose, onSaved }: Pr
             >
               <option value="">Alege profesor</option>
               {teachers.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>

@@ -11,7 +11,13 @@ export default function GroupsPage() {
   const isAdmin = permissions.includes("super") || permissions.includes("admin");
   const [courseFilter, setCourseFilter] = useState<number | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<{ id: number; name: string | null; courseId: number | null; teacherId: number | null; active: boolean | null } | null>(null);
+  const [editing, setEditing] = useState<{
+    id: number;
+    name: string | null;
+    courseId: number | null;
+    teacherId: number | null;
+    active: boolean | null;
+  } | null>(null);
 
   const { data: courses = [] } = trpc.course.list.useQuery();
   const { data: groups = [], isLoading } = trpc.group.list.useQuery(
@@ -26,7 +32,10 @@ export default function GroupsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Grupe</h1>
         <button
-          onClick={() => { setEditing(null); setShowForm(true); }}
+          onClick={() => {
+            setEditing(null);
+            setShowForm(true);
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           + Adaugă grupă
@@ -40,7 +49,9 @@ export default function GroupsPage() {
         >
           <option value="">Toate cursurile</option>
           {courses.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </div>
@@ -66,17 +77,27 @@ export default function GroupsPage() {
                 return (
                   <tr key={g.id} className="border-t">
                     <td className="px-4 py-3">
-                      <a href={`/dashboard/groups/${g.id}`} className="text-blue-600 hover:underline">
+                      <a
+                        href={`/dashboard/groups/${g.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
                         {g.name}
                       </a>
                     </td>
                     <td className="px-4 py-3">{course?.name ?? "-"}</td>
                     <td className="px-4 py-3">
-                      {g.active ? <span className="text-green-600">Activă</span> : <span className="text-red-600">Inactivă</span>}
+                      {g.active ? (
+                        <span className="text-green-600">Activă</span>
+                      ) : (
+                        <span className="text-red-600">Inactivă</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => { setEditing(g); setShowForm(true); }}
+                        onClick={() => {
+                          setEditing(g);
+                          setShowForm(true);
+                        }}
                         className="text-blue-600 hover:underline"
                       >
                         Editează

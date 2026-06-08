@@ -41,18 +41,27 @@ export default function GroupCalendarPage({ params }: { params: Promise<{ id: st
       <div className="flex items-center gap-3">
         <button
           onClick={() => {
-            if (month === 1) { setYear(year - 1); setMonth(12); } else setMonth(month - 1);
+            if (month === 1) {
+              setYear(year - 1);
+              setMonth(12);
+            } else setMonth(month - 1);
           }}
           className="px-3 py-1 border rounded-lg"
         >
           ←
         </button>
         <span className="font-semibold">
-          {new Date(year, month - 1, 1).toLocaleDateString("ro-RO", { month: "long", year: "numeric" })}
+          {new Date(year, month - 1, 1).toLocaleDateString("ro-RO", {
+            month: "long",
+            year: "numeric",
+          })}
         </span>
         <button
           onClick={() => {
-            if (month === 12) { setYear(year + 1); setMonth(1); } else setMonth(month + 1);
+            if (month === 12) {
+              setYear(year + 1);
+              setMonth(1);
+            } else setMonth(month + 1);
           }}
           className="px-3 py-1 border rounded-lg"
         >
@@ -62,13 +71,15 @@ export default function GroupCalendarPage({ params }: { params: Promise<{ id: st
 
       <div className="grid grid-cols-7 gap-1 text-xs text-neutral-600 mb-1">
         {["Lu", "Ma", "Mi", "Jo", "Vi", "Sb", "Du"].map((d) => (
-          <div key={d} className="text-center font-medium">{d}</div>
+          <div key={d} className="text-center font-medium">
+            {d}
+          </div>
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((c, i) => {
           const key = c.date ? formatYMD(c.date) : "";
-          const daySessions = key ? byDate.get(key) ?? [] : [];
+          const daySessions = key ? (byDate.get(key) ?? []) : [];
           return (
             <div
               key={i}

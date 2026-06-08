@@ -69,8 +69,7 @@ export const groupSessionRouter = router({
           .limit(1);
         if (!g) throw new TRPCError({ code: "NOT_FOUND" });
         const ownsGroup =
-          g.teacherId === parseInt(u.id) ||
-          (u.courseIds ?? []).includes(g.courseId);
+          g.teacherId === parseInt(u.id) || (u.courseIds ?? []).includes(g.courseId);
         if (!ownsGroup) throw new TRPCError({ code: "FORBIDDEN" });
       }
       try {

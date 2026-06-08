@@ -32,10 +32,15 @@ export function SessionFormDrawer({ groupId, onClose, onSaved }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
-      <div className="w-full max-w-md bg-white h-full p-6 overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="w-full max-w-md bg-white h-full p-6 overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Lecție nouă</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-black">✕</button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-black">
+            ✕
+          </button>
         </div>
         <form
           onSubmit={(e) => {
@@ -60,7 +65,9 @@ export function SessionFormDrawer({ groupId, onClose, onSaved }: Props) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Profesor (opțional, înlocuiește)</label>
+            <label className="block text-sm font-medium mb-1">
+              Profesor (opțional, înlocuiește)
+            </label>
             <select
               value={teacherId}
               onChange={(e) => setTeacherId(e.target.value === "" ? "" : Number(e.target.value))}
@@ -68,7 +75,9 @@ export function SessionFormDrawer({ groupId, onClose, onSaved }: Props) {
             >
               <option value="">— implicit —</option>
               {teachers.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>

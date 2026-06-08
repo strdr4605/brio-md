@@ -30,10 +30,15 @@ export function EnrollmentFormDrawer({ groupId, onClose, onSaved }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
-      <div className="w-full max-w-md bg-white h-full p-6 overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="w-full max-w-md bg-white h-full p-6 overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Înscrie elev</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-black">✕</button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-black">
+            ✕
+          </button>
         </div>
         <form
           onSubmit={(e) => {
@@ -59,7 +64,9 @@ export function EnrollmentFormDrawer({ groupId, onClose, onSaved }: Props) {
             >
               <option value="">Alege elev</option>
               {students.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>

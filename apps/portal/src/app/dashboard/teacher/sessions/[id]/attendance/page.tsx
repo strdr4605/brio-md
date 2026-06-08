@@ -21,7 +21,9 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
     { enabled: !!session?.groupId },
   );
   const { data: students = [] } = trpc.student.list.useQuery();
-  const { data: existing = [] } = trpc.attendance.listBySession.useQuery({ groupSessionId: sessionId });
+  const { data: existing = [] } = trpc.attendance.listBySession.useQuery({
+    groupSessionId: sessionId,
+  });
 
   const [rows, setRows] = useState<Row[]>([]);
   const [saving, setSaving] = useState(false);
@@ -90,7 +92,9 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        setRows((r) => r.map((x, i) => (i === idx ? { ...x, status: "present" } : x)))
+                        setRows((r) =>
+                          r.map((x, i) => (i === idx ? { ...x, status: "present" } : x)),
+                        )
                       }
                       className={`px-3 py-1 rounded-lg text-sm ${
                         row.status === "present" ? "bg-green-600 text-white" : "bg-neutral-100"
@@ -100,7 +104,9 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
                     </button>
                     <button
                       onClick={() =>
-                        setRows((r) => r.map((x, i) => (i === idx ? { ...x, status: "absent" } : x)))
+                        setRows((r) =>
+                          r.map((x, i) => (i === idx ? { ...x, status: "absent" } : x)),
+                        )
                       }
                       className={`px-3 py-1 rounded-lg text-sm ${
                         row.status === "absent" ? "bg-red-600 text-white" : "bg-neutral-100"
@@ -114,7 +120,9 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
                   type="text"
                   value={row.notes}
                   onChange={(e) =>
-                    setRows((r) => r.map((x, i) => (i === idx ? { ...x, notes: e.target.value } : x)))
+                    setRows((r) =>
+                      r.map((x, i) => (i === idx ? { ...x, notes: e.target.value } : x)),
+                    )
                   }
                   placeholder="Note (opțional)"
                   className="w-full border rounded-lg px-3 py-1 text-sm"

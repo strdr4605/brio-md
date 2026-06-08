@@ -44,8 +44,8 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
         </button>
       </div>
 
-      {tab === "enrollments" && (
-        enrollments.length === 0 ? (
+      {tab === "enrollments" &&
+        (enrollments.length === 0 ? (
           <p className="text-neutral-600">Nicio înscriere.</p>
         ) : (
           <div className="bg-white rounded-lg shadow">
@@ -78,11 +78,10 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
               </tbody>
             </table>
           </div>
-        )
-      )}
+        ))}
 
-      {tab === "attendance" && (
-        attendances.length === 0 ? (
+      {tab === "attendance" &&
+        (attendances.length === 0 ? (
           <p className="text-neutral-600">Nicio prezență înregistrată.</p>
         ) : (
           <div className="bg-white rounded-lg shadow">
@@ -116,8 +115,7 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
               </tbody>
             </table>
           </div>
-        )
-      )}
+        ))}
     </div>
   );
 }
