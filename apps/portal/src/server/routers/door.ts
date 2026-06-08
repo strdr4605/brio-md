@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import { runDoorAction } from "../tasmota";
 
 const doorPermissionProcedure = protectedProcedure.use(({ ctx, next }) => {
   const hasPermission =
     ctx.user.permissions.includes("open-front-door") || ctx.user.permissions.includes("super");
-  console.log(`[door] permission check for user ${ctx.user.id}: ${JSON.stringify(ctx.user.permissions)}, hasPermission: ${hasPermission}`);
+  console.log(
+    `[door] permission check for user ${ctx.user.id}: ${JSON.stringify(ctx.user.permissions)}, hasPermission: ${hasPermission}`,
+  );
   if (!hasPermission) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Lipsă permisiunea de a deschide ușa" });
   }
@@ -31,30 +34,26 @@ export const doorRouter = router({
         });
       }
 
-      const cmd = action === "open" ? 3 : 2;
-      const url = `http://${tasmotaIP}:${tasmotaPort}/cm?user=${tasmotaUser}&password=${tasmotaPassword}&cmnd=Power${cmd}%20On`;
-
-      console.log(`[door] ${action} request to ${url}`);
+      console.log(`[door] ${action} sequence starting`);
 
       try {
-        const response = await fetch(url, { method: "GET" });
-
-        console.log(`[door] response status: ${response.status}`);
-
-        if (!response.ok) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Eroare Tasmota: ${response.status}`,
-          });
-        }
-
+        await runDoorAction(action, {
+          ip: tasmotaIP,
+          port: tasmotaPort,
+          user: tasmotaUser,
+          password: tasmotaPassword,
+        });
+        console.log(`[door] ${action} sequence complete`);
         return { success: true, action };
       } catch (error) {
         console.error(`[door] error:`, error);
-        if (error instanceof TRPCError) throw error;
+        const message = (error as Error).message;
+        const isTasmotaStatus = message.startsWith("Tasmota error:");
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Nu s-a putut accesa dispozitivul Tasmota",
+          code: isTasmotaStatus ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR",
+          message: isTasmotaStatus
+            ? `Eroare Tasmota: ${message.split(": ")[1]}`
+            : "Nu s-a putut accesa dispozitivul Tasmota",
         });
       }
     }),
