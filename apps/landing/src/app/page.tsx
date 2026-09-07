@@ -5,7 +5,7 @@ export default function Home() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-20">
         <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">Brio.md</h1>
-        <p className="text-xl text-center text-gray-600 mb-2 max-w-2xl mx-auto">În curând</p>
+        <p className="text-xl text-center text-gray-600 mb-2 max-w-2xl mx-auto">În curând... We''ll se you soon!</p>
       </div>
 
       {/* Footer */}
