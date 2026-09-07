@@ -4,19 +4,39 @@ School management platform for Vibe Academy (Moldova).
 
 ## Quick Start
 
+**Prerequisites:** Docker, Node.js 20+, npm.
+
 ```bash
-# Start all services with hot reload
+# 1. Clone and enter the repo
+git clone <repo-url> && cd brio-md
+
+# 2. Install workspace dependencies
+npm install
+
+# 3. Copy env file (defaults work out of the box)
+cp .env.example .env
+
+# 4. Start all services with hot reload
 npm run dev
 ```
 
-## Development
+First run is slow (builds Docker images). Subsequent runs are fast.
+
+### Apps
+
+| App     | URL                   | Description             |
+| ------- | --------------------- | ----------------------- |
+| Landing | http://localhost:3001 | Marketing page          |
+| Portal  | http://localhost:3002 | Staff management        |
+| Learn   | http://localhost:3003 | Learning/courses portal |
+
+### Database
 
 ```bash
-# Start Drizzle Studio (database GUI)
-npm run studio  # http://localhost:4983
+npm run studio  # Drizzle Studio → http://localhost:4983
 
-# Stop Drizzle Studio
-pkill -f drizzle-kit
+# Reset DB (wipes all data)
+docker compose down -v
 ```
 
 ## Default Users
