@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { hash } from "bcryptjs";
-import { schools, users, courses, permissionDefinitions } from "@brio-md/db";
+import { schools, users, courses, permissionDefinitions, students } from "@brio-md/db";
 
 const sql = postgres(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -94,6 +94,27 @@ async function seed() {
     })
     .returning();
   console.log("✅ Created Teacher:", teacher.email);
+
+  // Create sample students with phone
+  const sampleStudents = [
+    {
+      name: "Alex Popescu",
+      schoolId: school.id,
+      phone: "+37369000001",
+      parentName: "Maria Popescu",
+      parentPhone: "+37360000000",
+    },
+    {
+      name: "Elena Ionescu",
+      schoolId: school.id,
+      phone: "+37369000002",
+      parentName: "Ion Ionescu",
+      parentPhone: "+37361111111",
+    },
+  ];
+
+  await db.insert(students).values(sampleStudents);
+  console.log(`✅ Created ${sampleStudents.length} sample students with phone numbers`);
 
   console.log("");
   console.log("🎉 Seed completed!");

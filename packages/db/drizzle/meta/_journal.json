@@ -8,6 +8,13 @@
       "when": 1780498667926,
       "tag": "0000_eminent_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788870263102,
+      "tag": "0001_wandering_shard",
+      "breakpoints": true
     }
   ]
 }
