@@ -50,6 +50,7 @@ export const students = pgTable("students", {
   parentPhone: varchar("parent_phone", { length: 50 }),
   info: text("info"),
   classId: integer("class_id"),
+  phone: text("phone"),
   active: boolean("active").default(true),
   lastChangedAt: timestamp("last_changed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

@@ -135,6 +135,27 @@ async function seed() {
     })
     .onConflictDoNothing();
 
+  // Create sample students with phone
+  const sampleStudents = [
+    {
+      name: "Alex Popescu",
+      schoolId: school.id,
+      phone: "+37369000001",
+      parentName: "Maria Popescu",
+      parentPhone: "+37360000000",
+    },
+    {
+      name: "Elena Ionescu",
+      schoolId: school.id,
+      phone: "+37369000002",
+      parentName: "Ion Ionescu",
+      parentPhone: "+37361111111",
+    },
+  ];
+
+  await db.insert(students).values(sampleStudents);
+  console.log(`✅ Created ${sampleStudents.length} sample students with phone numbers`);
+
   console.log("");
   console.log("🎉 Seed completed!");
   console.log("");
