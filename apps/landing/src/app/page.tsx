@@ -196,6 +196,16 @@ export default function Home() {
         </section>
       </main>
 
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-20">
+        <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">
+          Brio.md
+        </h1>
+        <p className="text-xl text-center text-gray-600 mb-2 max-w-2xl mx-auto">
+          Platformă modernă de management școlar pentru Vibe Academy.
+        </p>
+      </div>
       {/* Footer */}
       <footer className="bg-neutral-900 text-neutral-400 text-xs py-12 border-t border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
