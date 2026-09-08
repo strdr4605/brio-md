@@ -28,30 +28,73 @@ async function seed() {
     .returning();
   console.log("✅ Created course:", course.name);
 
+  // Create sample students
+  const [student1] = await db
+    .insert(students)
+    .values({
+      name: "Alex Popescu",
+      schoolId: school.id,
+      parentName: "Maria Popescu",
+      parentPhone: "+37360000000",
+    })
+    .returning();
+  console.log("✅ Created Student:", student1.name);
+
+  const [student2] = await db
+    .insert(students)
+    .values({
+      name: "Elena Ionescu",
+      schoolId: school.id,
+      parentName: "Ion Ionescu",
+      parentPhone: "+37361111111",
+    })
+    .returning();
+  console.log("✅ Created Student:", student2.name);
+
+  const [student3] = await db
+    .insert(students)
+    .values({
+      name: "Mihai Radu",
+      schoolId: school.id,
+      parentName: "Victor Radu",
+      parentPhone: "+37362222222",
+    })
+    .returning();
+  console.log("✅ Created Student:", student3.name);
+
+  const [student4] = await db
+    .insert(students)
+    .values({
+      name: "Sofia Ursu",
+      schoolId: school.id,
+      parentName: "Ana Ursu",
+      parentPhone: "+37363333333",
+    })
+    .returning();
+  console.log("✅ Created Student:", student4.name);
+
   // Create permission definitions
-  const [permSuper] = await db
+  await db
     .insert(permissionDefinitions)
     .values({
       key: "super",
       label: "Super Administrator",
       description: "Acces complet la sistem. Poate gestiona școli, utilizatori și permisiuni.",
     })
-    .returning();
-  console.log("✅ Created permission:", permSuper.key);
+    .onConflictDoNothing();
 
-  const [permAdmin] = await db
+  await db
     .insert(permissionDefinitions)
     .values({
       key: "admin",
       label: "Admin Școală",
       description: "Gestionează utilizatorii și cursurile din școala sa.",
     })
-    .returning();
-  console.log("✅ Created permission:", permAdmin.key);
+    .onConflictDoNothing();
 
   // Create SuperAdmin
   const superadminHash = await hash("admin123", 12);
-  const [superadmin] = await db
+  await db
     .insert(users)
     .values({
       email: "admin@brio.md",
@@ -61,12 +104,11 @@ async function seed() {
       permissions: ["super"],
       schoolId: null,
     })
-    .returning();
-  console.log("✅ Created SuperAdmin:", superadmin.email);
+    .onConflictDoNothing();
 
   // Create Admin
   const adminHash = await hash("admin123", 12);
-  const [admin] = await db
+  await db
     .insert(users)
     .values({
       email: "admin@vibe.md",
@@ -76,12 +118,11 @@ async function seed() {
       permissions: ["admin"],
       schoolId: school.id,
     })
-    .returning();
-  console.log("✅ Created Admin:", admin.email);
+    .onConflictDoNothing();
 
   // Create Teacher
   const teacherHash = await hash("teacher123", 12);
-  const [teacher] = await db
+  await db
     .insert(users)
     .values({
       email: "teacher@vibe.md",
@@ -92,8 +133,7 @@ async function seed() {
       courseIds: [course.id],
       schoolId: school.id,
     })
-    .returning();
-  console.log("✅ Created Teacher:", teacher.email);
+    .onConflictDoNothing();
 
   // Create sample students with phone
   const sampleStudents = [
@@ -131,3 +171,4 @@ seed().catch((err) => {
   console.error("Seed failed:", err);
   process.exit(1);
 });
+
