@@ -1,4 +1,15 @@
-import { pgTable, serial, varchar, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  pgEnum,
+  serial,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  integer,
+  date,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Schools table
 export const schools = pgTable("schools", {
@@ -11,7 +22,9 @@ export const schools = pgTable("schools", {
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
   schoolId: integer("school_id").references(() => schools.id),
+  active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -89,9 +102,112 @@ export const verificationTokens = pgTable("verification_tokens", {
   expires: timestamp("expires").notNull(),
 });
 
+// CRM enums
+export const enrollmentTypeEnum = pgEnum("enrollment_type", ["course", "camp"]);
+export const enrollmentStatusEnum = pgEnum("enrollment_status", [
+  "active",
+  "paused",
+  "cancelled",
+  "completed",
+]);
+export const attendanceStatusEnum = pgEnum("attendance_status", ["present", "absent"]);
+
+// Groups (time slot for a course)
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id")
+    .notNull()
+    .references(() => courses.id),
+  schoolId: integer("school_id")
+    .notNull()
+    .references(() => schools.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  teacherId: integer("teacher_id")
+    .notNull()
+    .references(() => users.id),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enrollments (student in a group)
+export const enrollments = pgTable("enrollments", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id")
+    .notNull()
+    .references(() => students.id),
+  groupId: integer("group_id")
+    .notNull()
+    .references(() => groups.id),
+  schoolId: integer("school_id")
+    .notNull()
+    .references(() => schools.id),
+  type: enrollmentTypeEnum("type").notNull(),
+  price: integer("price").notNull(),
+  status: enrollmentStatusEnum("status").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Group sessions (one class meeting)
+export const groupSessions = pgTable(
+  "group_sessions",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("group_id")
+      .notNull()
+      .references(() => groups.id),
+    schoolId: integer("school_id")
+      .notNull()
+      .references(() => schools.id),
+    date: date("date").notNull(),
+    teacherId: integer("teacher_id").references(() => users.id),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => ({
+    uniqGroupDate: uniqueIndex("group_sessions_group_date_uniq").on(t.groupId, t.date),
+  }),
+);
+
+// Attendances
+export const attendances = pgTable(
+  "attendances",
+  {
+    id: serial("id").primaryKey(),
+    groupSessionId: integer("group_session_id")
+      .notNull()
+      .references(() => groupSessions.id),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => students.id),
+    enrollmentId: integer("enrollment_id")
+      .notNull()
+      .references(() => enrollments.id),
+    status: attendanceStatusEnum("status").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => ({
+    uniqSessionStudent: uniqueIndex("attendances_session_student_uniq").on(
+      t.groupSessionId,
+      t.studentId,
+    ),
+  }),
+);
+
 // Types
 export type School = typeof schools.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Student = typeof students.$inferSelect;
 export type PermissionDefinition = typeof permissionDefinitions.$inferSelect;
+export type Group = typeof groups.$inferSelect;
+export type NewGroup = typeof groups.$inferInsert;
+export type Enrollment = typeof enrollments.$inferSelect;
+export type NewEnrollment = typeof enrollments.$inferInsert;
+export type GroupSession = typeof groupSessions.$inferSelect;
+export type NewGroupSession = typeof groupSessions.$inferInsert;
+export type Attendance = typeof attendances.$inferSelect;
+export type NewAttendance = typeof attendances.$inferInsert;
