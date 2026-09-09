@@ -9,6 +9,7 @@ declare module "next-auth" {
       role?: string | null;
       permissions?: string[] | null;
       courseIds?: number[] | null;
+      studentId?: number | null;
       schoolId?: number | null;
       expired?: boolean;
     } & Session["user"];

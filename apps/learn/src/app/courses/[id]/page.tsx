@@ -7,7 +7,7 @@ import { CourseDetailView } from "./CourseDetailView";
 export default async function CourseDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const session = await auth();
 
@@ -15,7 +15,7 @@ export default async function CourseDetailPage({
     redirect("/");
   }
 
-  const { id } = await params;
+  const { id } = params;
   const courseId = parseInt(id, 10);
 
   if (isNaN(courseId)) {

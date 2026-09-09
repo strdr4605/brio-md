@@ -15,10 +15,10 @@ export const courseRouter = router({
       return [];
     }
 
-    const currentStudentId = parseInt(ctx.user.id, 10);
+    const currentStudentId = ctx.user.studentId;
 
     const coursesList = await db.select().from(courses).where(inArray(courses.id, courseIds));
-    const progressList = !isNaN(currentStudentId)
+    const progressList = currentStudentId
       ? await db
           .select()
           .from(studentCourseProgress)
@@ -66,7 +66,7 @@ export const courseRouter = router({
         ctx.user.permissions?.includes("super") ||
         ctx.user.permissions?.includes("admin");
 
-      if (!isPrivileged && courseIds.length > 0 && !courseIds.includes(input.id)) {
+      if (!isPrivileged && (courseIds.length === 0 || !courseIds.includes(input.id))) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not enrolled in this course.",
@@ -100,10 +100,10 @@ export const courseRouter = router({
         .where(eq(courseMaterials.courseId, input.id))
         .orderBy(courseMaterials.orderIndex);
 
-      const currentStudentId = parseInt(ctx.user.id, 10);
+      const currentStudentId = ctx.user.studentId;
       let progress = null;
 
-      if (!isNaN(currentStudentId)) {
+      if (currentStudentId) {
         const [exactProgress] = await db
           .select()
           .from(studentCourseProgress)
@@ -115,15 +115,6 @@ export const courseRouter = router({
           )
           .limit(1);
         progress = exactProgress;
-      }
-
-      if (!progress) {
-        const [fallbackProgress] = await db
-          .select()
-          .from(studentCourseProgress)
-          .where(eq(studentCourseProgress.courseId, input.id))
-          .limit(1);
-        progress = fallbackProgress;
       }
 
       return {
@@ -146,4 +137,3 @@ export const courseRouter = router({
       };
     }),
 });
-

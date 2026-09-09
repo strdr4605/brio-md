@@ -21,6 +21,7 @@ type AuthUser = {
   role?: string | null;
   permissions?: string[] | null;
   courseIds?: number[] | null;
+  studentId?: number | null;
   schoolId?: number | null;
   lastChangedAt?: Date | null;
 };
@@ -63,6 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           permissions: user.permissions || [],
           courseIds: user.courseIds || [],
+          studentId: user.studentId,
           schoolId: user.schoolId,
           lastChangedAt: user.lastChangedAt,
         } as AuthUser;
@@ -77,6 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = u.role ?? null;
         token.permissions = u.permissions ?? null;
         token.courseIds = u.courseIds ?? null;
+        token.studentId = u.studentId ?? null;
         token.schoolId = u.schoolId ?? null;
         token.lastChangedAt = u.lastChangedAt ?? null;
       }
@@ -101,6 +104,7 @@ async session({ session, token }) {
         session.user.role = token.role as typeof session.user.role;
         session.user.permissions = token.permissions as typeof session.user.permissions;
         session.user.courseIds = token.courseIds as typeof session.user.courseIds;
+        session.user.studentId = token.studentId as typeof session.user.studentId;
         session.user.schoolId = token.schoolId as typeof session.user.schoolId;
       }
       return session;

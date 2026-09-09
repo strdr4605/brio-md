@@ -9,6 +9,7 @@ export type SessionUser = {
   role: string;
   permissions: string[];
   courseIds: number[];
+  studentId: number | null;
   schoolId: number | null;
 };
 
