@@ -34,6 +34,7 @@ async function seed() {
     .values({
       name: "Alex Popescu",
       schoolId: school.id,
+      phone: "+37369000001",
       parentName: "Maria Popescu",
       parentPhone: "+37360000000",
     })
@@ -45,6 +46,7 @@ async function seed() {
     .values({
       name: "Elena Ionescu",
       schoolId: school.id,
+      phone: "+37369000002",
       parentName: "Ion Ionescu",
       parentPhone: "+37361111111",
     })
@@ -56,6 +58,7 @@ async function seed() {
     .values({
       name: "Mihai Radu",
       schoolId: school.id,
+      phone: "+37369000003",
       parentName: "Victor Radu",
       parentPhone: "+37362222222",
     })
@@ -67,6 +70,7 @@ async function seed() {
     .values({
       name: "Sofia Ursu",
       schoolId: school.id,
+      phone: "+37369000004",
       parentName: "Ana Ursu",
       parentPhone: "+37363333333",
     })
@@ -134,27 +138,6 @@ async function seed() {
       schoolId: school.id,
     })
     .onConflictDoNothing();
-
-  // Create sample students with phone
-  const sampleStudents = [
-    {
-      name: "Alex Popescu",
-      schoolId: school.id,
-      phone: "+37369000001",
-      parentName: "Maria Popescu",
-      parentPhone: "+37360000000",
-    },
-    {
-      name: "Elena Ionescu",
-      schoolId: school.id,
-      phone: "+37369000002",
-      parentName: "Ion Ionescu",
-      parentPhone: "+37361111111",
-    },
-  ];
-
-  await db.insert(students).values(sampleStudents);
-  console.log(`✅ Created ${sampleStudents.length} sample students with phone numbers`);
 
   console.log("");
   console.log("🎉 Seed completed!");
