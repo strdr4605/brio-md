@@ -12,7 +12,9 @@ import {
   studentCourseProgress,
 } from "@brio-md/db";
 
-const sql = postgres(process.env.DATABASE_URL!);
+const sql = postgres(
+  process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md",
+);
 const db = drizzle(sql);
 
 async function seed() {
