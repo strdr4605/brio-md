@@ -15,22 +15,25 @@ export const courseRouter = router({
       return [];
     }
 
-    const coursesList = await db.select().from(courses).where(inArray(courses.id, courseIds));
-    const progressList = await db
-      .select()
-      .from(studentCourseProgress)
-      .where(inArray(studentCourseProgress.courseId, courseIds));
-
     const currentStudentId = parseInt(ctx.user.id, 10);
 
-    return coursesList.map((course) => {
-      const studentProgress =
-        progressList.find(
-          (p) =>
-            p.courseId === course.id &&
-            (!isNaN(currentStudentId) ? p.studentId === currentStudentId : true),
-        ) || progressList.find((p) => p.courseId === course.id);
+    const coursesList = await db.select().from(courses).where(inArray(courses.id, courseIds));
+    const progressList = !isNaN(currentStudentId)
+      ? await db
+          .select()
+          .from(studentCourseProgress)
+          .where(
+            and(
+              inArray(studentCourseProgress.courseId, courseIds),
+              eq(studentCourseProgress.studentId, currentStudentId),
+            ),
+          )
+      : [];
 
+    const progressByCourseId = new Map(progressList.map((p) => [p.courseId, p]));
+
+    return coursesList.map((course) => {
+      const studentProgress = progressByCourseId.get(course.id);
       return {
         ...course,
         progress: studentProgress
