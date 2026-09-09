@@ -3,6 +3,7 @@ import { router, protectedProcedure } from "../trpc";
 import { eq, ilike, and } from "drizzle-orm";
 import { students } from "@/db/schema";
 import { db } from "@/lib/db";
+import { TRPCError } from "@trpc/server";
 
 export const studentRouter = router({
   // List students (filtered by permissions)
@@ -58,6 +59,100 @@ export const studentRouter = router({
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .limit(input?.limit ?? 50)
         .offset(input?.offset ?? 0);
+
+      return result;
+    }),
+
+  // Create student
+  create: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Numele este obligatoriu"),
+        phone: z.string().optional().nullable(),
+        schoolId: z.number().nullable().optional(),
+        parentName: z.string().optional().nullable(),
+        parentPhone: z.string().optional().nullable(),
+        info: z.string().optional().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+
+      if (!isSuper && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a adăuga studenți" });
+      }
+
+      const assignedSchoolId = isSuper ? (input.schoolId ?? null) : user.schoolId;
+
+      const [result] = await db
+        .insert(students)
+        .values({
+          name: input.name,
+          phone: input.phone || null,
+          schoolId: assignedSchoolId,
+          parentName: input.parentName || null,
+          parentPhone: input.parentPhone || null,
+          info: input.info || null,
+          active: true,
+        })
+        .returning();
+
+      return result;
+    }),
+
+  // Update student
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        phone: z.string().optional().nullable(),
+        schoolId: z.number().nullable().optional(),
+        parentName: z.string().optional().nullable(),
+        parentPhone: z.string().optional().nullable(),
+        info: z.string().optional().nullable(),
+        active: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+
+      if (!isSuper && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
+      }
+
+      if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
+      }
+
+      const { id, ...data } = input;
+      const updateData: Record<string, any> = { ...data, lastChangedAt: new Date() };
+      if (!isSuper) {
+        delete updateData.schoolId;
+      }
+
+      const [result] = await db
+        .update(students)
+        .set(updateData)
+        .where(eq(students.id, id))
+        .returning();
 
       return result;
     }),
