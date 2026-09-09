@@ -14,7 +14,8 @@
     "studio": "cd packages/db && npx drizzle-kit studio",
     "deploy": "kamal deploy",
     "lint": "oxlint -c oxlintrc.json .",
-    "format": "prettier --write . --list-different"
+    "format": "prettier --write . --list-different",
+    "test": "npm test --workspaces --if-present"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

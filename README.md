@@ -1,5 +1,7 @@
 # Brio.md
 
+[![CI](https://github.com/strdr4605/brio-md/actions/workflows/ci.yml/badge.svg)](https://github.com/strdr4605/brio-md/actions/workflows/ci.yml)
+
 School management platform for Vibe Academy (Moldova).
 
 ## Quick Start
