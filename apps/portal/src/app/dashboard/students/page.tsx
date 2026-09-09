@@ -1,7 +1,9 @@
 "use client";
 
+import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 export default function StudentiPage() {
   const { data: session, status } = useSession();
@@ -12,6 +14,9 @@ export default function StudentiPage() {
     permissions.includes("admin") ||
     role === "superadmin" ||
     role === "admin";
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
 
   const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
     enabled: isSuperOrAdmin,
@@ -36,10 +41,26 @@ export default function StudentiPage() {
     );
   }
 
+  const handleCreate = () => {
+    setEditingStudent(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (student: typeof students[number]) => {
+    setEditingStudent(student);
+    setShowForm(true);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Studenți</h1>
+        <button
+          onClick={handleCreate}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          + Adaugă Student
+        </button>
       </div>
 
       {isLoading ? (
@@ -52,25 +73,33 @@ export default function StudentiPage() {
             {students.map((student) => {
               const school = schools.find((s) => s.id === student.schoolId);
               return (
-                <div key={student.id} className="p-3 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-neutral-900">{student.name}</span>
-                    {school && (
-                      <span className="text-xs text-neutral-500">{school.name}</span>
+                <div key={student.id} className="p-3 flex justify-between items-center">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-neutral-900">{student.name}</span>
+                      {school && (
+                        <span className="text-xs text-neutral-500">{school.name}</span>
+                      )}
+                    </div>
+                    {student.phone && (
+                      <p className="text-sm text-neutral-700">{student.phone}</p>
+                    )}
+                    {student.createdAt && (
+                      <p className="text-xs text-neutral-400">
+                        {new Date(student.createdAt).toLocaleDateString("ro-RO", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
                     )}
                   </div>
-                  {student.phone && (
-                    <p className="text-sm text-neutral-700">{student.phone}</p>
-                  )}
-                  {student.createdAt && (
-                    <p className="text-xs text-neutral-400">
-                      {new Date(student.createdAt).toLocaleDateString("ro-RO", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
-                  )}
+                  <button
+                    onClick={() => handleEdit(student)}
+                    className="text-blue-600 p-2 border border-blue-200 rounded hover:bg-blue-50"
+                  >
+                    ✏️
+                  </button>
                 </div>
               );
             })}
@@ -84,6 +113,7 @@ export default function StudentiPage() {
                   <th className="px-4 py-3 text-left">Telefon</th>
                   <th className="px-4 py-3 text-left">Școală</th>
                   <th className="px-4 py-3 text-left">Data adăugării</th>
+                  <th className="px-4 py-3 text-left"></th>
                 </tr>
               </thead>
               <tbody>
@@ -103,6 +133,14 @@ export default function StudentiPage() {
                             })
                           : "-"}
                       </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleEdit(student)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Editează
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -110,6 +148,16 @@ export default function StudentiPage() {
             </table>
           </div>
         </>
+      )}
+
+      {showForm && (
+        <StudentFormDrawer
+          student={editingStudent}
+          schools={schools}
+          isSuperAdmin={permissions.includes("super") || role === "superadmin"}
+          onClose={() => setShowForm(false)}
+          currentUserSchoolId={session?.user?.schoolId ?? undefined}
+        />
       )}
     </div>
   );
