@@ -5,6 +5,7 @@ declare module "next-auth" {
     role?: string | null;
     permissions?: string[] | null;
     courseIds?: number[] | null;
+    studentId?: number | null;
     schoolId?: number | null;
     lastChangedAt?: Date | null;
   }
@@ -13,6 +14,7 @@ declare module "next-auth" {
     role?: string | null;
     permissions?: string[] | null;
     courseIds?: number[] | null;
+    studentId?: number | null;
     schoolId?: number | null;
     lastChangedAt?: Date | null;
   }
@@ -24,6 +26,7 @@ declare module "next-auth" {
       role?: string | null;
       permissions?: string[] | null;
       courseIds?: number[] | null;
+      studentId?: number | null;
       schoolId?: number | null;
       expired?: boolean;
     } & DefaultSession["user"];
@@ -36,6 +39,7 @@ declare module "next-auth/jwt" {
     role?: string | null;
     permissions?: string[] | null;
     courseIds?: number[] | null;
+    studentId?: number | null;
     schoolId?: number | null;
     lastChangedAt?: Date | null;
     iat?: number;

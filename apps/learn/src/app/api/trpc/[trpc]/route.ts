@@ -36,6 +36,7 @@ const handler = (req: Request) =>
               role: dbUser.role || "teacher",
               permissions: dbUser.permissions || [],
               courseIds: dbUser.courseIds || [],
+              studentId: dbUser.studentId || null,
               schoolId: dbUser.schoolId || null,
             }
           : {
@@ -45,6 +46,7 @@ const handler = (req: Request) =>
               role: session.user.role || "teacher",
               permissions: session.user.permissions || [],
               courseIds: session.user.courseIds || [],
+              studentId: session.user.studentId || null,
               schoolId: session.user.schoolId || null,
             },
       };

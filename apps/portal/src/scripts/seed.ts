@@ -12,7 +12,13 @@ import {
   studentCourseProgress,
 } from "@brio-md/db";
 
-const sql = postgres(process.env.DATABASE_URL!);
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required to run the seed script.");
+}
+
+const sql = postgres(databaseUrl);
 const db = drizzle(sql);
 
 async function seed() {

@@ -26,6 +26,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).default("teacher"), // superadmin, admin, teacher
   permissions: text("permissions").array().default([]), // ['super'], ['admin'], ['view'], etc.
   courseIds: integer("course_ids").array().default([]), // Courses this teacher can teach
+  studentId: integer("student_id"),
   schoolId: integer("school_id").references(() => schools.id),
   phone: varchar("phone", { length: 50 }),
   info: text("info"),
@@ -164,8 +165,12 @@ export const studentCourseProgressRelations = relations(studentCourseProgress, (
   }),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   courses: many(courses),
+  student: one(students, {
+    fields: [users.studentId],
+    references: [students.id],
+  }),
 }));
 
 export const studentsRelations = relations(students, ({ many }) => ({
