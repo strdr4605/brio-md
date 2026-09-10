@@ -10,12 +10,12 @@ type SessionUser = {
   permissions: string[];
   courseIds: number[];
   schoolId: number | null;
-}
+};
 
 // Context type
 type Context = {
   user: SessionUser | null;
-}
+};
 
 // tRPC initialization
 const t = initTRPC.context<Context>().create({
@@ -42,7 +42,8 @@ export const protectedProcedure = t.procedure.use(isAuthed);
 
 // Super permission middleware
 const hasSuper = t.middleware(({ ctx, next }) => {
-  if (!ctx.user?.permissions.includes("super")) {
+  const isSuper = ctx.user?.permissions.includes("super") || ctx.user?.role === "superadmin";
+  if (!isSuper) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({ ctx });
@@ -52,7 +53,12 @@ export const superProcedure = t.procedure.use(hasSuper);
 
 // Admin permission middleware
 const hasAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user?.permissions.includes("admin") && !ctx.user?.permissions.includes("super")) {
+  const isSuperOrAdmin =
+    ctx.user?.permissions.includes("admin") ||
+    ctx.user?.permissions.includes("super") ||
+    ctx.user?.role === "admin" ||
+    ctx.user?.role === "superadmin";
+  if (!isSuperOrAdmin) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({ ctx });

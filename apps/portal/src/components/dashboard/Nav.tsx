@@ -4,9 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-export function Nav({ userName, permissions }: { userName?: string; permissions?: string[] }) {
+export function Nav({
+  userName,
+  permissions,
+  role,
+}: {
+  userName?: string;
+  permissions?: string[];
+  role?: string;
+}) {
   const pathname = usePathname();
-  const isSuperOrAdmin = permissions?.includes("super") || permissions?.includes("admin");
+  const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
+  const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
 
   const navItems = [
     { href: "/dashboard", icon: "🏠", label: "Dashboard" },
@@ -16,7 +25,7 @@ export function Nav({ userName, permissions }: { userName?: string; permissions?
           { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
         ]
       : []),
-    ...(isSuperOrAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
     ...(permissions?.includes("open-front-door") || isSuperOrAdmin
       ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
       : []),

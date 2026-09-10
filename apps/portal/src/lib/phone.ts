@@ -1,4 +1,5 @@
 import { parsePhoneNumber, type CountryCode } from "libphonenumber-js";
+import { z } from "zod";
 
 /**
  * Validates whether a phone number is valid according to international standards (Google libphonenumber).
@@ -44,3 +45,22 @@ export function formatPhone(phone?: string | null, defaultCountry: CountryCode =
     return phone.trim();
   }
 }
+
+/**
+ * Reusable Zod schema for phone fields.
+ * Preserves `undefined` when omitted (so updates don't overwrite existing phones with null).
+ * Converts null or blank strings to null.
+ * Normalizes valid phones to E.164.
+ */
+export const phoneSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .refine((val) => !val || isValidPhone(val), {
+    message: "Format telefon invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
+  })
+  .transform((val) => {
+    if (val === undefined) return undefined;
+    if (val === null || !val.trim()) return null;
+    return normalizePhone(val);
+  });

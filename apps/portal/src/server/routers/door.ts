@@ -5,7 +5,9 @@ import { runDoorAction } from "../tasmota";
 
 const doorPermissionProcedure = protectedProcedure.use(({ ctx, next }) => {
   const hasPermission =
-    ctx.user.permissions.includes("open-front-door") || ctx.user.permissions.includes("super");
+    ctx.user.permissions.includes("open-front-door") ||
+    ctx.user.permissions.includes("super") ||
+    ctx.user.role === "superadmin";
   console.log(
     `[door] permission check for user ${ctx.user.id}: ${JSON.stringify(ctx.user.permissions)}, hasPermission: ${hasPermission}`,
   );

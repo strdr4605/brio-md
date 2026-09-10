@@ -12,12 +12,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <Nav userName={session.user.name ?? undefined} permissions={session.user.permissions || []} />
+      <Nav
+        userName={session.user.name ?? undefined}
+        permissions={session.user.permissions || []}
+        role={session.user.role || undefined}
+      />
 
       <main className="md:ml-[200px] pb-20 md:pb-0 pt-0">
-        <SessionProvider session={session}>
-          {children}
-        </SessionProvider>
+        <SessionProvider session={session}>{children}</SessionProvider>
       </main>
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isValidPhone, normalizePhone, formatPhone } from "./phone";
+import { isValidPhone, normalizePhone, formatPhone, phoneSchema } from "./phone";
 
 describe("phone utilities with libphonenumber-js", () => {
   describe("isValidPhone", () => {
@@ -72,6 +72,28 @@ describe("phone utilities with libphonenumber-js", () => {
       expect(formatPhone(null)).toBe("-");
       expect(formatPhone("")).toBe("-");
       expect(formatPhone(undefined)).toBe("-");
+    });
+  });
+
+  describe("phoneSchema", () => {
+    it("preserves undefined for omitted fields", () => {
+      expect(phoneSchema.parse(undefined)).toBeUndefined();
+    });
+
+    it("converts null or blank string to null", () => {
+      expect(phoneSchema.parse(null)).toBeNull();
+      expect(phoneSchema.parse("")).toBeNull();
+      expect(phoneSchema.parse("   ")).toBeNull();
+    });
+
+    it("validates and normalizes valid numbers", () => {
+      expect(phoneSchema.parse("069123456")).toBe("+37369123456");
+      expect(phoneSchema.parse("+40 712 345 678")).toBe("+40712345678");
+    });
+
+    it("throws validation error for invalid numbers", () => {
+      const res = phoneSchema.safeParse("123");
+      expect(res.success).toBe(false);
     });
   });
 });

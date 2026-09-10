@@ -4,16 +4,7 @@ import { eq, ilike, and } from "drizzle-orm";
 import { students } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
-import { isValidPhone, normalizePhone } from "@/lib/phone";
-
-const phoneSchema = z
-  .string()
-  .optional()
-  .nullable()
-  .refine((val) => !val || isValidPhone(val), {
-    message: "Format telefon invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
-  })
-  .transform((val) => (val && val.trim() ? normalizePhone(val) : null));
+import { phoneSchema } from "@/lib/phone";
 
 export const studentRouter = router({
   // List students (filtered by permissions)
@@ -95,7 +86,10 @@ export const studentRouter = router({
       const isAdmin = permissions.includes("admin") || role === "admin";
 
       if (!isSuper && !isAdmin) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a adăuga studenți" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a adăuga studenți",
+        });
       }
 
       const assignedSchoolId = isSuper ? (input.schoolId ?? null) : user.schoolId;
@@ -149,7 +143,10 @@ export const studentRouter = router({
       }
 
       if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți modifica un student din altă școală",
+        });
       }
 
       const { id, ...data } = input;

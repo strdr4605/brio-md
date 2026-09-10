@@ -5,16 +5,7 @@ import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
-import { isValidPhone, normalizePhone } from "@/lib/phone";
-
-const phoneSchema = z
-  .string()
-  .optional()
-  .nullable()
-  .refine((val) => !val || isValidPhone(val), {
-    message: "Format telefon invalid.",
-  })
-  .transform((val) => (val && val.trim() ? normalizePhone(val) : null));
+import { phoneSchema } from "@/lib/phone";
 
 export const userRouter = router({
   // Get current user
@@ -42,12 +33,14 @@ export const userRouter = router({
       if (!ctx.user) return [];
       const user = ctx.user;
       const permissions = user.permissions || [];
+      const isSuper = permissions.includes("super") || user.role === "superadmin";
+      const isAdmin = permissions.includes("admin") || user.role === "admin";
 
       // Build conditions based on role
       const conditions = [];
 
-      if (!permissions.includes("super")) {
-        if (permissions.includes("admin")) {
+      if (!isSuper) {
+        if (isAdmin) {
           // Admins see users in their school
           if (user.schoolId) {
             conditions.push(eq(users.schoolId, user.schoolId));
@@ -112,10 +105,12 @@ export const userRouter = router({
     if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
     const user = ctx.user;
     const permissions = user.permissions || [];
+    const isSuper = permissions.includes("super") || user.role === "superadmin";
+    const isAdmin = permissions.includes("admin") || user.role === "admin";
 
     // Check permissions
-    if (!permissions.includes("super")) {
-      if (permissions.includes("admin")) {
+    if (!isSuper) {
+      if (isAdmin) {
         // Admin can only view users in their school (mock)
         if (input.id !== parseInt(user.id)) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Cannot view this user" });
@@ -183,7 +178,9 @@ export const userRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, password, ...updates } = input;
-      const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = { ...updates };
+      const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = {
+        ...updates,
+      };
       if (password) {
         updateData.passwordHash = await hash(password, 12);
       }

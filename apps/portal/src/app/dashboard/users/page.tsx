@@ -9,24 +9,20 @@ export default function UsersPage() {
   const { data: session, status } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
-  const isSuperOrAdmin =
-    permissions.includes("super") ||
-    permissions.includes("admin") ||
-    role === "superadmin" ||
-    role === "admin";
+  const isSuperAdmin = permissions.includes("super") || role === "superadmin";
+  const isSuperOrAdmin = isSuperAdmin || permissions.includes("admin") || role === "admin";
 
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<typeof users[number] | null>(null);
+  const [editingUser, setEditingUser] = useState<(typeof users)[number] | null>(null);
 
   const { data: users = [], isLoading } = trpc.user.list.useQuery(
     { active: activeFilter },
     { enabled: isSuperOrAdmin },
   );
-  const { data: schools = [] } = trpc.user.listSchools.useQuery(
-    undefined,
-    { enabled: isSuperOrAdmin },
-  );
+  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
+    enabled: isSuperOrAdmin,
+  });
 
   if (status === "loading") {
     return (
@@ -44,7 +40,7 @@ export default function UsersPage() {
     );
   }
 
-  const handleEdit = (user: typeof users[number]) => {
+  const handleEdit = (user: (typeof users)[number]) => {
     setEditingUser(user);
     setShowForm(true);
   };
@@ -160,7 +156,7 @@ export default function UsersPage() {
         <UserFormDrawer
           user={editingUser as UserFormUser}
           schools={schools}
-          isSuperAdmin={permissions.includes("super")}
+          isSuperAdmin={isSuperAdmin}
           onClose={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
