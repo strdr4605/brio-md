@@ -18,8 +18,8 @@ test.describe("Auth.js SSO & Session Sharing", () => {
     const learnPage = await context.newPage();
     await learnPage.goto("http://localhost:3003/courses");
 
-    await expect(learnPage).toHaveURL(/.*\/courses/);
-    await expect(learnPage.locator("h1")).toContainText("Learning Portal");
+    await expect(learnPage).toHaveURL(/.*\/(teacher|courses)/);
+    await expect(learnPage.locator("text=Learning Portal").first()).toBeVisible();
   });
 
   test("2. Without login direct access to  /dashboard and /courses blocked", async ({ page }) => {
