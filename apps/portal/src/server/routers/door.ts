@@ -2,27 +2,46 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { runDoorAction } from "../tasmota";
+import { createLogger } from "@/lib/logger";
+
+const doorLogger = createLogger("door");
 
 const doorPermissionProcedure = protectedProcedure.use(({ ctx, next }) => {
   const hasPermission =
     ctx.user.permissions.includes("open-front-door") ||
     ctx.user.permissions.includes("super") ||
     ctx.user.role === "superadmin";
-  console.log(
-    `[door] permission check for user ${ctx.user.id}: ${JSON.stringify(ctx.user.permissions)}, hasPermission: ${hasPermission}`,
-  );
+
+  doorLogger.info("Door permission check", {
+    userId: ctx.user.id,
+    hasPermission,
+  });
+
   if (!hasPermission) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Lipsă permisiunea de a deschide ușa" });
   }
   return next({ ctx });
 });
 
+let lastToggleTimestamp = 0;
+const TOGGLE_COOLDOWN_MS = 2500;
+
 export const doorRouter = router({
   toggle: doorPermissionProcedure
     .input(z.object({ action: z.enum(["open", "close"]) }))
     .mutation(async ({ ctx, input }) => {
+      const now = Date.now();
+      if (now - lastToggleTimestamp < TOGGLE_COOLDOWN_MS) {
+        doorLogger.warn("Door toggle throttled", { userId: ctx.user.id });
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Vă rugăm să așteptați câteva secunde între comenzi.",
+        });
+      }
+      lastToggleTimestamp = now;
+
       const { action } = input;
-      console.log(`[door] toggle request: ${action} by user ${ctx.user.id}`);
+      doorLogger.info("Door toggle requested", { action, userId: ctx.user.id });
 
       const tasmotaIP = process.env.TASMOTA_IP;
       const tasmotaPort = process.env.TASMOTA_PORT || "1883";
@@ -30,13 +49,14 @@ export const doorRouter = router({
       const tasmotaPassword = process.env.TASMOTA_PASSWORD;
 
       if (!tasmotaIP || !tasmotaUser || !tasmotaPassword) {
+        doorLogger.warn("Tasmota configuration missing");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Configurație Tasmota lipsă",
         });
       }
 
-      console.log(`[door] ${action} sequence starting`);
+      doorLogger.info("Door sequence starting", { action });
 
       try {
         await runDoorAction(action, {
@@ -45,10 +65,10 @@ export const doorRouter = router({
           user: tasmotaUser,
           password: tasmotaPassword,
         });
-        console.log(`[door] ${action} sequence complete`);
+        doorLogger.info("Door sequence complete", { action });
         return { success: true, action };
       } catch (error) {
-        console.error(`[door] error:`, error);
+        doorLogger.error("Door sequence failed", error as Error, { action });
         const message = (error as Error).message;
         const isTasmotaStatus = message.startsWith("Tasmota error:");
         throw new TRPCError({

@@ -4,7 +4,7 @@ import { users, schools, courses, sessions, permissionDefinitions } from "@/db/s
 
 const sql = postgres(
   process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md",
-  { max: 1 },
+  { max: 10 },
 );
 export const db = drizzle(sql, {
   schema: { users, schools, courses, sessions, permissionDefinitions },
