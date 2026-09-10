@@ -96,6 +96,50 @@ describe("studentRouter", () => {
       expect(result).toEqual(mockResult);
     });
 
+    it("creates a student with course enrollments", async () => {
+      const mockResult = {
+        id: 1,
+        name: "Enrolled Student",
+        phone: null,
+        age: 14,
+        schoolId: 1,
+        parentName: null,
+        parentPhone: null,
+        info: null,
+        active: true,
+      };
+
+      const insertValuesMock = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([mockResult]),
+      });
+      const progressValuesMock = vi.fn().mockResolvedValue({});
+
+      (db.insert as any)
+        .mockReturnValueOnce({ values: insertValuesMock })
+        .mockReturnValueOnce({ values: progressValuesMock });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.create({
+        name: "Enrolled Student",
+        age: 14,
+        courseIds: [1, 2],
+      });
+
+      expect(result).toEqual(mockResult);
+      expect(progressValuesMock).toHaveBeenCalledWith([
+        { studentId: 1, courseId: 1, status: "in_progress" },
+        { studentId: 1, courseId: 2, status: "in_progress" },
+      ]);
+    });
     it("throws FORBIDDEN when user has no student management permissions", async () => {
       const caller = studentRouter.createCaller({
         user: {
@@ -117,18 +161,27 @@ describe("studentRouter", () => {
         { id: 1, name: "Student School 1", schoolId: 1 },
         { id: 2, name: "Student School 2", schoolId: 2 },
       ];
+      const mockEnrollments = [{ studentId: 1, courseId: 101, courseName: "Matematică" }];
 
-      (db.select as any).mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                offset: vi.fn().mockResolvedValue(mockStudents),
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  offset: vi.fn().mockResolvedValue(mockStudents),
+                }),
               }),
             }),
           }),
-        }),
-      });
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue(mockEnrollments),
+            }),
+          }),
+        });
 
       const caller = studentRouter.createCaller({
         user: {
@@ -141,7 +194,20 @@ describe("studentRouter", () => {
       });
 
       const result = await caller.list();
-      expect(result).toEqual(mockStudents);
+      expect(result).toEqual([
+        {
+          id: 1,
+          name: "Student School 1",
+          schoolId: 1,
+          courses: [{ id: 101, name: "Matematică" }],
+        },
+        {
+          id: 2,
+          name: "Student School 2",
+          schoolId: 2,
+          courses: [],
+        },
+      ]);
     });
 
     it("returns empty array for unauthorized caller", async () => {
@@ -207,6 +273,123 @@ describe("studentRouter", () => {
       });
 
       await expect(caller.update({ id: 10, name: "Updated Student" })).rejects.toThrow(TRPCError);
+    });
+  });
+
+  describe("updateCourses", () => {
+    it("updates student courses successfully (adds and removes courses)", async () => {
+      const mockStudent = { id: 10, name: "Student", schoolId: 1 };
+      const existingEnrollments = [{ studentId: 10, courseId: 1 }];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(existingEnrollments),
+          }),
+        });
+
+      (db.delete as any).mockReturnValue({
+        where: vi.fn().mockResolvedValue({}),
+      });
+
+      const insertValuesMock = vi.fn().mockResolvedValue({});
+      (db.insert as any).mockReturnValue({
+        values: insertValuesMock,
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      const result = await caller.updateCourses({
+        studentId: 10,
+        courseIds: [2],
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(db.delete).toHaveBeenCalled();
+      expect(insertValuesMock).toHaveBeenCalledWith([
+        { studentId: 10, courseId: 2, status: "in_progress" },
+      ]);
+    });
+
+    it("throws NOT_FOUND when student does not exist", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      await expect(caller.updateCourses({ studentId: 999, courseIds: [1] })).rejects.toThrow(
+        TRPCError,
+      );
+    });
+
+    it("throws FORBIDDEN when caller has no permission", async () => {
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "4",
+          role: "guest",
+          permissions: [],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      await expect(caller.updateCourses({ studentId: 1, courseIds: [1] })).rejects.toThrow(
+        TRPCError,
+      );
+    });
+
+    it("throws FORBIDDEN when school admin tries to update courses for student in another school", async () => {
+      const mockStudent = { id: 10, name: "Student", schoolId: 99 };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockStudent]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "2",
+          role: "admin",
+          permissions: ["admin"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.updateCourses({ studentId: 10, courseIds: [1] })).rejects.toThrow(
+        TRPCError,
+      );
     });
   });
 

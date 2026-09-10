@@ -24,14 +24,19 @@ const db = drizzle(sql);
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  // Create school
-  const [school] = await db
-    .insert(schools)
-    .values({
-      name: "Vibe Academy",
-    })
-    .returning();
-  console.log("✅ Created school:", school.name);
+  // Find or create school (idempotent)
+  let [school] = await db.select().from(schools).where(eq(schools.name, "Vibe Academy")).limit(1);
+  if (!school) {
+    [school] = await db
+      .insert(schools)
+      .values({
+        name: "Vibe Academy",
+      })
+      .returning();
+    console.log("✅ Created school:", school.name);
+  } else {
+    console.log("ℹ️ Using existing school:", school.name, `(id: ${school.id})`);
+  }
 
   // Create sample students
   const [student1] = await db
