@@ -1,6 +1,7 @@
 "use client";
 
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
+import { StudentCoursesCell } from "@/components/dashboard/StudentCoursesCell";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -40,6 +41,9 @@ export default function StudentiPage() {
     enabled: canManageStudents,
   });
   const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
+    enabled: canManageStudents,
+  });
+  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, {
     enabled: canManageStudents,
   });
 
@@ -114,6 +118,13 @@ export default function StudentiPage() {
                         )}
                       </p>
                     )}
+                    <div className="pt-0.5">
+                      <StudentCoursesCell
+                        studentId={student.id}
+                        currentCourses={(student as any).courses || []}
+                        availableCourses={courses}
+                      />
+                    </div>
                     {student.createdAt && (
                       <p className="text-xs text-neutral-400">
                         {new Date(student.createdAt).toLocaleDateString("ro-RO", {
@@ -154,6 +165,7 @@ export default function StudentiPage() {
                   <th className="px-4 py-3 text-left">Telefon</th>
                   <th className="px-4 py-3 text-left">Vârstă</th>
                   <th className="px-4 py-3 text-left">Școală</th>
+                  <th className="px-4 py-3 text-left">Cursuri</th>
                   <th className="px-4 py-3 text-left">Data adăugării</th>
                   <th className="px-4 py-3 text-left"></th>
                 </tr>
@@ -181,6 +193,13 @@ export default function StudentiPage() {
                         {student.age ? `${student.age} ani` : "-"}
                       </td>
                       <td className="px-4 py-3">{school?.name || "-"}</td>
+                      <td className="px-4 py-3 min-w-[200px]">
+                        <StudentCoursesCell
+                          studentId={student.id}
+                          currentCourses={(student as any).courses || []}
+                          availableCourses={courses}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-neutral-700">
                         {student.createdAt
                           ? new Date(student.createdAt).toLocaleDateString("ro-RO", {
@@ -220,6 +239,7 @@ export default function StudentiPage() {
         <StudentFormDrawer
           student={editingStudent}
           schools={schools}
+          courses={courses}
           isSuperAdmin={permissions.includes("super") || role === "superadmin"}
           onClose={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}

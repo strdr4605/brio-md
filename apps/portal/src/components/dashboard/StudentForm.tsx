@@ -14,11 +14,13 @@ export type StudentFormStudent = {
   parentPhone?: string | null;
   info?: string | null;
   active?: boolean | null;
+  courses?: Array<{ id: number; name: string }>;
 };
 
 type Props = {
   student: StudentFormStudent | null;
   schools: { id: number; name: string }[];
+  courses?: { id: number; name: string; level?: string | null }[];
   isSuperAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
@@ -27,6 +29,7 @@ type Props = {
 export function StudentFormDrawer({
   student,
   schools,
+  courses = [],
   isSuperAdmin,
   onClose,
   currentUserSchoolId,
@@ -78,6 +81,10 @@ export function StudentFormDrawer({
     active: student?.active ?? true,
   });
 
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>(
+    student?.courses?.map((c) => c.id) || [],
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,6 +124,7 @@ export function StudentFormDrawer({
         parentPhone: normalizedParentPhone,
         info: formData.info || null,
         active: formData.active,
+        courseIds: selectedCourseIds,
       });
     } else {
       createMutation.mutate({
@@ -127,6 +135,7 @@ export function StudentFormDrawer({
         parentName: formData.parentName || null,
         parentPhone: normalizedParentPhone,
         info: formData.info || null,
+        courseIds: selectedCourseIds,
       });
     }
   };
@@ -250,8 +259,40 @@ export function StudentFormDrawer({
               {parentPhoneError && <p className="text-red-500 text-xs mt-1">{parentPhoneError}</p>}
             </div>
 
+            {courses.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Cursuri înscrise</label>
+                <div className="flex flex-wrap gap-1.5 p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg">
+                  {courses.map((course) => {
+                    const isSelected = selectedCourseIds.includes(course.id);
+                    return (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCourseIds((prev) =>
+                            prev.includes(course.id)
+                              ? prev.filter((id) => id !== course.id)
+                              : [...prev, course.id],
+                          );
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                          isSelected
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                            : "bg-white text-neutral-600 border-neutral-300 hover:border-neutral-400"
+                        }`}
+                      >
+                        <span>{isSelected ? "✓" : "+"}</span>
+                        <span>{course.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium mb-1">Notițe / Informații</label>
+              <label className="block text-sm font-medium mb-1.5">Notițe / Informații</label>
               <textarea
                 rows={3}
                 value={formData.info}
