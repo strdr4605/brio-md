@@ -53,8 +53,8 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
           until curl -s http://localhost:3002 > /dev/null; do sleep 2; done
           until curl -s http://localhost:3003 > /dev/null; do sleep 2; done
-          docker exec brio-portal-1 npm run db:push --workspace=@brio-md/portal
-          docker exec brio-portal-1 npm run db:seed --workspace=@brio-md/portal
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T portal npm run db:push --workspace=@brio-md/portal
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T portal npm run db:seed --workspace=@brio-md/portal
 
       - name: Run E2E tests
         run: npm run test:e2e
