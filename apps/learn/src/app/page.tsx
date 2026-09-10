@@ -9,10 +9,22 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  // If already logged in, redirect to courses
+  // If already logged in, redirect based on role
   const session = await auth();
   if (session?.user) {
-    redirect("/courses");
+    const isTeacher =
+      session.user.role === "teacher" ||
+      session.user.role === "admin" ||
+      session.user.role === "superadmin" ||
+      session.user.permissions?.includes("teach") ||
+      session.user.permissions?.includes("admin") ||
+      session.user.permissions?.includes("super");
+
+    if (isTeacher && !session.user.studentId) {
+      redirect("/teacher");
+    } else {
+      redirect("/courses");
+    }
   }
 
   const params = await searchParams;
