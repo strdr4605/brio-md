@@ -140,7 +140,6 @@ describe("studentRouter", () => {
         { studentId: 1, courseId: 2, status: "in_progress" },
       ]);
     });
-
     it("throws FORBIDDEN when user has no student management permissions", async () => {
       const caller = studentRouter.createCaller({
         user: {

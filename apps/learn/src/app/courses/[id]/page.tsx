@@ -7,7 +7,7 @@ import { CourseDetailView } from "./CourseDetailView";
 export default async function CourseDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
 }) {
   const session = await auth();
 
@@ -15,11 +15,23 @@ export default async function CourseDetailPage({
     redirect("/");
   }
 
-  const { id } = params;
-  const courseId = parseInt(id, 10);
+  const resolvedParams = await params;
+  const courseId = parseInt(resolvedParams.id, 10);
 
   if (isNaN(courseId)) {
     redirect("/courses");
+  }
+
+  const isTeacher =
+    session.user.role === "teacher" ||
+    session.user.role === "admin" ||
+    session.user.role === "superadmin" ||
+    session.user.permissions?.includes("teach") ||
+    session.user.permissions?.includes("admin") ||
+    session.user.permissions?.includes("super");
+
+  if (isTeacher) {
+    redirect(`/teacher/courses/${courseId}`);
   }
 
   async function handleSignOut() {

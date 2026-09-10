@@ -254,7 +254,7 @@ export const studentRouter = router({
       return result;
     }),
 
-  // Update student courses (Discord-style roles toggle)
+  // Update student courses (tag-based roles toggle)
   updateCourses: protectedProcedure
     .input(
       z.object({
@@ -328,7 +328,6 @@ export const studentRouter = router({
 
       return { success: true };
     }),
-
   // Delete student
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
