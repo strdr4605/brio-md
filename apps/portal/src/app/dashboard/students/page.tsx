@@ -19,6 +19,22 @@ export default function StudentiPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
 
+  const utils = trpc.useUtils();
+  const deleteMutation = trpc.student.delete.useMutation({
+    onSuccess: () => {
+      utils.student.list.invalidate();
+    },
+    onError: (err) => {
+      alert(err.message || "A apărut o eroare la ștergere");
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    if (confirm("Sigur doriți să ștergeți acest student?")) {
+      deleteMutation.mutate({ id });
+    }
+  };
+
   const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
     enabled: isSuperOrAdmin,
   });
@@ -47,7 +63,7 @@ export default function StudentiPage() {
     setShowForm(true);
   };
 
-  const handleEdit = (student: typeof students[number]) => {
+  const handleEdit = (student: (typeof students)[number]) => {
     setEditingStudent(student);
     setShowForm(true);
   };
@@ -78,9 +94,12 @@ export default function StudentiPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-neutral-900">{student.name}</span>
-                      {school && (
-                        <span className="text-xs text-neutral-500">{school.name}</span>
+                      {student.age && (
+                        <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded">
+                          {student.age} ani
+                        </span>
                       )}
+                      {school && <span className="text-xs text-neutral-500">{school.name}</span>}
                     </div>
                     {(student.phone || student.parentPhone) && (
                       <p className="text-sm text-neutral-700">
@@ -100,12 +119,23 @@ export default function StudentiPage() {
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="text-blue-600 p-2 border border-blue-200 rounded hover:bg-blue-50"
-                  >
-                    ✏️
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(student)}
+                      className="text-blue-600 p-2 border border-blue-200 rounded hover:bg-blue-50"
+                      aria-label="Editează"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student.id)}
+                      disabled={deleteMutation.isPending}
+                      className="text-red-600 p-2 border border-red-200 rounded hover:bg-red-50 disabled:opacity-50"
+                      aria-label="Șterge"
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -117,6 +147,7 @@ export default function StudentiPage() {
                 <tr>
                   <th className="px-4 py-3 text-left">Nume</th>
                   <th className="px-4 py-3 text-left">Telefon</th>
+                  <th className="px-4 py-3 text-left">Vârstă</th>
                   <th className="px-4 py-3 text-left">Școală</th>
                   <th className="px-4 py-3 text-left">Data adăugării</th>
                   <th className="px-4 py-3 text-left"></th>
@@ -128,7 +159,7 @@ export default function StudentiPage() {
                   const displayPhone = student.phone || student.parentPhone;
                   return (
                     <tr key={student.id} className="border-t">
-                      <td className="px-4 py-3">{student.name}</td>
+                      <td className="px-4 py-3 font-medium text-neutral-900">{student.name}</td>
                       <td className="px-4 py-3">
                         {displayPhone ? (
                           <span>
@@ -141,6 +172,9 @@ export default function StudentiPage() {
                           "-"
                         )}
                       </td>
+                      <td className="px-4 py-3 text-neutral-700">
+                        {student.age ? `${student.age} ani` : "-"}
+                      </td>
                       <td className="px-4 py-3">{school?.name || "-"}</td>
                       <td className="px-4 py-3 text-neutral-700">
                         {student.createdAt
@@ -152,12 +186,21 @@ export default function StudentiPage() {
                           : "-"}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleEdit(student)}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Editează
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEdit(student)}
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Editează
+                          </button>
+                          <button
+                            onClick={() => handleDelete(student.id)}
+                            disabled={deleteMutation.isPending}
+                            className="text-red-600 hover:underline text-sm disabled:opacity-50"
+                          >
+                            Șterge
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -70,6 +70,13 @@ export const studentRouter = router({
       z.object({
         name: z.string().min(1, "Numele este obligatoriu"),
         phone: phoneSchema,
+        age: z
+          .number()
+          .int()
+          .min(1, "Vârsta minimă este 1 an")
+          .max(120, "Vârsta maximă este 120 ani")
+          .nullable()
+          .optional(),
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
         parentPhone: phoneSchema,
@@ -99,6 +106,7 @@ export const studentRouter = router({
         .values({
           name: input.name,
           phone: input.phone || null,
+          age: input.age ?? null,
           schoolId: assignedSchoolId,
           parentName: input.parentName || null,
           parentPhone: input.parentPhone || null,
@@ -117,6 +125,13 @@ export const studentRouter = router({
         id: z.number(),
         name: z.string().min(1).optional(),
         phone: phoneSchema,
+        age: z
+          .number()
+          .int()
+          .min(1, "Vârsta minimă este 1 an")
+          .max(120, "Vârsta maximă este 120 ani")
+          .nullable()
+          .optional(),
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
         parentPhone: phoneSchema,
@@ -162,5 +177,45 @@ export const studentRouter = router({
         .returning();
 
       return result;
+    }),
+
+  // Delete student
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+
+      if (!isSuper && !isAdmin) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a șterge studenți",
+        });
+      }
+
+      const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Studentul nu a fost găsit",
+        });
+      }
+
+      if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți șterge un student din altă școală",
+        });
+      }
+
+      await db.delete(students).where(eq(students.id, input.id));
+
+      return { success: true };
     }),
 });

@@ -8,6 +8,7 @@ export type StudentFormStudent = {
   id?: number;
   name?: string;
   phone?: string | null;
+  age?: number | null;
   schoolId?: number | null;
   parentName?: string | null;
   parentPhone?: string | null;
@@ -56,9 +57,20 @@ export function StudentFormDrawer({
     },
   });
 
+  const deleteMutation = trpc.student.delete.useMutation({
+    onSuccess: () => {
+      utils.student.list.invalidate();
+      onClose();
+    },
+    onError: (err) => {
+      alert(err.message || "A apărut o eroare la ștergere");
+    },
+  });
+
   const [formData, setFormData] = useState({
     name: student?.name || "",
     phone: student?.phone || "",
+    age: student?.age != null ? String(student.age) : "",
     schoolId: student?.schoolId || currentUserSchoolId || null,
     parentName: student?.parentName || "",
     parentPhone: student?.parentPhone || "",
@@ -78,7 +90,9 @@ export function StudentFormDrawer({
     }
 
     if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
-      setParentPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+      setParentPhoneError(
+        "Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
+      );
       hasError = true;
     } else {
       setParentPhoneError(null);
@@ -87,13 +101,17 @@ export function StudentFormDrawer({
     if (hasError) return;
 
     const normalizedPhone = formData.phone ? normalizePhone(formData.phone) : null;
-    const normalizedParentPhone = formData.parentPhone ? normalizePhone(formData.parentPhone) : null;
+    const normalizedParentPhone = formData.parentPhone
+      ? normalizePhone(formData.parentPhone)
+      : null;
+    const parsedAge = formData.age.trim() === "" ? null : Number(formData.age);
 
     if (isEditing) {
       updateMutation.mutate({
         id: student.id!,
         name: formData.name,
         phone: normalizedPhone,
+        age: parsedAge,
         schoolId: isSuperAdmin ? formData.schoolId : undefined,
         parentName: formData.parentName || null,
         parentPhone: normalizedParentPhone,
@@ -104,6 +122,7 @@ export function StudentFormDrawer({
       createMutation.mutate({
         name: formData.name,
         phone: normalizedPhone,
+        age: parsedAge,
         schoolId: formData.schoolId,
         parentName: formData.parentName || null,
         parentPhone: normalizedParentPhone,
@@ -150,7 +169,9 @@ export function StudentFormDrawer({
                 }}
                 onBlur={() => {
                   if (formData.phone && !isValidPhone(formData.phone)) {
-                    setPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+                    setPhoneError(
+                      "Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
+                    );
                   }
                 }}
                 placeholder="Ex: +373 69 000 000 sau +40 712 345 678"
@@ -159,6 +180,19 @@ export function StudentFormDrawer({
                 }`}
               />
               {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Vârstă (ani)</label>
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                placeholder="Ex: 12"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
 
             {isSuperAdmin && (
@@ -203,7 +237,9 @@ export function StudentFormDrawer({
                 }}
                 onBlur={() => {
                   if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
-                    setParentPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+                    setParentPhoneError(
+                      "Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
+                    );
                   }
                 }}
                 placeholder="Ex: +373 68 000 000 sau +40 712 345 678"
@@ -249,7 +285,9 @@ export function StudentFormDrawer({
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={
+                  createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
+                }
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
               >
                 {createMutation.isPending || updateMutation.isPending
@@ -258,6 +296,22 @@ export function StudentFormDrawer({
                     ? "Salvează Modificările"
                     : "Creează Student"}
               </button>
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Sigur doriți să ștergeți acest student?")) {
+                      deleteMutation.mutate({ id: student.id! });
+                    }
+                  }}
+                  disabled={
+                    deleteMutation.isPending || createMutation.isPending || updateMutation.isPending
+                  }
+                  className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 font-medium"
+                >
+                  {deleteMutation.isPending ? "Se șterge..." : "Șterge"}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onClose}
