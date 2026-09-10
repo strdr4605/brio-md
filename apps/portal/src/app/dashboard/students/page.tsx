@@ -69,6 +69,10 @@ export default function StudentiPage() {
     setShowForm(true);
   };
 
+  const sortedStudents = [...students].sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", "ro", { sensitivity: "base" }),
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -83,12 +87,12 @@ export default function StudentiPage() {
 
       {isLoading ? (
         <p>Se încarcă...</p>
-      ) : students.length === 0 ? (
+      ) : sortedStudents.length === 0 ? (
         <p className="text-neutral-600">Nu există studenți înregistrați.</p>
       ) : (
         <>
           <div className="md:hidden bg-white rounded-lg shadow divide-y">
-            {students.map((student) => {
+            {sortedStudents.map((student) => {
               const school = schools.find((s) => s.id === student.schoolId);
               return (
                 <div key={student.id} className="p-3 flex justify-between items-center">
@@ -155,7 +159,7 @@ export default function StudentiPage() {
                 </tr>
               </thead>
               <tbody>
-                {students.map((student) => {
+                {sortedStudents.map((student) => {
                   const school = schools.find((s) => s.id === student.schoolId);
                   const displayPhone = student.phone || student.parentPhone;
                   return (

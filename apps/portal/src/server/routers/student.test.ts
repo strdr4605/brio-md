@@ -121,8 +121,10 @@ describe("studentRouter", () => {
       (db.select as any).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              offset: vi.fn().mockResolvedValue(mockStudents),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(mockStudents),
+              }),
             }),
           }),
         }),

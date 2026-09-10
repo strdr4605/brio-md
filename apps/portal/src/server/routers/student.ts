@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, asc } from "drizzle-orm";
 import { students } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
@@ -59,6 +59,7 @@ export const studentRouter = router({
         .select()
         .from(students)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(asc(students.name))
         .limit(input?.limit ?? 50)
         .offset(input?.offset ?? 0);
 
