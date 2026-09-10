@@ -71,6 +71,8 @@ export function CourseDetailView({ courseId }: Props) {
     { id: courseId },
     {
       retry: false,
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
     },
   );
 
