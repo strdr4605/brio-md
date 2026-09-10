@@ -8,14 +8,25 @@ import { useState } from "react";
 export default function UsersPage() {
   const { data: session, status } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
-  const isSuperOrAdmin = permissions.includes("super") || permissions.includes("admin");
+  const role = session?.user?.role;
+  const isSuperOrAdmin =
+    permissions.includes("super") ||
+    permissions.includes("admin") ||
+    role === "superadmin" ||
+    role === "admin";
 
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<typeof users[number] | null>(null);
 
-  const { data: users = [], isLoading } = trpc.user.list.useQuery({ active: activeFilter });
-  const { data: schools = [] } = trpc.user.listSchools.useQuery();
+  const { data: users = [], isLoading } = trpc.user.list.useQuery(
+    { active: activeFilter },
+    { enabled: isSuperOrAdmin },
+  );
+  const { data: schools = [] } = trpc.user.listSchools.useQuery(
+    undefined,
+    { enabled: isSuperOrAdmin },
+  );
 
   if (status === "loading") {
     return (
