@@ -4,6 +4,7 @@ import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboa
 import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { formatPhone } from "@/lib/phone";
 
 export default function StudentiPage() {
   const { data: session, status } = useSession();
@@ -83,7 +84,7 @@ export default function StudentiPage() {
                     </div>
                     {(student.phone || student.parentPhone) && (
                       <p className="text-sm text-neutral-700">
-                        {student.phone || student.parentPhone}
+                        {formatPhone(student.phone || student.parentPhone)}
                         {!student.phone && student.parentPhone && (
                           <span className="text-xs text-neutral-400 ml-1">(părinte)</span>
                         )}
@@ -131,7 +132,7 @@ export default function StudentiPage() {
                       <td className="px-4 py-3">
                         {displayPhone ? (
                           <span>
-                            {displayPhone}
+                            {formatPhone(displayPhone)}
                             {!student.phone && student.parentPhone && (
                               <span className="text-xs text-neutral-400 ml-1">(părinte)</span>
                             )}

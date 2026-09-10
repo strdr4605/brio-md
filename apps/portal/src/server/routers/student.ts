@@ -4,6 +4,16 @@ import { eq, ilike, and } from "drizzle-orm";
 import { students } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
+import { isValidPhone, normalizePhone } from "@/lib/phone";
+
+const phoneSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .refine((val) => !val || isValidPhone(val), {
+    message: "Format telefon invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000",
+  })
+  .transform((val) => (val && val.trim() ? normalizePhone(val) : null));
 
 export const studentRouter = router({
   // List students (filtered by permissions)
@@ -68,10 +78,10 @@ export const studentRouter = router({
     .input(
       z.object({
         name: z.string().min(1, "Numele este obligatoriu"),
-        phone: z.string().optional().nullable(),
+        phone: phoneSchema,
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
-        parentPhone: z.string().optional().nullable(),
+        parentPhone: phoneSchema,
         info: z.string().optional().nullable(),
       }),
     )
@@ -112,10 +122,10 @@ export const studentRouter = router({
       z.object({
         id: z.number(),
         name: z.string().min(1).optional(),
-        phone: z.string().optional().nullable(),
+        phone: phoneSchema,
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
-        parentPhone: z.string().optional().nullable(),
+        parentPhone: phoneSchema,
         info: z.string().optional().nullable(),
         active: z.boolean().optional(),
       }),

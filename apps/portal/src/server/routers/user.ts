@@ -5,6 +5,16 @@ import { users, schools, courses, sessions } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
+import { isValidPhone, normalizePhone } from "@/lib/phone";
+
+const phoneSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .refine((val) => !val || isValidPhone(val), {
+    message: "Format telefon invalid.",
+  })
+  .transform((val) => (val && val.trim() ? normalizePhone(val) : null));
 
 export const userRouter = router({
   // Get current user
@@ -129,7 +139,7 @@ export const userRouter = router({
         permissions: z.array(z.string()),
         courseIds: z.array(z.number()).optional(),
         schoolId: z.number().nullable().optional(),
-        phone: z.string().optional(),
+        phone: phoneSchema,
         info: z.string().optional(),
       }),
     )
@@ -146,7 +156,7 @@ export const userRouter = router({
           permissions: input.permissions,
           courseIds: input.courseIds || [],
           schoolId,
-          phone: input.phone,
+          phone: input.phone || null,
           info: input.info,
           active: true,
         })
@@ -166,6 +176,7 @@ export const userRouter = router({
         permissions: z.array(z.string()).optional(),
         courseIds: z.array(z.number()).optional(),
         schoolId: z.number().nullable().optional(),
+        phone: phoneSchema,
         active: z.boolean().optional(),
         password: z.string().optional(),
       }),

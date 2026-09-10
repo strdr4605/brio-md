@@ -2,6 +2,7 @@
 
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { isValidPhone, normalizePhone } from "@/lib/phone";
 
 export type StudentFormStudent = {
   id?: number;
@@ -32,10 +33,16 @@ export function StudentFormDrawer({
   const utils = trpc.useUtils();
   const isEditing = !!student?.id;
 
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [parentPhoneError, setParentPhoneError] = useState<string | null>(null);
+
   const createMutation = trpc.student.create.useMutation({
     onSuccess: () => {
       utils.student.list.invalidate();
       onClose();
+    },
+    onError: (err) => {
+      alert(err.message || "A apărut o eroare la salvare");
     },
   });
 
@@ -43,6 +50,9 @@ export function StudentFormDrawer({
     onSuccess: () => {
       utils.student.list.invalidate();
       onClose();
+    },
+    onError: (err) => {
+      alert(err.message || "A apărut o eroare la salvare");
     },
   });
 
@@ -58,24 +68,45 @@ export function StudentFormDrawer({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    let hasError = false;
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      setPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+      hasError = true;
+    } else {
+      setPhoneError(null);
+    }
+
+    if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
+      setParentPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+      hasError = true;
+    } else {
+      setParentPhoneError(null);
+    }
+
+    if (hasError) return;
+
+    const normalizedPhone = formData.phone ? normalizePhone(formData.phone) : null;
+    const normalizedParentPhone = formData.parentPhone ? normalizePhone(formData.parentPhone) : null;
+
     if (isEditing) {
       updateMutation.mutate({
         id: student.id!,
         name: formData.name,
-        phone: formData.phone || null,
+        phone: normalizedPhone,
         schoolId: isSuperAdmin ? formData.schoolId : undefined,
         parentName: formData.parentName || null,
-        parentPhone: formData.parentPhone || null,
+        parentPhone: normalizedParentPhone,
         info: formData.info || null,
         active: formData.active,
       });
     } else {
       createMutation.mutate({
         name: formData.name,
-        phone: formData.phone || null,
+        phone: normalizedPhone,
         schoolId: formData.schoolId,
         parentName: formData.parentName || null,
-        parentPhone: formData.parentPhone || null,
+        parentPhone: normalizedParentPhone,
         info: formData.info || null,
       });
     }
@@ -113,10 +144,21 @@ export function StudentFormDrawer({
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Ex: +37369000000"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  setFormData({ ...formData, phone: e.target.value });
+                  if (phoneError) setPhoneError(null);
+                }}
+                onBlur={() => {
+                  if (formData.phone && !isValidPhone(formData.phone)) {
+                    setPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+                  }
+                }}
+                placeholder="Ex: +373 69 000 000 sau +40 712 345 678"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  phoneError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                }`}
               />
+              {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
             </div>
 
             {isSuperAdmin && (
@@ -155,10 +197,21 @@ export function StudentFormDrawer({
               <input
                 type="tel"
                 value={formData.parentPhone}
-                onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                placeholder="Ex: +37368000000"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  setFormData({ ...formData, parentPhone: e.target.value });
+                  if (parentPhoneError) setParentPhoneError(null);
+                }}
+                onBlur={() => {
+                  if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
+                    setParentPhoneError("Format invalid. Exemplu: +373 69 000 000, +40 712 345 678 sau 069000000");
+                  }
+                }}
+                placeholder="Ex: +373 68 000 000 sau +40 712 345 678"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  parentPhoneError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                }`}
               />
+              {parentPhoneError && <p className="text-red-500 text-xs mt-1">{parentPhoneError}</p>}
             </div>
 
             <div>
