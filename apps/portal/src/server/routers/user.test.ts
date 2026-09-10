@@ -246,4 +246,92 @@ describe("user.list", () => {
 
     await expect(caller.list({})).rejects.toThrow(TRPCError);
   });
+
+  it("returns all users when called by role-only superadmin without explicit super permission", async () => {
+    const mockUsers = [
+      {
+        id: 1,
+        email: "super@example.com",
+        name: "Super Admin",
+        role: "superadmin",
+        permissions: [],
+        courseIds: [],
+        schoolId: null,
+        phone: null,
+        info: null,
+        active: true,
+        createdAt: new Date(),
+      },
+    ];
+
+    const mockQuery = {
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      offset: vi.fn().mockResolvedValue(mockUsers),
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue(mockQuery),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "1",
+        email: "super@example.com",
+        name: "Super Admin",
+        role: "superadmin",
+        permissions: [],
+        courseIds: [],
+        schoolId: null,
+      },
+    });
+
+    const result = await caller.list({});
+    expect(result).toHaveLength(1);
+    expect(result[0].email).toBe("super@example.com");
+  });
+
+  it("returns school users when called by role-only admin without explicit admin permission", async () => {
+    const mockUsers = [
+      {
+        id: 2,
+        email: "admin@school.com",
+        name: "School Admin",
+        role: "admin",
+        permissions: [],
+        courseIds: [],
+        schoolId: 5,
+        phone: null,
+        info: null,
+        active: true,
+        createdAt: new Date(),
+      },
+    ];
+
+    const mockQuery = {
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      offset: vi.fn().mockResolvedValue(mockUsers),
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue(mockQuery),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "School Admin",
+        role: "admin",
+        permissions: [],
+        courseIds: [],
+        schoolId: 5,
+      },
+    });
+
+    const result = await caller.list({});
+    expect(result).toHaveLength(1);
+    expect(result[0].email).toBe("admin@school.com");
+  });
 });

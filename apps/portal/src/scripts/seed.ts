@@ -40,6 +40,7 @@ async function seed() {
       name: "Alex Popescu",
       schoolId: school.id,
       phone: "+37369000001",
+      age: 14,
       parentName: "Maria Popescu",
       parentPhone: "+37360000000",
     })
@@ -52,6 +53,7 @@ async function seed() {
       name: "Elena Ionescu",
       schoolId: school.id,
       phone: "+37369000002",
+      age: 12,
       parentName: "Ion Ionescu",
       parentPhone: "+37361111111",
     })
@@ -64,6 +66,7 @@ async function seed() {
       name: "Mihai Radu",
       schoolId: school.id,
       phone: "+37369000003",
+      age: 16,
       parentName: "Victor Radu",
       parentPhone: "+37362222222",
     })
@@ -76,6 +79,7 @@ async function seed() {
       name: "Sofia Ursu",
       schoolId: school.id,
       phone: "+37369000004",
+      age: 11,
       parentName: "Ana Ursu",
       parentPhone: "+37363333333",
     })
@@ -151,7 +155,6 @@ async function seed() {
     .returning();
   console.log("✅ Created Teacher:", teacher.name);
 
-
   // Create Courses with full schedule and level information
   const [courseEnglish] = await db
     .insert(courses)
@@ -210,7 +213,6 @@ async function seed() {
     .update(users)
     .set({ courseIds: [courseEnglish.id, courseRobotics.id, courseWeb.id] })
     .where(eq(users.id, teacher.id));
-
 
   // Create Course Materials
   await db.insert(courseMaterials).values([
@@ -297,5 +299,3 @@ seed().catch((err) => {
   console.error("Seed failed:", err);
   process.exit(1);
 });
-
-

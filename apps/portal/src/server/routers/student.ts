@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, asc } from "drizzle-orm";
 import { students } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
+import { phoneSchema } from "@/lib/phone";
 
 export const studentRouter = router({
   // List students (filtered by permissions)
@@ -27,10 +28,11 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
       const conditions = [];
 
-      if (!isSuper) {
+      if (!isSuper && !isTeacher) {
         if (isAdmin) {
           // Admins see students in their school
           if (user.schoolId) {
@@ -57,6 +59,7 @@ export const studentRouter = router({
         .select()
         .from(students)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(asc(students.name))
         .limit(input?.limit ?? 50)
         .offset(input?.offset ?? 0);
 
@@ -68,10 +71,17 @@ export const studentRouter = router({
     .input(
       z.object({
         name: z.string().min(1, "Numele este obligatoriu"),
-        phone: z.string().optional().nullable(),
+        phone: phoneSchema,
+        age: z
+          .number()
+          .int()
+          .min(1, "Vârsta minimă este 1 an")
+          .max(120, "Vârsta maximă este 120 ani")
+          .nullable()
+          .optional(),
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
-        parentPhone: z.string().optional().nullable(),
+        parentPhone: phoneSchema,
         info: z.string().optional().nullable(),
       }),
     )
@@ -83,18 +93,24 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
-      if (!isSuper && !isAdmin) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a adăuga studenți" });
+      if (!isSuper && !isAdmin && !isTeacher) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a adăuga studenți",
+        });
       }
 
-      const assignedSchoolId = isSuper ? (input.schoolId ?? null) : user.schoolId;
+      const assignedSchoolId =
+        isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
 
       const [result] = await db
         .insert(students)
         .values({
           name: input.name,
           phone: input.phone || null,
+          age: input.age ?? null,
           schoolId: assignedSchoolId,
           parentName: input.parentName || null,
           parentPhone: input.parentPhone || null,
@@ -112,10 +128,17 @@ export const studentRouter = router({
       z.object({
         id: z.number(),
         name: z.string().min(1).optional(),
-        phone: z.string().optional().nullable(),
+        phone: phoneSchema,
+        age: z
+          .number()
+          .int()
+          .min(1, "Vârsta minimă este 1 an")
+          .max(120, "Vârsta maximă este 120 ani")
+          .nullable()
+          .optional(),
         schoolId: z.number().nullable().optional(),
         parentName: z.string().optional().nullable(),
-        parentPhone: z.string().optional().nullable(),
+        parentPhone: phoneSchema,
         info: z.string().optional().nullable(),
         active: z.boolean().optional(),
       }),
@@ -128,8 +151,9 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
-      if (!isSuper && !isAdmin) {
+      if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -138,8 +162,11 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
+      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți modifica un student din altă școală",
+        });
       }
 
       const { id, ...data } = input;
@@ -155,5 +182,46 @@ export const studentRouter = router({
         .returning();
 
       return result;
+    }),
+
+  // Delete student
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
+
+      if (!isSuper && !isAdmin && !isTeacher) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a șterge studenți",
+        });
+      }
+
+      const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Studentul nu a fost găsit",
+        });
+      }
+
+      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți șterge un student din altă școală",
+        });
+      }
+
+      await db.delete(students).where(eq(students.id, input.id));
+
+      return { success: true };
     }),
 });

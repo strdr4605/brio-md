@@ -45,6 +45,7 @@ export const students = pgTable("students", {
   info: text("info"),
   classId: integer("class_id"),
   phone: text("phone"),
+  age: integer("age"),
   active: boolean("active").default(true),
   lastChangedAt: timestamp("last_changed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
