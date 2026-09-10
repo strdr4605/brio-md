@@ -15,6 +15,7 @@ export default function StudentiPage() {
     permissions.includes("admin") ||
     role === "superadmin" ||
     role === "admin";
+  const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
 
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
@@ -36,10 +37,10 @@ export default function StudentiPage() {
   };
 
   const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
-    enabled: isSuperOrAdmin,
+    enabled: canManageStudents,
   });
   const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
-    enabled: isSuperOrAdmin,
+    enabled: canManageStudents,
   });
 
   if (status === "loading") {
@@ -50,7 +51,7 @@ export default function StudentiPage() {
     );
   }
 
-  if (!isSuperOrAdmin) {
+  if (!canManageStudents) {
     return (
       <div className="p-6">
         <p className="text-neutral-600">Nu ai permisiunea să accesezi această pagină.</p>

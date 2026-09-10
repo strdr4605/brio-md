@@ -28,10 +28,11 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
       const conditions = [];
 
-      if (!isSuper) {
+      if (!isSuper && !isTeacher) {
         if (isAdmin) {
           // Admins see students in their school
           if (user.schoolId) {
@@ -91,15 +92,17 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
-      if (!isSuper && !isAdmin) {
+      if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu ai permisiunea de a adăuga studenți",
         });
       }
 
-      const assignedSchoolId = isSuper ? (input.schoolId ?? null) : user.schoolId;
+      const assignedSchoolId =
+        isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
 
       const [result] = await db
         .insert(students)
@@ -147,8 +150,9 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
-      if (!isSuper && !isAdmin) {
+      if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -157,7 +161,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
+      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu poți modifica un student din altă școală",
@@ -190,8 +194,9 @@ export const studentRouter = router({
 
       const isSuper = permissions.includes("super") || role === "superadmin";
       const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
 
-      if (!isSuper && !isAdmin) {
+      if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu ai permisiunea de a șterge studenți",
@@ -207,7 +212,7 @@ export const studentRouter = router({
         });
       }
 
-      if (!isSuper && isAdmin && existing.schoolId !== user.schoolId) {
+      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu poți șterge un student din altă școală",
