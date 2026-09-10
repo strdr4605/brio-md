@@ -14,6 +14,7 @@ export function Nav({ userName, permissions }: { userName?: string; permissions?
       ? [
           { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
           { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
+          { href: "/dashboard/courses", icon: "📚", label: "Cursuri" },
         ]
       : []),
     ...(isSuperOrAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
