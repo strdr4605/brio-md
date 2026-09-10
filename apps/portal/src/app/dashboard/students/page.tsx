@@ -81,8 +81,13 @@ export default function StudentiPage() {
                         <span className="text-xs text-neutral-500">{school.name}</span>
                       )}
                     </div>
-                    {student.phone && (
-                      <p className="text-sm text-neutral-700">{student.phone}</p>
+                    {(student.phone || student.parentPhone) && (
+                      <p className="text-sm text-neutral-700">
+                        {student.phone || student.parentPhone}
+                        {!student.phone && student.parentPhone && (
+                          <span className="text-xs text-neutral-400 ml-1">(părinte)</span>
+                        )}
+                      </p>
                     )}
                     {student.createdAt && (
                       <p className="text-xs text-neutral-400">
@@ -119,10 +124,22 @@ export default function StudentiPage() {
               <tbody>
                 {students.map((student) => {
                   const school = schools.find((s) => s.id === student.schoolId);
+                  const displayPhone = student.phone || student.parentPhone;
                   return (
                     <tr key={student.id} className="border-t">
                       <td className="px-4 py-3">{student.name}</td>
-                      <td className="px-4 py-3">{student.phone || "-"}</td>
+                      <td className="px-4 py-3">
+                        {displayPhone ? (
+                          <span>
+                            {displayPhone}
+                            {!student.phone && student.parentPhone && (
+                              <span className="text-xs text-neutral-400 ml-1">(părinte)</span>
+                            )}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                       <td className="px-4 py-3">{school?.name || "-"}</td>
                       <td className="px-4 py-3 text-neutral-700">
                         {student.createdAt
