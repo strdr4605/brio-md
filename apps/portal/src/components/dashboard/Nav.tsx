@@ -8,6 +8,7 @@ import {
   DashboardIcon,
   UsersIcon,
   StudentsIcon,
+  BookOpenIcon,
   KeyIcon,
   DoorIcon,
   SettingsIcon,
@@ -39,10 +40,10 @@ export function Nav({
   onCloseMobile,
 }: NavProps) {
   const pathname = usePathname();
-  const isSuperAdmin = permissions.includes("super") || role === "superadmin";
-  const isSuperOrAdmin = isSuperAdmin || permissions.includes("admin") || role === "admin";
-  const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
-  const canAccessDoor = permissions.includes("open-front-door") || isSuperOrAdmin;
+  const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
+  const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
+  const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
+  const canAccessDoor = permissions?.includes("open-front-door") || isSuperOrAdmin;
 
   // Smart Accordions
   const [academicOpen, setAcademicOpen] = useState(true);
@@ -193,6 +194,7 @@ export function Nav({
               <div className="space-y-1">
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
               </div>
             )}
           </div>
