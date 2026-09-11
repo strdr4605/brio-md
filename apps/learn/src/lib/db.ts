@@ -4,7 +4,7 @@ import { courses, users, courseMaterials, studentCourseProgress } from "@brio-md
 
 const sql = postgres(
   process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md",
-  { max: 1 },
+  { max: 10 },
 );
 
 export const db = drizzle(sql, {

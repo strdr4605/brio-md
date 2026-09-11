@@ -17,7 +17,9 @@ const BURST_GAP_MS = 200;
 const USER_AGENT_TIMEOUT_MS = 5000;
 
 function buildUrl(cfg: TasmotaConfig, cmnd: string): string {
-  return `http://${cfg.ip}:${cfg.port}/cm?user=${cfg.user}&password=${cfg.password}&cmnd=${cmnd}`;
+  const user = encodeURIComponent(cfg.user);
+  const password = encodeURIComponent(cfg.password);
+  return `http://${cfg.ip}:${cfg.port}/cm?user=${user}&password=${password}&cmnd=${cmnd}`;
 }
 
 export async function runDoorAction(
@@ -33,7 +35,7 @@ export async function runDoorAction(
   ];
   await Promise.all(
     offUrls.map((url) =>
-      fetcher(url, { method: "GET" }).catch((err) => {
+      fetcher(url, { method: "GET", signal: AbortSignal.timeout(USER_AGENT_TIMEOUT_MS) }).catch((err) => {
         throw new Error(`Tasmota pre-clear failed: ${(err as Error).message}`);
       }),
     ),
@@ -42,7 +44,10 @@ export async function runDoorAction(
   await new Promise((resolve) => setTimeout(resolve, BURST_GAP_MS));
 
   const onUrl = buildUrl(cfg, `Power${cmd}%20On`);
-  const response = await fetcher(onUrl, { method: "GET" });
+  const response = await fetcher(onUrl, {
+    method: "GET",
+    signal: AbortSignal.timeout(USER_AGENT_TIMEOUT_MS),
+  });
   if (!response.ok) {
     throw new Error(`Tasmota error: ${response.status}`);
   }
