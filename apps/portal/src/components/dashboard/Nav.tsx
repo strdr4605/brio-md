@@ -22,6 +22,7 @@ export function Nav({
     { href: "/dashboard", icon: "🏠", label: "Dashboard" },
     ...(isSuperOrAdmin ? [{ href: "/dashboard/users", icon: "👥", label: "Utilizatori" }] : []),
     ...(canManageStudents ? [{ href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" }] : []),
+    ...(isSuperOrAdmin ? [{ href: "/dashboard/courses", icon: "📚", label: "Cursuri" }] : []),
     ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
     ...(permissions?.includes("open-front-door") || isSuperOrAdmin
       ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
