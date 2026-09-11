@@ -126,8 +126,9 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <>
+      <div className="space-y-6 animate-fade-in-up">
+        {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Management Cursuri</h1>
@@ -344,6 +345,7 @@ export default function CoursesPage() {
           </div>
         </>
       )}
+      </div>
 
       {/* Drawer */}
       {showDrawer && (
@@ -353,7 +355,7 @@ export default function CoursesPage() {
           currentUserSchoolId={session?.user?.schoolId}
         />
       )}
-    </div>
+    </>
   );
 }
 
