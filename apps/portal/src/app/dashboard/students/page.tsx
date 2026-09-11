@@ -139,7 +139,8 @@ export default function StudentiPage() {
   const unenrolledCount = students.length - enrolledCount;
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <>
+      <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -327,6 +328,7 @@ export default function StudentiPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Edit / Create Drawer */}
       {showForm && (
@@ -339,6 +341,6 @@ export default function StudentiPage() {
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
       )}
-    </div>
+    </>
   );
 }
