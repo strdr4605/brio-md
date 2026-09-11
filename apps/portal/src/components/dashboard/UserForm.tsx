@@ -99,21 +99,41 @@ export function UserFormDrawer({
     }
   };
 
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-xl overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">
+    <div className="fixed inset-0 z-[100] flex justify-end">
+      {/* Full-viewport backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Drawer panel with pinned header, scrollable body, and pinned footer */}
+      <div className="relative z-10 w-full max-w-lg bg-white h-full shadow-2xl flex flex-col overflow-hidden">
+        {/* Header - Pinned */}
+        <div className="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
               {isEditing ? "Editează Utilizator" : "Adaugă Utilizator"}
             </h2>
-            <button onClick={onClose} className="text-neutral-500 hover:text-neutral-700">
-              ✕
-            </button>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isEditing ? "Actualizează datele contului și permisiunile" : "Creează un nou cont de utilizator"}
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            type="button"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+            aria-label="Închide"
+          >
+            ✕
+          </button>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Scrollable Form Body */}
+        <form id="user-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Nume</label>
               <input
@@ -241,27 +261,29 @@ export function UserFormDrawer({
               <p className="text-red-600 text-sm">{updateMutation.error.message}</p>
             )}
 
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Se salvează..."
-                  : isEditing
-                    ? "Salvează Modificările"
-                    : "Creează Utilizator"}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 border rounded-lg hover:bg-neutral-100"
-              >
-                Anulează
-              </button>
-            </div>
-          </form>
+        </form>
+
+        {/* Footer - Pinned at Bottom */}
+        <div className="p-4 px-6 border-t border-slate-200/80 bg-slate-50/95 flex items-center justify-end gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-xl transition"
+          >
+            Anulează
+          </button>
+          <button
+            type="submit"
+            form="user-form"
+            disabled={isPending}
+            className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 rounded-xl transition disabled:opacity-50"
+          >
+            {isPending
+              ? "Se procesează..."
+              : isEditing
+              ? "Salvează Modificările"
+              : "Creează Utilizator"}
+          </button>
         </div>
       </div>
     </div>
