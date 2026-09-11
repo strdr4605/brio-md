@@ -15,6 +15,7 @@ const ROUTE_TITLES: Record<string, { title: string; section: string; sectionHref
   "/dashboard": { title: "Panou Principal", section: "Prezentare", sectionHref: "/dashboard" },
   "/dashboard/users": { title: "Utilizatori", section: "Gestiune", sectionHref: "/dashboard/users" },
   "/dashboard/students": { title: "Studenți", section: "Academic", sectionHref: "/dashboard/students" },
+  "/dashboard/courses": { title: "Cursuri", section: "Academic", sectionHref: "/dashboard/courses" },
   "/dashboard/permissions": { title: "Permisiuni", section: "Securitate", sectionHref: "/dashboard/permissions" },
   "/dashboard/roller-door": { title: "Roletă Intrare", section: "Control Acces", sectionHref: "/dashboard/roller-door" },
   "/dashboard/settings": { title: "Setări Sistem", section: "Configurare", sectionHref: "/dashboard/settings" },
