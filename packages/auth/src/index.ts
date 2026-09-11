@@ -10,7 +10,7 @@ import { users } from "@brio-md/db";
 
 const sql = postgres(
   process.env.DATABASE_URL || "postgres://brio:briopassword@localhost:5432/brio_md",
-  { max: 1 },
+  { max: 10 },
 );
 const db = drizzle(sql, { schema: { users } });
 
@@ -85,27 +85,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-async session({ session, token }) {
-      if (session.user) {
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        const userId = parseInt(token.id as string, 10);
+        if (isNaN(userId)) {
+          return session;
+        }
+
         const [dbUser] = await db
           .select()
           .from(users)
-          .where(eq(users.id, parseInt(token.id as string)))
+          .where(eq(users.id, userId))
           .limit(1);
-        if (dbUser?.lastChangedAt && token.lastChangedAt) {
-          const tokenIssuedAt = new Date(token.iat! * 1000);
+
+        if (!dbUser || !dbUser.active) {
+          session.user.id = token.id as string;
+          session.user.expired = true;
+          return session;
+        }
+
+        if (dbUser.lastChangedAt && token.iat) {
+          const tokenIssuedAt = new Date(token.iat * 1000);
           if (dbUser.lastChangedAt > tokenIssuedAt) {
             session.user.id = token.id as string;
             session.user.expired = true;
             return session;
           }
         }
-        session.user.id = token.id as string;
-        session.user.role = token.role as typeof session.user.role;
-        session.user.permissions = token.permissions as typeof session.user.permissions;
-        session.user.courseIds = token.courseIds as typeof session.user.courseIds;
-        session.user.studentId = token.studentId as typeof session.user.studentId;
-        session.user.schoolId = token.schoolId as typeof session.user.schoolId;
+
+        session.user.id = String(dbUser.id);
+        session.user.email = dbUser.email ?? "";
+        session.user.name = dbUser.name ?? "";
+        session.user.role = dbUser.role as typeof session.user.role;
+        session.user.permissions = (dbUser.permissions || []) as typeof session.user.permissions;
+        session.user.courseIds = (dbUser.courseIds || []) as typeof session.user.courseIds;
+        session.user.studentId = dbUser.studentId as typeof session.user.studentId;
+        session.user.schoolId = dbUser.schoolId as typeof session.user.schoolId;
+        session.user.expired = false;
       }
       return session;
     },

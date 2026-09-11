@@ -6,6 +6,9 @@ import { userRouter } from "./user";
 vi.mock("@/lib/db", () => ({
   db: {
     select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -333,5 +336,419 @@ describe("user.list", () => {
     const result = await caller.list({});
     expect(result).toHaveLength(1);
     expect(result[0].email).toBe("admin@school.com");
+  });
+});
+
+describe("user.getById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns user when requested by superadmin", async () => {
+    const mockUser = {
+      id: 10,
+      email: "target@school.com",
+      name: "Target User",
+      role: "teacher",
+      permissions: [],
+      courseIds: [],
+      schoolId: 2,
+      phone: null,
+      info: null,
+      active: true,
+      createdAt: new Date(),
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([mockUser]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "1",
+        email: "super@example.com",
+        name: "Super Admin",
+        role: "superadmin",
+        permissions: ["super"],
+        courseIds: [],
+        schoolId: null,
+      },
+    });
+
+    const result = await caller.getById({ id: 10 });
+    expect(result).toEqual(mockUser);
+    expect((result as any).passwordHash).toBeUndefined();
+  });
+
+  it("throws FORBIDDEN when school admin tries to view user from another school", async () => {
+    const mockUser = {
+      id: 10,
+      email: "target@school2.com",
+      name: "Target User",
+      role: "teacher",
+      permissions: [],
+      courseIds: [],
+      schoolId: 2,
+      phone: null,
+      info: null,
+      active: true,
+      createdAt: new Date(),
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([mockUser]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school1.com",
+        name: "School 1 Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(caller.getById({ id: 10 })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws NOT_FOUND when user does not exist", async () => {
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "1",
+        email: "super@example.com",
+        name: "Super Admin",
+        role: "superadmin",
+        permissions: ["super"],
+        courseIds: [],
+        schoolId: null,
+      },
+    });
+
+    await expect(caller.getById({ id: 999 })).rejects.toThrow(TRPCError);
+  });
+});
+
+describe("user.create", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("creates a user successfully and strips passwordHash from result", async () => {
+    const mockCreated = {
+      id: 5,
+      email: "newteacher@school.com",
+      passwordHash: "hashed_password123",
+      name: "New Teacher",
+      role: "teacher",
+      permissions: [],
+      courseIds: [],
+      schoolId: 1,
+      phone: null,
+      info: null,
+      active: true,
+    };
+
+    (db.insert as any).mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([mockCreated]),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    const result = await caller.create({
+      email: "newteacher@school.com",
+      password: "password123",
+      name: "New Teacher",
+      role: "teacher",
+      permissions: [],
+    });
+
+    expect(result.id).toBe(5);
+    expect(result.email).toBe("newteacher@school.com");
+    expect((result as any).passwordHash).toBeUndefined();
+  });
+
+  it("throws FORBIDDEN when school admin tries to create superadmin", async () => {
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(
+      caller.create({
+        email: "fake-super@school.com",
+        password: "password123",
+        name: "Fake Super",
+        role: "superadmin",
+        permissions: [],
+      }),
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when school admin tries to grant super permission", async () => {
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(
+      caller.create({
+        email: "sneaky@school.com",
+        password: "password123",
+        name: "Sneaky User",
+        role: "teacher",
+        permissions: ["super"],
+      }),
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when school admin tries to assign user to another school", async () => {
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(
+      caller.create({
+        email: "other@school2.com",
+        password: "password123",
+        name: "Other School User",
+        role: "teacher",
+        permissions: [],
+        schoolId: 2,
+      }),
+    ).rejects.toThrow(TRPCError);
+  });
+});
+
+describe("user.update", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates user successfully and strips passwordHash from response", async () => {
+    const existingUser = {
+      id: 5,
+      email: "teacher@school.com",
+      name: "Old Name",
+      role: "teacher",
+      permissions: [],
+      schoolId: 1,
+    };
+    const updatedUser = {
+      ...existingUser,
+      name: "Updated Name",
+      passwordHash: "new_hashed_password",
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([existingUser]),
+        }),
+      }),
+    });
+
+    (db.update as any).mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([updatedUser]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    const result = await caller.update({
+      id: 5,
+      name: "Updated Name",
+    });
+
+    expect(result.name).toBe("Updated Name");
+    expect((result as any).passwordHash).toBeUndefined();
+  });
+
+  it("throws NOT_FOUND when target user does not exist", async () => {
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "1",
+        email: "super@example.com",
+        name: "Super Admin",
+        role: "superadmin",
+        permissions: ["super"],
+        courseIds: [],
+        schoolId: null,
+      },
+    });
+
+    await expect(caller.update({ id: 999, name: "Nonexistent" })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when school admin tries to update user from another school", async () => {
+    const existingUser = {
+      id: 10,
+      email: "user@school2.com",
+      name: "School 2 User",
+      role: "teacher",
+      permissions: [],
+      schoolId: 2,
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([existingUser]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school1.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(caller.update({ id: 10, name: "Hijacked" })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when school admin tries to update a superadmin", async () => {
+    const existingSuper = {
+      id: 1,
+      email: "super@example.com",
+      name: "Real Super",
+      role: "superadmin",
+      permissions: ["super"],
+      schoolId: 1,
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([existingSuper]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(caller.update({ id: 1, name: "Demoted" })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when school admin tries to escalate role to superadmin", async () => {
+    const existingTeacher = {
+      id: 5,
+      email: "teacher@school.com",
+      name: "Teacher",
+      role: "teacher",
+      permissions: [],
+      schoolId: 1,
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([existingTeacher]),
+        }),
+      }),
+    });
+
+    const caller = userRouter.createCaller({
+      user: {
+        id: "2",
+        email: "admin@school.com",
+        name: "Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: 1,
+      },
+    });
+
+    await expect(caller.update({ id: 5, role: "superadmin" })).rejects.toThrow(TRPCError);
   });
 });

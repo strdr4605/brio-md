@@ -66,7 +66,8 @@ export const userRouter = router({
 
       // Apply filters
       if (input?.search) {
-        conditions.push(ilike(users.name, `%${input.search}%`));
+        const escapedSearch = input.search.replace(/[%_\\]/g, "\\$&");
+        conditions.push(ilike(users.name, `%${escapedSearch}%`));
       }
       if (input?.schoolId) {
         conditions.push(eq(users.schoolId, input.schoolId));
@@ -103,24 +104,47 @@ export const userRouter = router({
   // Get user by ID
   getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
     if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-    const user = ctx.user;
-    const permissions = user.permissions || [];
-    const isSuper = permissions.includes("super") || user.role === "superadmin";
-    const isAdmin = permissions.includes("admin") || user.role === "admin";
+    const caller = ctx.user;
+    const permissions = caller.permissions || [];
+    const isSuper = permissions.includes("super") || caller.role === "superadmin";
+    const isAdmin = permissions.includes("admin") || caller.role === "admin";
 
-    // Check permissions
-    if (!isSuper) {
-      if (isAdmin) {
-        // Admin can only view users in their school (mock)
-        if (input.id !== parseInt(user.id)) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Cannot view this user" });
-        }
-      } else {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot view users" });
+    if (!isSuper && !isAdmin) {
+      if (input.id !== parseInt(caller.id, 10)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți vizualiza acest utilizator" });
       }
     }
 
-    return null; // Mock
+    const [foundUser] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        permissions: users.permissions,
+        courseIds: users.courseIds,
+        schoolId: users.schoolId,
+        phone: users.phone,
+        info: users.info,
+        active: users.active,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, input.id))
+      .limit(1);
+
+    if (!foundUser) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Utilizatorul nu a fost găsit" });
+    }
+
+    if (!isSuper && isAdmin && foundUser.schoolId !== caller.schoolId) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Nu poți vizualiza un utilizator din altă școală",
+      });
+    }
+
+    return foundUser;
   }),
 
   // Create user (Admin or SuperAdmin)
@@ -128,7 +152,7 @@ export const userRouter = router({
     .input(
       z.object({
         email: z.string().email(),
-        password: z.string().min(8),
+        password: z.string().min(8).max(72),
         name: z.string().min(1),
         role: z.enum(["superadmin", "admin", "teacher"]),
         permissions: z.array(z.string()),
@@ -139,8 +163,33 @@ export const userRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const caller = ctx.user!;
+      const callerPermissions = caller.permissions || [];
+      const isSuper = callerPermissions.includes("super") || caller.role === "superadmin";
+
+      if (!isSuper) {
+        if (input.role === "superadmin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Doar superadmin poate crea utilizatori cu rolul superadmin",
+          });
+        }
+        if (input.permissions.includes("super")) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Doar superadmin poate acorda permisiunea super",
+          });
+        }
+        if (input.schoolId && input.schoolId !== caller.schoolId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu poți crea un utilizator pentru altă școală",
+          });
+        }
+      }
+
       const passwordHash = await hash(input.password, 12);
-      const schoolId = input.schoolId ?? ctx.user!.schoolId;
+      const schoolId = isSuper ? (input.schoolId ?? caller.schoolId) : caller.schoolId;
       const [result] = await db
         .insert(users)
         .values({
@@ -157,7 +206,8 @@ export const userRouter = router({
         })
         .returning();
 
-      return result;
+      const { passwordHash: _, ...safeUser } = result;
+      return safeUser;
     }),
 
   // Update user (Admin or SuperAdmin)
@@ -173,33 +223,86 @@ export const userRouter = router({
         schoolId: z.number().nullable().optional(),
         phone: phoneSchema,
         active: z.boolean().optional(),
-        password: z.string().optional(),
+        password: z.string().min(8).max(72).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const caller = ctx.user!;
+      const callerPermissions = caller.permissions || [];
+      const isSuper = callerPermissions.includes("super") || caller.role === "superadmin";
+
+      const [targetUser] = await db.select().from(users).where(eq(users.id, input.id)).limit(1);
+      if (!targetUser) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Utilizatorul nu a fost găsit" });
+      }
+
+      if (!isSuper) {
+        if (targetUser.schoolId !== caller.schoolId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu poți modifica un utilizator din altă școală",
+          });
+        }
+        if (targetUser.role === "superadmin" || targetUser.permissions?.includes("super")) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu poți modifica un superadmin",
+          });
+        }
+        if (input.role === "superadmin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu poți atribui rolul superadmin",
+          });
+        }
+        if (input.permissions && input.permissions.includes("super")) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu poți acorda permisiunea super",
+          });
+        }
+      }
+
       const { id, password, ...updates } = input;
       const updateData: typeof updates & { passwordHash?: string; lastChangedAt?: Date } = {
         ...updates,
       };
+
+      if (!isSuper) {
+        delete updateData.schoolId;
+      }
+
       if (password) {
         updateData.passwordHash = await hash(password, 12);
       }
-      if (password || "permissions" in updates) {
+      if (
+        password ||
+        "permissions" in updates ||
+        "role" in updates ||
+        "active" in updates ||
+        "schoolId" in updates
+      ) {
         updateData.lastChangedAt = new Date();
         await db.delete(sessions).where(eq(sessions.userId, id));
       }
       const [result] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
 
-      return result;
+      const { passwordHash: _, ...safeUser } = result;
+      return safeUser;
     }),
 
-  // List schools
-  listSchools: protectedProcedure.query(async () => {
-    const result = await db.select().from(schools);
-    return result;
+  // List schools (superadmin sees all, others see only their school)
+  listSchools: protectedProcedure.query(async ({ ctx }) => {
+    const permissions = ctx.user?.permissions || [];
+    const isSuper = permissions.includes("super") || ctx.user?.role === "superadmin";
+    if (isSuper) {
+      return db.select().from(schools);
+    }
+    if (!ctx.user?.schoolId) return [];
+    return db.select().from(schools).where(eq(schools.id, ctx.user.schoolId));
   }),
 
-  // List courses
+  // List courses (scoped to schoolId)
   listCourses: protectedProcedure
     .input(
       z
@@ -208,10 +311,14 @@ export const userRouter = router({
         })
         .optional(),
     )
-    .query(async ({ input }) => {
-      if (input?.schoolId) {
-        return db.select().from(courses).where(eq(courses.schoolId, input.schoolId));
+    .query(async ({ ctx, input }) => {
+      const permissions = ctx.user?.permissions || [];
+      const isSuper = permissions.includes("super") || ctx.user?.role === "superadmin";
+      const targetSchoolId = isSuper ? input?.schoolId : (ctx.user?.schoolId ?? undefined);
+
+      if (targetSchoolId) {
+        return db.select().from(courses).where(eq(courses.schoolId, targetSchoolId));
       }
-      return db.select().from(courses);
+      return isSuper ? db.select().from(courses) : [];
     }),
 });
