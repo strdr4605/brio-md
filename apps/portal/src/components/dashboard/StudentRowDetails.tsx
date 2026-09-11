@@ -46,7 +46,7 @@ export function StudentRowDetails({
     : "—";
 
   return (
-    <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/20 border-t border-slate-200/80 space-y-4">
+    <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/20 border-t border-slate-200/80 space-y-4 animate-fade-in-up">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Col 1: Guardian / Contact */}
         <div className="bg-white rounded-xl p-4 border border-slate-200/70 shadow-sm space-y-2.5">

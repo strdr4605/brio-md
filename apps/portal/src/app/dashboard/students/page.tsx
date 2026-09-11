@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
@@ -29,6 +29,16 @@ export default function StudentiPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
   const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("new") === "1") {
+        setEditingStudent(null);
+        setShowForm(true);
+      }
+    }
+  }, []);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -129,7 +139,7 @@ export default function StudentiPage() {
   const unenrolledCount = students.length - enrolledCount;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
