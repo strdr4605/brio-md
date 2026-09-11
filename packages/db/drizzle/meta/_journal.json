@@ -29,6 +29,13 @@
       "when": 1788972165566,
       "tag": "0003_tearful_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789035480686,
+      "tag": "0004_fixed_paibok",
+      "breakpoints": true
     }
   ]
 }

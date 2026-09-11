@@ -16,6 +16,18 @@ export default async function CoursesPage() {
     await signOut({ redirectTo: "/" });
   }
 
+  const isTeacher =
+    session.user.role === "teacher" ||
+    session.user.role === "admin" ||
+    session.user.role === "superadmin" ||
+    session.user.permissions?.includes("teach") ||
+    session.user.permissions?.includes("admin") ||
+    session.user.permissions?.includes("super");
+
+  if (isTeacher) {
+    redirect("/teacher");
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}

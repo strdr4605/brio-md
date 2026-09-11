@@ -12,7 +12,7 @@ const handler = (req: Request) =>
     router: appRouter,
     createContext: async () => {
       const session = await auth();
-      if (!session?.user) {
+      if (!session?.user || (session.user as any).expired) {
         return { user: null, db };
       }
 

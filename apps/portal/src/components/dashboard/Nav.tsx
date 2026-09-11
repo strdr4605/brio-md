@@ -4,20 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-export function Nav({ userName, permissions }: { userName?: string; permissions?: string[] }) {
+export function Nav({
+  userName,
+  permissions,
+  role,
+}: {
+  userName?: string;
+  permissions?: string[];
+  role?: string;
+}) {
   const pathname = usePathname();
-  const isSuperOrAdmin = permissions?.includes("super") || permissions?.includes("admin");
+  const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
+  const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
+  const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
 
   const navItems = [
     { href: "/dashboard", icon: "🏠", label: "Dashboard" },
-    ...(isSuperOrAdmin
-      ? [
-          { href: "/dashboard/users", icon: "👥", label: "Utilizatori" },
-          { href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" },
-          { href: "/dashboard/courses", icon: "📚", label: "Cursuri" },
-        ]
-      : []),
-    ...(isSuperOrAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
+    ...(isSuperOrAdmin ? [{ href: "/dashboard/users", icon: "👥", label: "Utilizatori" }] : []),
+    ...(canManageStudents ? [{ href: "/dashboard/students", icon: "👨‍🎓", label: "Studenţi" }] : []),
+    ...(isSuperOrAdmin ? [{ href: "/dashboard/courses", icon: "📚", label: "Cursuri" }] : []),
+    ...(isSuperAdmin ? [{ href: "/dashboard/permissions", icon: "🔑", label: "Permisiuni" }] : []),
     ...(permissions?.includes("open-front-door") || isSuperOrAdmin
       ? [{ href: "/dashboard/roller-door", icon: "🏢", label: "Roletă Intrare" }]
       : []),

@@ -7,7 +7,8 @@ import { useState } from "react";
 export default function PermissionsPage() {
   const { data: session } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
-  const isSuperAdmin = permissions.includes("super");
+  const role = session?.user?.role;
+  const isSuperAdmin = permissions.includes("super") || role === "superadmin";
 
   const utils = trpc.useUtils();
   const { data: definitions = [], isLoading } = trpc.permissionDefinition.list.useQuery(undefined, {
