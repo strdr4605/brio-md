@@ -30,13 +30,10 @@ test.describe("Portal - Student Management Lifecycle", () => {
 
     // 4. Fill in student details
     await page.fill('input[placeholder="Ex: Ion Popescu"]', testStudentName);
-    await page.fill(
-      'input[placeholder="Ex: +373 69 000 000 sau +40 712 345 678"]',
-      rawStudentPhone,
-    );
+    await page.fill('input[placeholder="Ex: +373 69 000 000"]', rawStudentPhone);
     await page.fill('input[placeholder="Ex: 12"]', "12");
     await page.fill('input[placeholder="Ex: Maria Popescu"]', "Parent Auto");
-    await page.fill('input[placeholder="Ex: +373 68 000 000 sau +40 712 345 678"]', parentPhone);
+    await page.fill('input[placeholder="Ex: +373 68 000 000"]', parentPhone);
 
     // 5. Select a course if available within the form
     const form = page.locator("form");
@@ -47,7 +44,7 @@ test.describe("Portal - Student Management Lifecycle", () => {
     }
 
     // 6. Submit the form
-    await form.locator('button[type="submit"]:has-text("Creează Student")').click();
+    await page.locator('button[type="submit"]:has-text("Creează Student")').click();
 
     // 7. Verify the drawer closes and student appears in table
     const studentRow = page.locator("tr.group", { hasText: testStudentName });
@@ -66,9 +63,9 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await studentRow.locator("button:has-text('Editează')").click();
     await expect(page.locator("h2")).toContainText("Editează Student");
 
-    const ageInput = page.locator('form input[placeholder="Ex: 12"]');
+    const ageInput = page.locator('input[placeholder="Ex: 12"]');
     await ageInput.fill("13");
-    await page.locator('form button[type="submit"]:has-text("Salvează Modificările")').click();
+    await page.locator('button[type="submit"]:has-text("Salvează Modificările")').click();
 
     // 9. Verify updated age in the table
     const updatedRow = page.locator("tr.group", { hasText: testStudentName });
