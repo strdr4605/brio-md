@@ -24,8 +24,8 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await page.goto("http://localhost:3002/dashboard/students");
     await expect(page.getByRole("heading", { name: "Studenți" })).toBeVisible();
 
-    // 3. Open "+ Adaugă Student" drawer
-    await page.click("text=+ Adaugă Student");
+    // 3. Open "Adaugă Student" drawer
+    await page.getByRole("button", { name: "Adaugă Student" }).click();
     await expect(page.locator("h2")).toContainText("Adaugă Student");
 
     // 4. Fill in student details
@@ -50,7 +50,7 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await form.locator('button[type="submit"]:has-text("Creează Student")').click();
 
     // 7. Verify the drawer closes and student appears in table
-    const studentRow = page.locator("tr", { hasText: testStudentName });
+    const studentRow = page.locator("tr.group", { hasText: testStudentName });
     await expect(studentRow).toBeVisible({ timeout: 10000 });
 
     // Verify age and formatted phone number (handled by libphonenumber-js)
@@ -71,14 +71,14 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await page.locator('form button[type="submit"]:has-text("Salvează Modificările")').click();
 
     // 9. Verify updated age in the table
-    const updatedRow = page.locator("tr", { hasText: testStudentName });
+    const updatedRow = page.locator("tr.group", { hasText: testStudentName });
     await expect(updatedRow).toContainText("13 ani");
 
     // 10. Clean up: delete the test student
     await updatedRow.locator("button:has-text('Șterge')").click();
 
     // Verify student is removed from the table
-    await expect(page.locator("tr", { hasText: testStudentName })).not.toBeVisible();
+    await expect(page.locator("tr.group", { hasText: testStudentName })).not.toBeVisible();
   });
 });
 
