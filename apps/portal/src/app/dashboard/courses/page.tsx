@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { CourseFormDrawer } from "@/components/dashboard/CourseForm";
+import { CourseGroupsDrawer } from "@/components/dashboard/CourseGroupsDrawer";
 
 const DAY_LABELS: Record<string, string> = {
   mon: "Luni",
@@ -67,6 +68,10 @@ export default function CoursesPage() {
   const [search, setSearch] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [selectedCourseForGroups, setSelectedCourseForGroups] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const utils = trpc.useUtils();
 
@@ -259,6 +264,12 @@ export default function CoursesPage() {
                     </td>
                     <td className="px-4 py-3.5 text-right space-x-2">
                       <button
+                        onClick={() => setSelectedCourseForGroups({ id: course.id, name: course.name })}
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold text-xs px-2 py-1 rounded hover:bg-indigo-50"
+                      >
+                        Grupe & Roster
+                      </button>
+                      <button
                         onClick={() => handleEdit(course.id)}
                         className="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50"
                       >
@@ -321,6 +332,12 @@ export default function CoursesPage() {
                   </div>
                   <div className="space-x-2">
                     <button
+                      onClick={() => setSelectedCourseForGroups({ id: course.id, name: course.name })}
+                      className="text-indigo-600 font-semibold"
+                    >
+                      Grupe
+                    </button>
+                    <button
                       onClick={() => handleEdit(course.id)}
                       className="text-blue-600 font-medium"
                     >
@@ -353,6 +370,17 @@ export default function CoursesPage() {
           courseId={selectedCourseId}
           onClose={() => setShowDrawer(false)}
           currentUserSchoolId={session?.user?.schoolId}
+        />
+      )}
+
+      {/* Groups & Roster Drawer */}
+      {selectedCourseForGroups && (
+        <CourseGroupsDrawer
+          isOpen={Boolean(selectedCourseForGroups)}
+          onClose={() => setSelectedCourseForGroups(null)}
+          courseId={selectedCourseForGroups.id}
+          courseName={selectedCourseForGroups.name}
+          schoolId={session?.user?.schoolId}
         />
       )}
     </>

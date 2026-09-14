@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { formatPhone } from "@/lib/phone";
 import { PhoneIcon, CalendarIcon, SchoolIcon } from "@/components/ui/icons";
 import { StudentCoursesCell } from "./StudentCoursesCell";
+import { EnrollmentDrawer } from "./EnrollmentDrawer";
+import { trpc } from "@/lib/trpc";
 
 type CourseItem = {
   id: number;
@@ -21,6 +24,7 @@ type Props = {
     info?: string | null;
     createdAt?: Date | string | null;
     courses?: Array<{ id: number; name: string }>;
+    schoolId?: number | null;
   };
   schoolName?: string;
   availableCourses: CourseItem[];
@@ -37,6 +41,13 @@ export function StudentRowDetails({
   onDelete,
   deletePending,
 }: Props) {
+  const [showEnrollmentDrawer, setShowEnrollmentDrawer] = useState(false);
+
+  const { data: studentEnrollments = [] } = trpc.enrollment.getByStudent.useQuery(
+    { studentId: student.id },
+    { enabled: Boolean(student.id) },
+  );
+
   const createdDateStr = student.createdAt
     ? new Date(student.createdAt).toLocaleDateString("ro-RO", {
         day: "numeric",
@@ -122,6 +133,48 @@ export function StudentRowDetails({
               availableCourses={availableCourses}
             />
           </div>
+
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase">
+                Grupe & Cohorte
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowEnrollmentDrawer(true)}
+                className="text-blue-600 hover:text-blue-700 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>+</span>
+                <span>Înrolare Grupe</span>
+              </button>
+            </div>
+
+            {studentEnrollments.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Nu este înrolat în nicio grupă</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {studentEnrollments.map((enr) => (
+                  <span
+                    key={enr.id}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border ${
+                      enr.status === "active"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : enr.status === "inactive"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
+                    }`}
+                    title={`${enr.courseName} - ${enr.groupName} (${enr.status})`}
+                  >
+                    <span className="font-semibold">{enr.courseName}:</span>
+                    <span>{enr.groupName}</span>
+                    <span className="text-[10px] opacity-75 uppercase">
+                      ({enr.status === "active" ? "activ" : enr.status === "inactive" ? "inactiv" : "arhivat"})
+                    </span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Col 3: Notes & Quick Actions */}
@@ -152,6 +205,17 @@ export function StudentRowDetails({
           </div>
         </div>
       </div>
+
+      {/* Enrollment Drawer */}
+      {showEnrollmentDrawer && (
+        <EnrollmentDrawer
+          isOpen={showEnrollmentDrawer}
+          onClose={() => setShowEnrollmentDrawer(false)}
+          studentId={student.id}
+          studentName={student.name}
+          schoolId={student.schoolId}
+        />
+      )}
     </div>
   );
 }
