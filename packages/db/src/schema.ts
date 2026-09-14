@@ -155,6 +155,37 @@ export const studentGroupEnrollments = pgTable(
   ],
 );
 
+// Attendance Records table
+export const attendanceRecords = pgTable(
+  "attendance_records",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    courseId: integer("course_id").references(() => courses.id),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    date: varchar("date", { length: 10 }).notNull(),
+    status: varchar("status", {
+      length: 20,
+      enum: ["present", "absent", "late", "excused"],
+    }).notNull(),
+    comment: text("comment"),
+    markedByUserId: integer("marked_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("attendance_records_group_student_date_idx").on(
+      table.groupId,
+      table.studentId,
+      table.date,
+    ),
+  ],
+);
+
 // Auth.js adapter tables
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -203,6 +234,7 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   progress: many(studentCourseProgress),
   groups: many(groups),
   enrollments: many(studentGroupEnrollments),
+  attendanceRecords: many(attendanceRecords),
 }));
 
 export const courseMaterialsRelations = relations(courseMaterials, ({ one }) => ({
@@ -226,6 +258,7 @@ export const studentCourseProgressRelations = relations(studentCourseProgress, (
 export const usersRelations = relations(users, ({ many, one }) => ({
   courses: many(courses),
   groups: many(groups),
+  markedAttendances: many(attendanceRecords),
   student: one(students, {
     fields: [users.studentId],
     references: [students.id],
@@ -235,6 +268,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 export const studentsRelations = relations(students, ({ many }) => ({
   courseProgress: many(studentCourseProgress),
   groupEnrollments: many(studentGroupEnrollments),
+  attendanceRecords: many(attendanceRecords),
 }));
 
 export const groupsRelations = relations(groups, ({ one, many }) => ({
@@ -251,6 +285,7 @@ export const groupsRelations = relations(groups, ({ one, many }) => ({
     references: [users.id],
   }),
   enrollments: many(studentGroupEnrollments),
+  attendanceRecords: many(attendanceRecords),
 }));
 
 export const studentGroupEnrollmentsRelations = relations(
@@ -270,6 +305,25 @@ export const studentGroupEnrollmentsRelations = relations(
     }),
   }),
 );
+
+export const attendanceRecordsRelations = relations(attendanceRecords, ({ one }) => ({
+  group: one(groups, {
+    fields: [attendanceRecords.groupId],
+    references: [groups.id],
+  }),
+  course: one(courses, {
+    fields: [attendanceRecords.courseId],
+    references: [courses.id],
+  }),
+  student: one(students, {
+    fields: [attendanceRecords.studentId],
+    references: [students.id],
+  }),
+  markedByUser: one(users, {
+    fields: [attendanceRecords.markedByUserId],
+    references: [users.id],
+  }),
+}));
 
 // Types
 export type School = typeof schools.$inferSelect;
@@ -295,6 +349,9 @@ export type NewGroup = typeof groups.$inferInsert;
 
 export type StudentGroupEnrollment = typeof studentGroupEnrollments.$inferSelect;
 export type NewStudentGroupEnrollment = typeof studentGroupEnrollments.$inferInsert;
+
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
+export type NewAttendanceRecord = typeof attendanceRecords.$inferInsert;
 
 export type PermissionDefinition = typeof permissionDefinitions.$inferSelect;
 export type NewPermissionDefinition = typeof permissionDefinitions.$inferInsert;

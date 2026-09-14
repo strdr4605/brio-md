@@ -43,6 +43,13 @@
       "when": 1789374013823,
       "tag": "0005_noisy_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789376278782,
+      "tag": "0006_third_kree",
+      "breakpoints": true
     }
   ]
 }
