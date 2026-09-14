@@ -11,6 +11,8 @@ import {
   students,
   courseMaterials,
   studentCourseProgress,
+  groups,
+  studentGroupEnrollments,
 } from "@brio-md/db";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -289,6 +291,99 @@ async function seed() {
     },
   ]);
   console.log("✅ Created sample student course progress records");
+
+  // Create Groups for Courses
+  const [groupEnglishA] = await db
+    .insert(groups)
+    .values({
+      name: "Grupa A - Marți 17:30",
+      courseId: courseEnglish.id,
+      schoolId: school.id,
+      scheduleDays: ["tue", "thu"],
+      scheduleTime: "17:30 - 19:00",
+      room: "Sala 101 (Etaj 1)",
+      teacherId: teacher.id,
+      active: true,
+    })
+    .returning();
+
+  const [groupEnglishB] = await db
+    .insert(groups)
+    .values({
+      name: "Grupa B - Sâmbătă 10:00",
+      courseId: courseEnglish.id,
+      schoolId: school.id,
+      scheduleDays: ["sat"],
+      scheduleTime: "10:00 - 12:00",
+      room: "Sala 102 (Etaj 1)",
+      teacherId: teacher.id,
+      active: true,
+    })
+    .returning();
+
+  const [groupRobotics1] = await db
+    .insert(groups)
+    .values({
+      name: "Robotics Cohort 1 - Miercuri 15:00",
+      courseId: courseRobotics.id,
+      schoolId: school.id,
+      scheduleDays: ["wed", "fri"],
+      scheduleTime: "15:00 - 16:30",
+      room: "Lab Robotică (Corp B)",
+      teacherId: teacher.id,
+      active: true,
+    })
+    .returning();
+  console.log("✅ Created sample groups with schedules, rooms, and teachers");
+
+  // Create Student Group Enrollments
+  await db.insert(studentGroupEnrollments).values([
+    {
+      studentId: student1.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "active",
+      joinedAt: new Date(Date.now() - 14 * 86400000),
+    },
+    {
+      studentId: student1.id,
+      groupId: groupRobotics1.id,
+      courseId: courseRobotics.id,
+      status: "active",
+      joinedAt: new Date(Date.now() - 7 * 86400000),
+    },
+    {
+      studentId: student2.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "inactive",
+      joinedAt: new Date(Date.now() - 30 * 86400000),
+      leftAt: new Date(Date.now() - 2 * 86400000),
+    },
+    {
+      studentId: student2.id,
+      groupId: groupRobotics1.id,
+      courseId: courseRobotics.id,
+      status: "active",
+      joinedAt: new Date(Date.now() - 10 * 86400000),
+    },
+    {
+      studentId: student3.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "archived",
+      joinedAt: new Date(Date.now() - 60 * 86400000),
+      leftAt: new Date(Date.now() - 15 * 86400000),
+    },
+    {
+      studentId: student4.id,
+      groupId: groupEnglishB.id,
+      courseId: courseEnglish.id,
+      status: "active",
+      joinedAt: new Date(Date.now() - 5 * 86400000),
+    },
+  ]);
+  console.log("✅ Created sample student group enrollments (active, inactive, archived)");
 
   console.log("");
   console.log("🎉 Seed completed!");
