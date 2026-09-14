@@ -1,5 +1,14 @@
 import { relations } from "drizzle-orm";
-import { pgTable, serial, varchar, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Schools table
 export const schools = pgTable("schools", {
@@ -100,6 +109,52 @@ export const studentCourseProgress = pgTable("student_course_progress", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Groups table
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id")
+    .notNull()
+    .references(() => courses.id, { onDelete: "cascade" }),
+  schoolId: integer("school_id").references(() => schools.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  scheduleDays: text("schedule_days").array().default([]),
+  scheduleTime: varchar("schedule_time", { length: 100 }),
+  room: varchar("room", { length: 255 }),
+  teacherId: integer("teacher_id").references(() => users.id),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Student Group Enrollments table
+export const studentGroupEnrollments = pgTable(
+  "student_group_enrollments",
+  {
+    id: serial("id").primaryKey(),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    groupId: integer("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    courseId: integer("course_id").references(() => courses.id),
+    status: varchar("status", {
+      length: 50,
+      enum: ["active", "inactive", "archived", "completed"],
+    }).default("active"),
+    joinedAt: timestamp("joined_at").defaultNow(),
+    leftAt: timestamp("left_at"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("student_group_enrollments_student_group_idx").on(
+      table.studentId,
+      table.groupId,
+    ),
+  ],
+);
+
 // Auth.js adapter tables
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -146,6 +201,8 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   }),
   materials: many(courseMaterials),
   progress: many(studentCourseProgress),
+  groups: many(groups),
+  enrollments: many(studentGroupEnrollments),
 }));
 
 export const courseMaterialsRelations = relations(courseMaterials, ({ one }) => ({
@@ -168,6 +225,7 @@ export const studentCourseProgressRelations = relations(studentCourseProgress, (
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   courses: many(courses),
+  groups: many(groups),
   student: one(students, {
     fields: [users.studentId],
     references: [students.id],
@@ -176,7 +234,42 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 
 export const studentsRelations = relations(students, ({ many }) => ({
   courseProgress: many(studentCourseProgress),
+  groupEnrollments: many(studentGroupEnrollments),
 }));
+
+export const groupsRelations = relations(groups, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [groups.courseId],
+    references: [courses.id],
+  }),
+  school: one(schools, {
+    fields: [groups.schoolId],
+    references: [schools.id],
+  }),
+  teacher: one(users, {
+    fields: [groups.teacherId],
+    references: [users.id],
+  }),
+  enrollments: many(studentGroupEnrollments),
+}));
+
+export const studentGroupEnrollmentsRelations = relations(
+  studentGroupEnrollments,
+  ({ one }) => ({
+    student: one(students, {
+      fields: [studentGroupEnrollments.studentId],
+      references: [students.id],
+    }),
+    group: one(groups, {
+      fields: [studentGroupEnrollments.groupId],
+      references: [groups.id],
+    }),
+    course: one(courses, {
+      fields: [studentGroupEnrollments.courseId],
+      references: [courses.id],
+    }),
+  }),
+);
 
 // Types
 export type School = typeof schools.$inferSelect;
@@ -196,6 +289,12 @@ export type NewUser = typeof users.$inferInsert;
 
 export type Student = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
+
+export type Group = typeof groups.$inferSelect;
+export type NewGroup = typeof groups.$inferInsert;
+
+export type StudentGroupEnrollment = typeof studentGroupEnrollments.$inferSelect;
+export type NewStudentGroupEnrollment = typeof studentGroupEnrollments.$inferInsert;
 
 export type PermissionDefinition = typeof permissionDefinitions.$inferSelect;
 export type NewPermissionDefinition = typeof permissionDefinitions.$inferInsert;
