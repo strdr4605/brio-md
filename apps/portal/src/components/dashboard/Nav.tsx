@@ -9,6 +9,7 @@ import {
   UsersIcon,
   StudentsIcon,
   BookOpenIcon,
+  CalendarIcon,
   KeyIcon,
   DoorIcon,
   SettingsIcon,
@@ -195,6 +196,7 @@ export function Nav({
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", CalendarIcon)}
               </div>
             )}
           </div>
