@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
@@ -215,7 +215,7 @@ export default function StudentiPage() {
                   const displayPhone = student.phone || student.parentPhone;
 
                   return (
-                    <tr key={student.id} className="contents">
+                    <Fragment key={student.id}>
                       {/* Main Summary Row */}
                       <tr
                         onClick={() => toggleExpand(student.id)}
@@ -320,7 +320,7 @@ export default function StudentiPage() {
                           </td>
                         </tr>
                       )}
-                    </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>
