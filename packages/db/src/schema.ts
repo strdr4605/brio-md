@@ -13,7 +13,7 @@ import {
 // Schools table
 export const schools = pgTable("schools", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
