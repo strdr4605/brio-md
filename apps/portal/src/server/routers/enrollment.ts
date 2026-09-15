@@ -230,6 +230,7 @@ export const enrollmentRouter = router({
           groupName: groups.name,
           courseId: courses.id,
           courseName: courses.name,
+          courseLevel: courses.level,
           scheduleDays: groups.scheduleDays,
           scheduleTime: groups.scheduleTime,
           room: groups.room,
