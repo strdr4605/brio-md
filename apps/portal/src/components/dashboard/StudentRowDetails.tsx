@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { formatPhone } from "@/lib/phone";
-import { PhoneIcon, CalendarIcon, SchoolIcon } from "@/components/ui/icons";
+import { CalendarIcon, SchoolIcon } from "@/components/ui/icons";
 import { StudentCoursesCell } from "./StudentCoursesCell";
 import { EnrollmentDrawer } from "./EnrollmentDrawer";
+import { ParentCallWidget } from "./ParentCallWidget";
 import { trpc } from "@/lib/trpc";
 
 type CourseItem = {
@@ -69,22 +71,10 @@ export function StudentRowDetails({
               Contact Primar
             </span>
           </div>
-          <div>
-            <p className="text-sm font-bold text-slate-800">
-              {student.parentName || "Nume nespecificat"}
-            </p>
-            {student.parentPhone ? (
-              <a
-                href={`tel:${student.parentPhone}`}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline mt-1"
-              >
-                <PhoneIcon className="w-3.5 h-3.5" />
-                <span>{formatPhone(student.parentPhone)}</span>
-              </a>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">Fără număr înregistrat</p>
-            )}
-          </div>
+          <ParentCallWidget
+            parentName={student.parentName}
+            parentPhone={student.parentPhone}
+          />
 
           {student.phone && (
             <div className="pt-2 border-t border-slate-100">
@@ -189,6 +179,12 @@ export function StudentRowDetails({
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <Link
+              href={`/dashboard/students/${student.id}`}
+              className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-xs transition"
+            >
+              Dosar Elev →
+            </Link>
             <button
               onClick={onEdit}
               className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition"

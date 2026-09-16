@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import { eq, and, asc } from "drizzle-orm";
-import { groups, attendanceRecords, studentGroupEnrollments, students } from "@/db/schema";
+import { eq, and, asc, desc } from "drizzle-orm";
+import { groups, courses, students, attendanceRecords, studentGroupEnrollments } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 
@@ -233,5 +233,98 @@ export const attendanceRouter = router({
           updatedAt: rec?.updatedAt ?? null,
         };
       });
+    }),
+
+  // Get attendance records and summary metrics for a student
+  getByStudent: protectedProcedure
+    .input(z.object({ studentId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+      const [student] = await db
+        .select()
+        .from(students)
+        .where(eq(students.id, input.studentId))
+        .limit(1);
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Studentul nu a fost găsit.",
+        });
+      }
+
+      const permissions = user.permissions || [];
+      const role = user.role;
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
+
+      if (!isSuper && !isAdmin && !isTeacher) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiuni pentru a vizualiza prezența studentului.",
+        });
+      }
+
+      if (!isSuper && !isTeacher && isAdmin && student.schoolId && user.schoolId && student.schoolId !== user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți vizualiza date din altă școală.",
+        });
+      }
+
+      const records = await db
+        .select({
+          id: attendanceRecords.id,
+          groupId: attendanceRecords.groupId,
+          groupName: groups.name,
+          courseId: attendanceRecords.courseId,
+          courseName: courses.name,
+          courseLevel: courses.level,
+          scheduleDays: groups.scheduleDays,
+          scheduleTime: groups.scheduleTime,
+          room: groups.room,
+          date: attendanceRecords.date,
+          status: attendanceRecords.status,
+          comment: attendanceRecords.comment,
+          createdAt: attendanceRecords.createdAt,
+        })
+        .from(attendanceRecords)
+        .innerJoin(groups, eq(attendanceRecords.groupId, groups.id))
+        .innerJoin(courses, eq(attendanceRecords.courseId, courses.id))
+        .where(eq(attendanceRecords.studentId, input.studentId))
+        .orderBy(desc(attendanceRecords.date));
+
+      let presentCount = 0;
+      let lateCount = 0;
+      let absentCount = 0;
+      let excusedCount = 0;
+
+      for (const rec of records) {
+        if (rec.status === "present") presentCount++;
+        else if (rec.status === "late") lateCount++;
+        else if (rec.status === "absent") absentCount++;
+        else if (rec.status === "excused") excusedCount++;
+      }
+
+      const totalSessions = records.length;
+      const attendedCount = presentCount + lateCount;
+      const attendanceRate =
+        totalSessions > 0 ? Math.round((attendedCount / totalSessions) * 100) : null;
+
+      return {
+        summary: {
+          totalSessions,
+          attendedCount,
+          presentCount,
+          lateCount,
+          absentCount,
+          excusedCount,
+          attendanceRate,
+        },
+        records,
+      };
     }),
 });

@@ -512,4 +512,117 @@ describe("studentRouter", () => {
       await expect(caller.delete({ id: 999 })).rejects.toThrow(TRPCError);
     });
   });
+
+  describe("getById", () => {
+    it("returns student profile with school and courses when authorized", async () => {
+      const mockStudent = {
+        id: 1,
+        name: "Alex Popescu",
+        phone: "+37369123456",
+        age: 14,
+        schoolId: 1,
+        schoolName: "Chișinău Campus",
+        parentName: "Elena Popescu",
+        parentPhone: "+37369234567",
+        info: "Recomandare robotică",
+        active: true,
+        createdAt: new Date("2026-01-10"),
+        lastChangedAt: new Date("2026-01-10"),
+      };
+
+      const mockCourses = [{ id: 10, name: "Robotică Avansată" }];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([mockStudent]),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue(mockCourses),
+            }),
+          }),
+        });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.getById({ id: 1 });
+      expect(result).toEqual({
+        ...mockStudent,
+        courses: mockCourses,
+      });
+    });
+
+    it("throws NOT_FOUND when student does not exist", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([]),
+            }),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      await expect(caller.getById({ id: 999 })).rejects.toThrow(
+        expect.objectContaining({ code: "NOT_FOUND" }),
+      );
+    });
+
+    it("throws FORBIDDEN when admin from another school tries to access", async () => {
+      const mockStudent = {
+        id: 1,
+        name: "Alex",
+        schoolId: 2, // different school
+      };
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "2",
+          role: "admin",
+          permissions: ["admin"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.getById({ id: 1 })).rejects.toThrow(
+        expect.objectContaining({ code: "FORBIDDEN" }),
+      );
+    });
+  });
 });

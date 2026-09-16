@@ -50,6 +50,13 @@
       "when": 1789376278782,
       "tag": "0006_third_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789468618646,
+      "tag": "0007_nervous_lifeguard",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
@@ -215,7 +216,7 @@ export default function StudentiPage() {
                   const displayPhone = student.phone || student.parentPhone;
 
                   return (
-                    <tr key={student.id} className="contents">
+                    <Fragment key={student.id}>
                       {/* Main Summary Row */}
                       <tr
                         onClick={() => toggleExpand(student.id)}
@@ -243,9 +244,13 @@ export default function StudentiPage() {
                               {student.name ? student.name.charAt(0).toUpperCase() : "S"}
                             </div>
                             <div>
-                              <span className="font-bold text-slate-900 text-sm block">
+                              <Link
+                                href={`/dashboard/students/${student.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-bold text-slate-900 text-sm block hover:text-blue-600 hover:underline transition"
+                              >
                                 {student.name}
-                              </span>
+                              </Link>
                               <span className="text-xs text-slate-400">
                                 {student.age ? `${student.age} ani` : "Vârstă N/A"}
                               </span>
@@ -288,6 +293,12 @@ export default function StudentiPage() {
 
                         <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="inline-flex items-center gap-2">
+                            <Link
+                              href={`/dashboard/students/${student.id}`}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition"
+                            >
+                              Profil
+                            </Link>
                             <button
                               onClick={() => handleEdit(student)}
                               className="px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
@@ -320,7 +331,7 @@ export default function StudentiPage() {
                           </td>
                         </tr>
                       )}
-                    </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>
