@@ -135,6 +135,7 @@ describe("studentRouter", () => {
 
       const result = await caller.create({
         name: "Enrolled Student",
+        phone: "069123456",
         age: 14,
         courseIds: [1, 2],
       });
@@ -145,6 +146,65 @@ describe("studentRouter", () => {
         { studentId: 1, courseId: 2, status: "in_progress" },
       ]);
     });
+
+    it("throws BAD_REQUEST when neither phone nor parentPhone is provided", async () => {
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      await expect(
+        caller.create({
+          name: "No Phone Student",
+          schoolId: 1,
+        }),
+      ).rejects.toThrowError(/cel puțin un număr de telefon/);
+    });
+
+    it("creates a student when only parentPhone is provided", async () => {
+      const mockResult = {
+        id: 5,
+        name: "Kid with Parent Phone",
+        phone: null,
+        age: 8,
+        schoolId: 1,
+        parentName: "Parent",
+        parentPhone: "+37368111222",
+        info: null,
+        active: true,
+      };
+
+      (db.insert as any).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockResult]),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.create({
+        name: "Kid with Parent Phone",
+        parentPhone: "068111222",
+        age: 8,
+        schoolId: 1,
+      });
+
+      expect(result).toEqual(mockResult);
+    });
+
     it("throws FORBIDDEN when user has no student management permissions", async () => {
       const caller = studentRouter.createCaller({
         user: {
@@ -156,7 +216,7 @@ describe("studentRouter", () => {
         },
       });
 
-      await expect(caller.create({ name: "Unauthorized" })).rejects.toThrow(TRPCError);
+      await expect(caller.create({ name: "Unauthorized", phone: "069111222" })).rejects.toThrow(TRPCError);
     });
   });
 
