@@ -1,9 +1,10 @@
 "use client";
 
 import { trpc } from "@/lib/trpc";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
+import { detectCourseScheduleConflicts } from "@/lib/scheduleConflicts";
 
 export type StudentFormStudent = {
   id?: number;
@@ -21,7 +22,7 @@ export type StudentFormStudent = {
 type Props = {
   student: StudentFormStudent | null;
   schools: { id: number; name: string }[];
-  courses?: { id: number; name: string; level?: string | null }[];
+  courses?: { id: number; name: string; level?: string | null; scheduleDays?: string[] | null; scheduleTime?: string | null }[];
   isSuperAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
@@ -71,21 +72,20 @@ export function StudentFormDrawer({
     student?.courses?.map((c) => c.id) || [],
   );
 
+  const courseConflicts = useMemo(() => {
+    if (selectedCourseIds.length <= 1) return [];
+    return detectCourseScheduleConflicts(courses.filter((c) => selectedCourseIds.includes(c.id)));
+  }, [selectedCourseIds, courses]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (courseConflicts.length > 0) return;
     const phoneErr = "Format invalid. Ex: +373 69 000 000 sau 069000000";
-    let hasError = false;
-    if (formData.phone && !isValidPhone(formData.phone)) {
-      setPhoneError(phoneErr);
-      hasError = true;
-    } else setPhoneError(null);
-
-    if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
-      setParentPhoneError(phoneErr);
-      hasError = true;
-    } else setParentPhoneError(null);
-
-    if (hasError) return;
+    const pErr = formData.phone && !isValidPhone(formData.phone) ? phoneErr : null;
+    const ppErr = formData.parentPhone && !isValidPhone(formData.parentPhone) ? phoneErr : null;
+    setPhoneError(pErr);
+    setParentPhoneError(ppErr);
+    if (pErr || ppErr) return;
 
     const payload = {
       name: formData.name,
@@ -270,6 +270,12 @@ export function StudentFormDrawer({
                   );
                 })}
               </div>
+              {courseConflicts.map((c, idx) => (
+                <div key={idx} className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                  <span className="text-amber-500 font-bold shrink-0">⚠️</span>
+                  <span>{c.message}</span>
+                </div>
+              ))}
             </div>
           )}
 
@@ -298,11 +304,10 @@ export function StudentFormDrawer({
             </div>
           )}
 
-          {createMutation.error && (
-            <p className="text-rose-600 text-xs font-medium p-2 bg-rose-50 rounded-lg">{createMutation.error.message}</p>
-          )}
-          {updateMutation.error && (
-            <p className="text-rose-600 text-xs font-medium p-2 bg-rose-50 rounded-lg">{updateMutation.error.message}</p>
+          {(createMutation.error || updateMutation.error) && (
+            <p className="text-rose-600 text-xs font-medium p-2 bg-rose-50 rounded-lg">
+              {createMutation.error?.message || updateMutation.error?.message}
+            </p>
           )}
         </form>
 
@@ -331,7 +336,7 @@ export function StudentFormDrawer({
           <button
             type="submit"
             form="student-form"
-            disabled={isPending}
+            disabled={isPending || courseConflicts.length > 0}
             className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 rounded-xl transition disabled:opacity-50"
           >
             {isPending ? "Se procesează..." : isEditing ? "Salvează Modificările" : "Creează Student"}
