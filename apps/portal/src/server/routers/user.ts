@@ -316,9 +316,19 @@ export const userRouter = router({
       const isSuper = permissions.includes("super") || ctx.user?.role === "superadmin";
       const targetSchoolId = isSuper ? input?.schoolId : (ctx.user?.schoolId ?? undefined);
 
+      let rows;
       if (targetSchoolId) {
-        return db.select().from(courses).where(eq(courses.schoolId, targetSchoolId));
+        rows = await db.select().from(courses).where(eq(courses.schoolId, targetSchoolId));
+      } else {
+        rows = isSuper ? await db.select().from(courses) : [];
       }
-      return isSuper ? db.select().from(courses) : [];
+
+      const seen = new Set<string>();
+      return rows.filter((c) => {
+        const key = `${c.schoolId ?? "none"}:${c.name.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     }),
 });

@@ -57,6 +57,20 @@
       "when": 1789468618646,
       "tag": "0007_nervous_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789542837481,
+      "tag": "0008_calm_blacklash",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789545454483,
+      "tag": "0009_common_unicorn",
+      "breakpoints": true
     }
   ]
 }

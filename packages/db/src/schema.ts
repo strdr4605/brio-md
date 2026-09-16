@@ -45,36 +45,52 @@ export const users = pgTable("users", {
 });
 
 // Students table (separate - may not have login yet)
-export const students = pgTable("students", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  schoolId: integer("school_id").references(() => schools.id),
-  parentName: varchar("parent_name", { length: 255 }),
-  parentPhone: varchar("parent_phone", { length: 50 }),
-  info: text("info"),
-  classId: integer("class_id"),
-  phone: text("phone"),
-  age: integer("age"),
-  active: boolean("active").default(true),
-  lastChangedAt: timestamp("last_changed_at").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const students = pgTable(
+  "students",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    schoolId: integer("school_id").references(() => schools.id),
+    parentName: varchar("parent_name", { length: 255 }),
+    parentPhone: varchar("parent_phone", { length: 50 }),
+    info: text("info"),
+    classId: integer("class_id"),
+    phone: text("phone"),
+    age: integer("age"),
+    active: boolean("active").default(true),
+    lastChangedAt: timestamp("last_changed_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("students_school_name_phone_idx").on(
+      table.schoolId,
+      table.name,
+      table.phone,
+    ),
+  ],
+);
 
 // Courses table
-export const courses = pgTable("courses", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  level: varchar("level", { length: 50, enum: ["beginner", "intermediate", "advanced"] }),
-  totalSessions: integer("total_sessions").notNull().default(1),
-  sessionDurationMinutes: integer("session_duration_minutes").default(60),
-  scheduleDays: text("schedule_days").array().default([]),
-  scheduleTime: varchar("schedule_time", { length: 100 }),
-  teacherId: integer("teacher_id").references(() => users.id),
-  schoolId: integer("school_id").references(() => schools.id),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const courses = pgTable(
+  "courses",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    level: varchar("level", { length: 50, enum: ["beginner", "intermediate", "advanced"] }),
+    totalSessions: integer("total_sessions").notNull().default(1),
+    sessionDurationMinutes: integer("session_duration_minutes").default(60),
+    scheduleDays: text("schedule_days").array().default([]),
+    scheduleTime: varchar("schedule_time", { length: 100 }),
+    teacherId: integer("teacher_id").references(() => users.id),
+    schoolId: integer("school_id").references(() => schools.id),
+    active: boolean("active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("courses_school_name_idx").on(table.schoolId, table.name),
+  ],
+);
 
 // Course Materials table
 export const courseMaterials = pgTable("course_materials", {
@@ -110,21 +126,27 @@ export const studentCourseProgress = pgTable("student_course_progress", {
 });
 
 // Groups table
-export const groups = pgTable("groups", {
-  id: serial("id").primaryKey(),
-  courseId: integer("course_id")
-    .notNull()
-    .references(() => courses.id, { onDelete: "cascade" }),
-  schoolId: integer("school_id").references(() => schools.id),
-  name: varchar("name", { length: 255 }).notNull(),
-  scheduleDays: text("schedule_days").array().default([]),
-  scheduleTime: varchar("schedule_time", { length: 100 }),
-  room: varchar("room", { length: 255 }),
-  teacherId: integer("teacher_id").references(() => users.id),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+export const groups = pgTable(
+  "groups",
+  {
+    id: serial("id").primaryKey(),
+    courseId: integer("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    schoolId: integer("school_id").references(() => schools.id),
+    name: varchar("name", { length: 255 }).notNull(),
+    scheduleDays: text("schedule_days").array().default([]),
+    scheduleTime: varchar("schedule_time", { length: 100 }),
+    room: varchar("room", { length: 255 }),
+    teacherId: integer("teacher_id").references(() => users.id),
+    active: boolean("active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("groups_course_name_idx").on(table.courseId, table.name),
+  ],
+);
 
 // Student Group Enrollments table
 export const studentGroupEnrollments = pgTable(
