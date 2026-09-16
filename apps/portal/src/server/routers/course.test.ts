@@ -11,6 +11,11 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("../conflictChecker", () => ({
+  checkCourseNameConflict: vi.fn(),
+  checkGroupConflicts: vi.fn(),
+}));
+
 import { db } from "@/lib/db";
 
 describe("courseRouter", () => {

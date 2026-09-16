@@ -4,6 +4,7 @@ import { eq, and, inArray, asc } from "drizzle-orm";
 import { studentGroupEnrollments, groups, courses, students, users } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
+import { checkStudentGroupConflicts } from "../conflictChecker";
 
 export function assertAdminAccess(
   user: { id: string; role: string; permissions: string[]; schoolId: number | null },
@@ -16,19 +17,11 @@ export function assertAdminAccess(
   const isTeacher = permissions.includes("teach") || role === "teacher";
 
   if (!isSuper && !isAdmin && !isTeacher) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Nu ai permisiuni suficiente pentru gestiunea înscrierilor.",
-    });
+    throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiuni suficiente pentru gestiunea înscrierilor." });
   }
-
   if (!isSuper && isAdmin && targetSchoolId && user.schoolId && targetSchoolId !== user.schoolId) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Nu ai permisiunea de a modifica date din altă școală.",
-    });
+    throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a modifica date din altă școală." });
   }
-
   return { isSuper, isAdmin, isTeacher };
 }
 
@@ -82,6 +75,11 @@ export const enrollmentRouter = router({
       for (const grp of targetGroups) {
         assertAdminAccess(user, grp.schoolId);
       }
+
+      await checkStudentGroupConflicts(db, {
+        studentId: input.studentId,
+        groupIds: input.groupIds,
+      });
 
       // 3. Upsert enrollments with status "active"
       const results = [];
@@ -177,6 +175,14 @@ export const enrollmentRouter = router({
 
       if (student) {
         assertAdminAccess(user, student.schoolId);
+      }
+
+      if (input.status === "active") {
+        await checkStudentGroupConflicts(db, {
+          studentId: enrollment.studentId,
+          groupIds: [enrollment.groupId],
+          excludeEnrollmentId: enrollment.id,
+        });
       }
 
       const isDeactivating = input.status !== "active";

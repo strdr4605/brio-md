@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import {
   schools,
@@ -11,8 +11,6 @@ import {
   students,
   courseMaterials,
   studentCourseProgress,
-  groups,
-  studentGroupEnrollments,
 } from "@brio-md/db";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -41,58 +39,55 @@ async function seed() {
     console.log("ℹ️ Using existing school:", school.name, `(id: ${school.id})`);
   }
 
-  // Create sample students
-  const [student1] = await db
-    .insert(students)
-    .values({
-      name: "Alex Popescu",
-      schoolId: school.id,
-      phone: "+37369000001",
-      age: 14,
-      parentName: "Maria Popescu",
-      parentPhone: "+37360000000",
-    })
-    .returning();
-  console.log("✅ Created Student:", student1.name);
+  // Find or create sample students (idempotent)
+  async function findOrCreateStudent(data: typeof students.$inferInsert) {
+    let [s] = await db
+      .select()
+      .from(students)
+      .where(and(eq(students.schoolId, data.schoolId!), eq(students.phone, data.phone!)))
+      .limit(1);
+    if (!s) {
+      [s] = await db.insert(students).values(data).returning();
+      console.log("✅ Created Student:", s.name);
+    }
+    return s;
+  }
 
-  const [student2] = await db
-    .insert(students)
-    .values({
-      name: "Elena Ionescu",
-      schoolId: school.id,
-      phone: "+37369000002",
-      age: 12,
-      parentName: "Ion Ionescu",
-      parentPhone: "+37361111111",
-    })
-    .returning();
-  console.log("✅ Created Student:", student2.name);
+  const student1 = await findOrCreateStudent({
+    name: "Alex Popescu",
+    schoolId: school.id,
+    phone: "+37369000001",
+    age: 14,
+    parentName: "Maria Popescu",
+    parentPhone: "+37360000000",
+  });
 
-  const [student3] = await db
-    .insert(students)
-    .values({
-      name: "Mihai Radu",
-      schoolId: school.id,
-      phone: "+37369000003",
-      age: 16,
-      parentName: "Victor Radu",
-      parentPhone: "+37362222222",
-    })
-    .returning();
-  console.log("✅ Created Student:", student3.name);
+  const student2 = await findOrCreateStudent({
+    name: "Elena Ionescu",
+    schoolId: school.id,
+    phone: "+37369000002",
+    age: 12,
+    parentName: "Ion Ionescu",
+    parentPhone: "+37361111111",
+  });
 
-  const [student4] = await db
-    .insert(students)
-    .values({
-      name: "Sofia Ursu",
-      schoolId: school.id,
-      phone: "+37369000004",
-      age: 11,
-      parentName: "Ana Ursu",
-      parentPhone: "+37363333333",
-    })
-    .returning();
-  console.log("✅ Created Student:", student4.name);
+  const student3 = await findOrCreateStudent({
+    name: "Mihai Radu",
+    schoolId: school.id,
+    phone: "+37369000003",
+    age: 16,
+    parentName: "Victor Radu",
+    parentPhone: "+37362222222",
+  });
+
+  const student4 = await findOrCreateStudent({
+    name: "Sofia Ursu",
+    schoolId: school.id,
+    phone: "+37369000004",
+    age: 11,
+    parentName: "Ana Ursu",
+    parentPhone: "+37363333333",
+  });
 
   // Create permission definitions
   await db
@@ -163,58 +158,79 @@ async function seed() {
     .returning();
   console.log("✅ Created Teacher:", teacher.name);
 
-  // Create Courses with full schedule and level information
-  const [courseEnglish] = await db
-    .insert(courses)
-    .values({
-      name: "General English A1-A2",
-      description:
-        "Foundational English course focusing on vocabulary, basic grammar, and conversational skills for beginners.",
-      level: "beginner",
-      totalSessions: 24,
-      sessionDurationMinutes: 60,
-      scheduleDays: ["mon", "wed", "fri"],
-      scheduleTime: "15:00 - 16:00",
-      teacherId: teacher.id,
-      schoolId: school.id,
-      active: true,
-    })
-    .returning();
+  // Find or create Courses (idempotent)
+  let [courseEnglish] = await db
+    .select()
+    .from(courses)
+    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "General English A1-A2")))
+    .limit(1);
+  if (!courseEnglish) {
+    [courseEnglish] = await db
+      .insert(courses)
+      .values({
+        name: "General English A1-A2",
+        description:
+          "Foundational English course focusing on vocabulary, basic grammar, and conversational skills for beginners.",
+        level: "beginner",
+        totalSessions: 24,
+        sessionDurationMinutes: 60,
+        scheduleDays: ["mon", "wed", "fri"],
+        scheduleTime: "15:00 - 16:00",
+        teacherId: teacher.id,
+        schoolId: school.id,
+        active: true,
+      })
+      .returning();
+  }
 
-  const [courseRobotics] = await db
-    .insert(courses)
-    .values({
-      name: "Intermediate Robotics & STEM",
-      description:
-        "Hands-on robotics course covering sensor integration, motor controls, and algorithmic problem solving.",
-      level: "intermediate",
-      totalSessions: 16,
-      sessionDurationMinutes: 90,
-      scheduleDays: ["tue", "thu"],
-      scheduleTime: "16:30 - 18:00",
-      teacherId: teacher.id,
-      schoolId: school.id,
-      active: true,
-    })
-    .returning();
+  let [courseRobotics] = await db
+    .select()
+    .from(courses)
+    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "Intermediate Robotics & STEM")))
+    .limit(1);
+  if (!courseRobotics) {
+    [courseRobotics] = await db
+      .insert(courses)
+      .values({
+        name: "Intermediate Robotics & STEM",
+        description:
+          "Hands-on robotics course covering sensor integration, motor controls, and algorithmic problem solving.",
+        level: "intermediate",
+        totalSessions: 16,
+        sessionDurationMinutes: 90,
+        scheduleDays: ["tue", "thu"],
+        scheduleTime: "16:30 - 18:00",
+        teacherId: teacher.id,
+        schoolId: school.id,
+        active: true,
+      })
+      .returning();
+  }
 
-  const [courseWeb] = await db
-    .insert(courses)
-    .values({
-      name: "Advanced Web Engineering",
-      description:
-        "Deep dive into full-stack development with modern TypeScript, databases, and distributed architectures.",
-      level: "advanced",
-      totalSessions: 30,
-      sessionDurationMinutes: 120,
-      scheduleDays: ["sat"],
-      scheduleTime: "10:00 - 12:00",
-      teacherId: teacher.id,
-      schoolId: school.id,
-      active: true,
-    })
-    .returning();
-  console.log("✅ Created 3 sample courses with schedules and levels");
+  let [courseWeb] = await db
+    .select()
+    .from(courses)
+    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "Advanced Web Engineering")))
+    .limit(1);
+  if (!courseWeb) {
+    [courseWeb] = await db
+      .insert(courses)
+      .values({
+        name: "Advanced Web Engineering",
+        description:
+          "Deep dive into full-stack development with modern TypeScript, databases, and distributed architectures.",
+        level: "advanced",
+        totalSessions: 30,
+        sessionDurationMinutes: 120,
+        scheduleDays: ["sat"],
+        scheduleTime: "10:00 - 12:00",
+        teacherId: teacher.id,
+        schoolId: school.id,
+        active: true,
+      })
+      .returning();
+  }
+  console.log("✅ Using courses with schedules and levels");
 
   // Assign courses to teacher
   await db
@@ -292,98 +308,6 @@ async function seed() {
   ]);
   console.log("✅ Created sample student course progress records");
 
-  // Create Groups for Courses
-  const [groupEnglishA] = await db
-    .insert(groups)
-    .values({
-      name: "Grupa A - Marți 17:30",
-      courseId: courseEnglish.id,
-      schoolId: school.id,
-      scheduleDays: ["tue", "thu"],
-      scheduleTime: "17:30 - 19:00",
-      room: "Sala 101 (Etaj 1)",
-      teacherId: teacher.id,
-      active: true,
-    })
-    .returning();
-
-  const [groupEnglishB] = await db
-    .insert(groups)
-    .values({
-      name: "Grupa B - Sâmbătă 10:00",
-      courseId: courseEnglish.id,
-      schoolId: school.id,
-      scheduleDays: ["sat"],
-      scheduleTime: "10:00 - 12:00",
-      room: "Sala 102 (Etaj 1)",
-      teacherId: teacher.id,
-      active: true,
-    })
-    .returning();
-
-  const [groupRobotics1] = await db
-    .insert(groups)
-    .values({
-      name: "Robotics Cohort 1 - Miercuri 15:00",
-      courseId: courseRobotics.id,
-      schoolId: school.id,
-      scheduleDays: ["wed", "fri"],
-      scheduleTime: "15:00 - 16:30",
-      room: "Lab Robotică (Corp B)",
-      teacherId: teacher.id,
-      active: true,
-    })
-    .returning();
-  console.log("✅ Created sample groups with schedules, rooms, and teachers");
-
-  // Create Student Group Enrollments
-  await db.insert(studentGroupEnrollments).values([
-    {
-      studentId: student1.id,
-      groupId: groupEnglishA.id,
-      courseId: courseEnglish.id,
-      status: "active",
-      joinedAt: new Date(Date.now() - 14 * 86400000),
-    },
-    {
-      studentId: student1.id,
-      groupId: groupRobotics1.id,
-      courseId: courseRobotics.id,
-      status: "active",
-      joinedAt: new Date(Date.now() - 7 * 86400000),
-    },
-    {
-      studentId: student2.id,
-      groupId: groupEnglishA.id,
-      courseId: courseEnglish.id,
-      status: "inactive",
-      joinedAt: new Date(Date.now() - 30 * 86400000),
-      leftAt: new Date(Date.now() - 2 * 86400000),
-    },
-    {
-      studentId: student2.id,
-      groupId: groupRobotics1.id,
-      courseId: courseRobotics.id,
-      status: "active",
-      joinedAt: new Date(Date.now() - 10 * 86400000),
-    },
-    {
-      studentId: student3.id,
-      groupId: groupEnglishA.id,
-      courseId: courseEnglish.id,
-      status: "archived",
-      joinedAt: new Date(Date.now() - 60 * 86400000),
-      leftAt: new Date(Date.now() - 15 * 86400000),
-    },
-    {
-      studentId: student4.id,
-      groupId: groupEnglishB.id,
-      courseId: courseEnglish.id,
-      status: "active",
-      joinedAt: new Date(Date.now() - 5 * 86400000),
-    },
-  ]);
-  console.log("✅ Created sample student group enrollments (active, inactive, archived)");
 
   console.log("");
   console.log("🎉 Seed completed!");

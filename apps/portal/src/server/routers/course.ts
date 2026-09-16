@@ -4,6 +4,7 @@ import { eq, ilike, and } from "drizzle-orm";
 import { courses, courseMaterials, users } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
+import { checkCourseNameConflict } from "../conflictChecker";
 
 function assertSuperOrAdmin(ctxUser: { role: string; permissions: string[]; schoolId: number | null } | null) {
   if (!ctxUser) {
@@ -152,6 +153,11 @@ export const courseRouter = router({
       const { isSuper, user } = assertSuperOrAdmin(ctx.user);
       const schoolId = isSuper ? (input.schoolId ?? user.schoolId) : user.schoolId;
 
+      await checkCourseNameConflict(db, {
+        schoolId,
+        name: input.name,
+      });
+
       const [course] = await db
         .insert(courses)
         .values({
@@ -210,6 +216,14 @@ export const courseRouter = router({
 
       if (!isSuper && existing.schoolId !== user.schoolId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica acest curs." });
+      }
+
+      if (input.name !== undefined) {
+        await checkCourseNameConflict(db, {
+          schoolId: existing.schoolId,
+          excludeCourseId: input.id,
+          name: input.name,
+        });
       }
 
       const updateData: Record<string, unknown> = {};
