@@ -11,6 +11,8 @@ import {
   students,
   courseMaterials,
   studentCourseProgress,
+  groups,
+  studentGroupEnrollments,
 } from "@brio-md/db";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -238,47 +240,63 @@ async function seed() {
     .set({ courseIds: [courseEnglish.id, courseRobotics.id, courseWeb.id] })
     .where(eq(users.id, teacher.id));
 
-  // Create Course Materials
-  await db.insert(courseMaterials).values([
+  // Create Course Materials (idempotent)
+  const sampleMaterials = [
     {
       courseId: courseEnglish.id,
       title: "English Grammar in Use (5th Edition)",
-      type: "textbook",
+      type: "textbook" as const,
       url: "https://example.com/materials/english-grammar-in-use.pdf",
       orderIndex: 1,
     },
     {
       courseId: courseEnglish.id,
       title: "Beginner Audio Listening Exercises",
-      type: "link",
+      type: "link" as const,
       url: "https://example.com/audio/a1-listening",
       orderIndex: 2,
     },
     {
       courseId: courseRobotics.id,
       title: "LEGO SPIKE Prime Teacher Guide & Lab Manual",
-      type: "manual",
+      type: "manual" as const,
       url: "https://example.com/manuals/spike-prime-lab-guide.pdf",
       orderIndex: 1,
     },
     {
       courseId: courseWeb.id,
       title: "Fullstack TypeScript System Architecture Docs",
-      type: "file",
+      type: "file" as const,
       url: "https://example.com/docs/fullstack-architecture.pdf",
       orderIndex: 1,
     },
-  ]);
-  console.log("✅ Created sample course materials (manuals, textbooks, links, files)");
+  ];
 
-  // Create Student Course Progress
-  await db.insert(studentCourseProgress).values([
+  for (const mat of sampleMaterials) {
+    const [existing] = await db
+      .select()
+      .from(courseMaterials)
+      .where(
+        and(
+          eq(courseMaterials.courseId, mat.courseId),
+          eq(courseMaterials.title, mat.title),
+        ),
+      )
+      .limit(1);
+    if (!existing) {
+      await db.insert(courseMaterials).values(mat);
+    }
+  }
+  console.log("✅ Configured sample course materials (manuals, textbooks, links, files)");
+
+  // Create Student Course Progress (idempotent)
+  const sampleProgress = [
     {
       studentId: student1.id,
       courseId: courseEnglish.id,
       currentSession: 8,
       completedSessions: 7,
-      status: "in_progress",
+      status: "in_progress" as const,
       notes: "Alex is showing good grasp of regular verbs. Needs extra practice with past simple.",
     },
     {
@@ -286,7 +304,7 @@ async function seed() {
       courseId: courseEnglish.id,
       currentSession: 24,
       completedSessions: 24,
-      status: "completed",
+      status: "completed" as const,
       notes: "Successfully passed the final spoken exam with an A grade.",
     },
     {
@@ -294,7 +312,7 @@ async function seed() {
       courseId: courseRobotics.id,
       currentSession: 1,
       completedSessions: 0,
-      status: "not_started",
+      status: "not_started" as const,
       notes: "Enrolled for upcoming fall semester.",
     },
     {
@@ -302,11 +320,151 @@ async function seed() {
       courseId: courseRobotics.id,
       currentSession: 5,
       completedSessions: 4,
-      status: "on_pause",
+      status: "on_pause" as const,
       notes: "Paused due to medical leave; will resume next month.",
     },
-  ]);
-  console.log("✅ Created sample student course progress records");
+  ];
+
+  for (const prog of sampleProgress) {
+    const [existing] = await db
+      .select()
+      .from(studentCourseProgress)
+      .where(
+        and(
+          eq(studentCourseProgress.studentId, prog.studentId),
+          eq(studentCourseProgress.courseId, prog.courseId),
+        ),
+      )
+      .limit(1);
+    if (!existing) {
+      await db.insert(studentCourseProgress).values(prog);
+    }
+  }
+  console.log("✅ Configured sample student course progress records");
+
+  // Create Groups for Courses (idempotent)
+  async function findOrCreateGroup(data: {
+    name: string;
+    courseId: number;
+    schoolId: number;
+    scheduleDays: string[];
+    scheduleTime: string;
+    room: string;
+    teacherId: number;
+    active: boolean;
+  }) {
+    let [g] = await db
+      .select()
+      .from(groups)
+      .where(and(eq(groups.schoolId, data.schoolId), eq(groups.name, data.name)))
+      .limit(1);
+    if (!g) {
+      [g] = await db.insert(groups).values(data).returning();
+      console.log("✅ Created group:", g.name);
+    } else {
+      console.log("ℹ️ Using existing group:", g.name, `(id: ${g.id})`);
+    }
+    return g;
+  }
+
+  const groupEnglishA = await findOrCreateGroup({
+    name: "Grupa A - Marți 17:30",
+    courseId: courseEnglish.id,
+    schoolId: school.id,
+    scheduleDays: ["tue", "thu"],
+    scheduleTime: "17:30 - 19:00",
+    room: "Sala 101 (Etaj 1)",
+    teacherId: teacher.id,
+    active: true,
+  });
+
+  const groupEnglishB = await findOrCreateGroup({
+    name: "Grupa B - Sâmbătă 10:00",
+    courseId: courseEnglish.id,
+    schoolId: school.id,
+    scheduleDays: ["sat"],
+    scheduleTime: "10:00 - 12:00",
+    room: "Sala 102 (Etaj 1)",
+    teacherId: teacher.id,
+    active: true,
+  });
+
+  const groupRobotics1 = await findOrCreateGroup({
+    name: "Robotics Cohort 1 - Miercuri 15:00",
+    courseId: courseRobotics.id,
+    schoolId: school.id,
+    scheduleDays: ["wed", "fri"],
+    scheduleTime: "15:00 - 16:30",
+    room: "Lab Robotică (Corp B)",
+    teacherId: teacher.id,
+    active: true,
+  });
+  console.log("✅ Configured sample groups with schedules, rooms, and teachers");
+
+  // Create Student Group Enrollments (idempotent)
+  const sampleEnrollments = [
+    {
+      studentId: student1.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "active" as const,
+      joinedAt: new Date(Date.now() - 14 * 86400000),
+    },
+    {
+      studentId: student1.id,
+      groupId: groupRobotics1.id,
+      courseId: courseRobotics.id,
+      status: "active" as const,
+      joinedAt: new Date(Date.now() - 7 * 86400000),
+    },
+    {
+      studentId: student2.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "inactive" as const,
+      joinedAt: new Date(Date.now() - 30 * 86400000),
+      leftAt: new Date(Date.now() - 2 * 86400000),
+    },
+    {
+      studentId: student2.id,
+      groupId: groupRobotics1.id,
+      courseId: courseRobotics.id,
+      status: "active" as const,
+      joinedAt: new Date(Date.now() - 10 * 86400000),
+    },
+    {
+      studentId: student3.id,
+      groupId: groupEnglishA.id,
+      courseId: courseEnglish.id,
+      status: "archived" as const,
+      joinedAt: new Date(Date.now() - 60 * 86400000),
+      leftAt: new Date(Date.now() - 15 * 86400000),
+    },
+    {
+      studentId: student4.id,
+      groupId: groupEnglishB.id,
+      courseId: courseEnglish.id,
+      status: "active" as const,
+      joinedAt: new Date(Date.now() - 5 * 86400000),
+    },
+  ];
+
+  for (const enr of sampleEnrollments) {
+    const [existing] = await db
+      .select()
+      .from(studentGroupEnrollments)
+      .where(
+        and(
+          eq(studentGroupEnrollments.studentId, enr.studentId),
+          eq(studentGroupEnrollments.groupId, enr.groupId),
+        ),
+      )
+      .limit(1);
+    if (!existing) {
+      await db.insert(studentGroupEnrollments).values(enr);
+    }
+  }
+  console.log("✅ Configured sample student group enrollments (active, inactive, archived)");
 
 
   console.log("");
