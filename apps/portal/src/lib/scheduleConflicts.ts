@@ -76,7 +76,7 @@ export type DetectGroupConflictParams = {
 
 export function detectGroupConflicts(params: DetectGroupConflictParams): ConflictWarning[] {
   const warnings: ConflictWarning[] = [];
-  const { name, courseId, excludeGroupId, room, teacherId, scheduleDays, scheduleTime, existingGroups } = params;
+  const { name, excludeGroupId, room, teacherId, scheduleDays, scheduleTime, existingGroups } = params;
 
   const cleanName = name.trim().toLowerCase();
   const cleanRoom = room?.trim().toLowerCase();
@@ -100,11 +100,11 @@ export function detectGroupConflicts(params: DetectGroupConflictParams): Conflic
     if (excludeGroupId && group.id === excludeGroupId) continue;
     if (group.active === false) continue;
 
-    // Check duplicate name within same course
-    if (group.courseId === courseId && cleanName !== "" && group.name.trim().toLowerCase() === cleanName) {
+    // Check duplicate name within school
+    if (cleanName !== "" && group.name.trim().toLowerCase() === cleanName) {
       warnings.push({
         type: "name",
-        message: `Există deja o grupă cu denumirea "${group.name}" în cadrul acestui curs.`,
+        message: `Există deja o grupă cu denumirea "${group.name}" în această școală.`,
       });
     }
 

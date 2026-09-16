@@ -109,7 +109,7 @@ describe("scheduleConflicts pure functions", () => {
       },
     ];
 
-    it("flags duplicate group name in the same course", () => {
+    it("flags duplicate group name in the school", () => {
       const warnings = detectGroupConflicts({
         name: "grupa robotică a", // case-insensitive duplicate
         courseId: 10,
@@ -117,11 +117,22 @@ describe("scheduleConflicts pure functions", () => {
       });
       expect(warnings).toHaveLength(1);
       expect(warnings[0].type).toBe("name");
+      expect(warnings[0].message).toContain("în această școală");
     });
 
-    it("allows same group name in a different course", () => {
+    it("flags duplicate group name even when assigned to a different course", () => {
       const warnings = detectGroupConflicts({
         name: "Grupa Robotică A",
+        courseId: 99,
+        existingGroups,
+      });
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].type).toBe("name");
+    });
+
+    it("allows unique group name in the school", () => {
+      const warnings = detectGroupConflicts({
+        name: "Grupa Matematică B",
         courseId: 99,
         existingGroups,
       });
