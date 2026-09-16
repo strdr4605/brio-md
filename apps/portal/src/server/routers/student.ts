@@ -1,12 +1,81 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import { eq, ilike, and, asc, inArray } from "drizzle-orm";
-import { students, courses, studentCourseProgress } from "@/db/schema";
+import { students, courses, studentCourseProgress, schools } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { phoneSchema } from "@/lib/phone";
 
 export const studentRouter = router({
+  // Get student by ID
+  getById: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
+
+      if (!isSuper && !isAdmin && !isTeacher) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a vizualiza profilul studentului",
+        });
+      }
+
+      const [row] = await db
+        .select({
+          id: students.id,
+          name: students.name,
+          schoolId: students.schoolId,
+          schoolName: schools.name,
+          parentName: students.parentName,
+          parentPhone: students.parentPhone,
+          phone: students.phone,
+          age: students.age,
+          info: students.info,
+          active: students.active,
+          createdAt: students.createdAt,
+          lastChangedAt: students.lastChangedAt,
+        })
+        .from(students)
+        .leftJoin(schools, eq(students.schoolId, schools.id))
+        .where(eq(students.id, input.id))
+        .limit(1);
+
+      if (!row) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Studentul nu a fost găsit",
+        });
+      }
+
+      if (!isSuper && !isTeacher && isAdmin && row.schoolId !== user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu poți vizualiza un student din altă școală",
+        });
+      }
+
+      const enrollments = await db
+        .select({
+          id: courses.id,
+          name: courses.name,
+        })
+        .from(studentCourseProgress)
+        .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
+        .where(eq(studentCourseProgress.studentId, input.id));
+
+      return {
+        ...row,
+        courses: enrollments,
+      };
+    }),
+
   // List students (filtered by permissions)
   list: protectedProcedure
     .input(

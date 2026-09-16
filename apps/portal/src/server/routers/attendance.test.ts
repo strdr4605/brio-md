@@ -289,4 +289,185 @@ describe("attendanceRouter & Server-side Authorization", () => {
       );
     });
   });
+
+  describe("attendance.getByStudent", () => {
+    it("returns records and calculates summary statistics accurately", async () => {
+      const mockStudent = {
+        id: 101,
+        name: "Test Student",
+        schoolId: 1,
+      };
+
+      const mockRecords = [
+        {
+          id: 1,
+          groupId: 5,
+          groupName: "Grupa A",
+          courseId: 2,
+          courseName: "Robotică",
+          courseLevel: "beginner",
+          scheduleDays: ["tue"],
+          scheduleTime: "17:30",
+          room: "Lab 1",
+          date: "2026-09-11",
+          status: "present",
+          comment: "Excelentă participare",
+        },
+        {
+          id: 2,
+          groupId: 5,
+          groupName: "Grupa A",
+          courseId: 2,
+          courseName: "Robotică",
+          courseLevel: "beginner",
+          scheduleDays: ["tue"],
+          scheduleTime: "17:30",
+          room: "Lab 1",
+          date: "2026-09-04",
+          status: "late",
+          comment: "Întârziat 5 min",
+        },
+        {
+          id: 3,
+          groupId: 5,
+          groupName: "Grupa A",
+          courseId: 2,
+          courseName: "Robotică",
+          courseLevel: "beginner",
+          scheduleDays: ["tue"],
+          scheduleTime: "17:30",
+          room: "Lab 1",
+          date: "2026-08-28",
+          status: "absent",
+          comment: null,
+        },
+        {
+          id: 4,
+          groupId: 5,
+          groupName: "Grupa A",
+          courseId: 2,
+          courseName: "Robotică",
+          courseLevel: "beginner",
+          scheduleDays: ["tue"],
+          scheduleTime: "17:30",
+          room: "Lab 1",
+          date: "2026-08-21",
+          status: "excused",
+          comment: "Motivat medical",
+        },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  orderBy: vi.fn().mockResolvedValue(mockRecords),
+                }),
+              }),
+            }),
+          }),
+        });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      const result = await caller.getByStudent({ studentId: 101 });
+
+      expect(result.records).toHaveLength(4);
+      expect(result.summary).toEqual({
+        totalSessions: 4,
+        attendedCount: 2, // 1 present + 1 late
+        presentCount: 1,
+        lateCount: 1,
+        absentCount: 1,
+        excusedCount: 1,
+        attendanceRate: 50, // (2 / 4) * 100 = 50%
+      });
+    });
+
+    it("returns attendanceRate: null when student has 0 sessions recorded", async () => {
+      const mockStudent = {
+        id: 102,
+        name: "New Student",
+        schoolId: 1,
+      };
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  orderBy: vi.fn().mockResolvedValue([]),
+                }),
+              }),
+            }),
+          }),
+        });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      const result = await caller.getByStudent({ studentId: 102 });
+
+      expect(result.records).toHaveLength(0);
+      expect(result.summary).toEqual({
+        totalSessions: 0,
+        attendedCount: 0,
+        presentCount: 0,
+        lateCount: 0,
+        absentCount: 0,
+        excusedCount: 0,
+        attendanceRate: null,
+      });
+    });
+
+    it("throws NOT_FOUND when student does not exist", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      await expect(caller.getByStudent({ studentId: 999 })).rejects.toThrow(
+        expect.objectContaining({ code: "NOT_FOUND" }),
+      );
+    });
+
+    it("throws FORBIDDEN when admin attempts to access student from another school", async () => {
+      const mockStudent = {
+        id: 101,
+        name: "Different School Student",
+        schoolId: 99, // user is schoolId 1
+      };
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockStudent]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      await expect(caller.getByStudent({ studentId: 101 })).rejects.toThrow(
+        expect.objectContaining({ code: "FORBIDDEN" }),
+      );
+    });
+  });
 });
