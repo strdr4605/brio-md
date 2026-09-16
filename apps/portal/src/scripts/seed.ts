@@ -51,6 +51,8 @@ async function seed() {
     if (!s) {
       [s] = await db.insert(students).values(data).returning();
       console.log("✅ Created Student:", s.name);
+    } else {
+      console.log("ℹ️ Using existing student:", s.name, `(id: ${s.id})`);
     }
     return s;
   }
@@ -160,79 +162,75 @@ async function seed() {
     .returning();
   console.log("✅ Created Teacher:", teacher.name);
 
-  // Find or create Courses (idempotent)
-  let [courseEnglish] = await db
-    .select()
-    .from(courses)
-    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "General English A1-A2")))
-    .limit(1);
-  if (!courseEnglish) {
-    [courseEnglish] = await db
-      .insert(courses)
-      .values({
-        name: "General English A1-A2",
-        description:
-          "Foundational English course focusing on vocabulary, basic grammar, and conversational skills for beginners.",
-        level: "beginner",
-        totalSessions: 24,
-        sessionDurationMinutes: 60,
-        scheduleDays: ["mon", "wed", "fri"],
-        scheduleTime: "15:00 - 16:00",
-        teacherId: teacher.id,
-        schoolId: school.id,
-        active: true,
-      })
-      .returning();
+  // Create Courses with full schedule and level information (idempotent)
+  async function findOrCreateCourse(data: {
+    name: string;
+    description: string;
+    level: "beginner" | "intermediate" | "advanced";
+    totalSessions: number;
+    sessionDurationMinutes: number;
+    scheduleDays: string[];
+    scheduleTime: string;
+    teacherId: number;
+    schoolId: number;
+    active: boolean;
+  }) {
+    let [c] = await db
+      .select()
+      .from(courses)
+      .where(and(eq(courses.schoolId, data.schoolId), eq(courses.name, data.name)))
+      .limit(1);
+    if (!c) {
+      [c] = await db.insert(courses).values(data).returning();
+      console.log("✅ Created course:", c.name);
+    } else {
+      console.log("ℹ️ Using existing course:", c.name, `(id: ${c.id})`);
+    }
+    return c;
   }
 
-  let [courseRobotics] = await db
-    .select()
-    .from(courses)
-    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "Intermediate Robotics & STEM")))
-    .limit(1);
-  if (!courseRobotics) {
-    [courseRobotics] = await db
-      .insert(courses)
-      .values({
-        name: "Intermediate Robotics & STEM",
-        description:
-          "Hands-on robotics course covering sensor integration, motor controls, and algorithmic problem solving.",
-        level: "intermediate",
-        totalSessions: 16,
-        sessionDurationMinutes: 90,
-        scheduleDays: ["tue", "thu"],
-        scheduleTime: "16:30 - 18:00",
-        teacherId: teacher.id,
-        schoolId: school.id,
-        active: true,
-      })
-      .returning();
-  }
+  const courseEnglish = await findOrCreateCourse({
+    name: "General English A1-A2",
+    description:
+      "Foundational English course focusing on vocabulary, basic grammar, and conversational skills for beginners.",
+    level: "beginner",
+    totalSessions: 24,
+    sessionDurationMinutes: 60,
+    scheduleDays: ["mon", "wed", "fri"],
+    scheduleTime: "15:00 - 16:00",
+    teacherId: teacher.id,
+    schoolId: school.id,
+    active: true,
+  });
 
-  let [courseWeb] = await db
-    .select()
-    .from(courses)
-    .where(and(eq(courses.schoolId, school.id), eq(courses.name, "Advanced Web Engineering")))
-    .limit(1);
-  if (!courseWeb) {
-    [courseWeb] = await db
-      .insert(courses)
-      .values({
-        name: "Advanced Web Engineering",
-        description:
-          "Deep dive into full-stack development with modern TypeScript, databases, and distributed architectures.",
-        level: "advanced",
-        totalSessions: 30,
-        sessionDurationMinutes: 120,
-        scheduleDays: ["sat"],
-        scheduleTime: "10:00 - 12:00",
-        teacherId: teacher.id,
-        schoolId: school.id,
-        active: true,
-      })
-      .returning();
-  }
-  console.log("✅ Using courses with schedules and levels");
+  const courseRobotics = await findOrCreateCourse({
+    name: "Intermediate Robotics & STEM",
+    description:
+      "Hands-on robotics course covering sensor integration, motor controls, and algorithmic problem solving.",
+    level: "intermediate",
+    totalSessions: 16,
+    sessionDurationMinutes: 90,
+    scheduleDays: ["tue", "thu"],
+    scheduleTime: "16:30 - 18:00",
+    teacherId: teacher.id,
+    schoolId: school.id,
+    active: true,
+  });
+
+  const courseWeb = await findOrCreateCourse({
+    name: "Advanced Web Engineering",
+    description:
+      "Deep dive into full-stack development with modern TypeScript, databases, and distributed architectures.",
+    level: "advanced",
+    totalSessions: 30,
+    sessionDurationMinutes: 120,
+    scheduleDays: ["sat"],
+    scheduleTime: "10:00 - 12:00",
+    teacherId: teacher.id,
+    schoolId: school.id,
+    active: true,
+  });
+  console.log("✅ Configured 3 sample courses with schedules and levels");
 
   // Assign courses to teacher
   await db
@@ -356,7 +354,7 @@ async function seed() {
     let [g] = await db
       .select()
       .from(groups)
-      .where(and(eq(groups.schoolId, data.schoolId), eq(groups.name, data.name)))
+      .where(and(eq(groups.courseId, data.courseId), eq(groups.name, data.name)))
       .limit(1);
     if (!g) {
       [g] = await db.insert(groups).values(data).returning();
@@ -465,7 +463,6 @@ async function seed() {
     }
   }
   console.log("✅ Configured sample student group enrollments (active, inactive, archived)");
-
 
   console.log("");
   console.log("🎉 Seed completed!");
