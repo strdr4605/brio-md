@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import { eq, and, desc } from "drizzle-orm";
-import { groups, courses, students, attendanceRecords } from "@/db/schema";
+import { eq, and, asc, desc } from "drizzle-orm";
+import { groups, courses, students, attendanceRecords, studentGroupEnrollments } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 
@@ -153,6 +153,86 @@ export const attendanceRouter = router({
             eq(attendanceRecords.date, input.date),
           ),
         );
+    }),
+
+  // Get full attendance sheet for a group and date (active enrolled students + attendance status & comment)
+  getSheet: protectedProcedure
+    .input(
+      z.object({
+        groupId: z.number().int().positive(),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formatul datei trebuie să fie YYYY-MM-DD"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const [group] = await db
+        .select()
+        .from(groups)
+        .where(eq(groups.id, input.groupId))
+        .limit(1);
+
+      if (!group) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Grupul specificat nu a fost găsit.",
+        });
+      }
+
+      // Enforce teacher-group access control
+      assertTeacherGroupAccess(group, user);
+
+      // 1. Fetch active students enrolled in this group
+      const enrolledStudents = await db
+        .select({
+          studentId: students.id,
+          studentName: students.name,
+          studentPhone: students.phone,
+          parentName: students.parentName,
+          parentPhone: students.parentPhone,
+          age: students.age,
+        })
+        .from(studentGroupEnrollments)
+        .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
+        .where(
+          and(
+            eq(studentGroupEnrollments.groupId, input.groupId),
+            eq(studentGroupEnrollments.status, "active"),
+          ),
+        )
+        .orderBy(asc(students.name));
+
+      // 2. Fetch attendance records for this date
+      const existingRecords = await db
+        .select()
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.groupId, input.groupId),
+            eq(attendanceRecords.date, input.date),
+          ),
+        );
+
+      const recordsMap = new Map(existingRecords.map((r) => [r.studentId, r]));
+
+      return enrolledStudents.map((s) => {
+        const rec = recordsMap.get(s.studentId);
+        return {
+          studentId: s.studentId,
+          studentName: s.studentName,
+          studentPhone: s.studentPhone,
+          parentName: s.parentName,
+          parentPhone: s.parentPhone,
+          age: s.age,
+          status: rec?.status ?? null,
+          comment: rec?.comment ?? null,
+          markedByUserId: rec?.markedByUserId ?? null,
+          updatedAt: rec?.updatedAt ?? null,
+        };
+      });
     }),
 
   // Get attendance records and summary metrics for a student

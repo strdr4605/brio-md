@@ -47,4 +47,58 @@ describe("Absence and Parent Call Widget Logic", () => {
       expect(formatted).toBe("+40 712 345 678");
     });
   });
+
+  describe("Attendance comment eligibility", () => {
+    function canAddComment(status: "present" | "absent" | "late" | "excused", comment?: string | null) {
+      return status === "absent" || status === "late" || status === "excused" || Boolean(comment);
+    }
+
+    it("allows adding comments for late, excused, and absent statuses", () => {
+      expect(canAddComment("absent")).toBe(true);
+      expect(canAddComment("late")).toBe(true);
+      expect(canAddComment("excused")).toBe(true);
+      expect(canAddComment("present")).toBe(false);
+      expect(canAddComment("present", "Prezent cu mențiune")).toBe(true);
+    });
+  });
+
+  describe("Teacher group isolation logic", () => {
+    function filterGroupsForUser(
+      groups: { id: number; teacherId: number | null }[],
+      user: { id: string; role?: string; permissions?: string[] },
+    ) {
+      const isSuperOrAdmin =
+        user.permissions?.includes("super") ||
+        user.permissions?.includes("admin") ||
+        user.role === "superadmin" ||
+        user.role === "admin";
+
+      if (isSuperOrAdmin) return groups;
+      const currentUserId = Number(user.id);
+      return groups.filter((g) => g.teacherId === currentUserId);
+    }
+
+    it("filters groups to only those assigned to the teacher", () => {
+      const allGroups = [
+        { id: 1, teacherId: 10 },
+        { id: 2, teacherId: 20 },
+        { id: 3, teacherId: 10 },
+      ];
+
+      const teacherUser = { id: "10", role: "teacher", permissions: ["teach"] };
+      const teacherGroups = filterGroupsForUser(allGroups, teacherUser);
+
+      expect(teacherGroups.map((g) => g.id)).toEqual([1, 3]);
+    });
+
+    it("allows superadmins and admins to view all groups", () => {
+      const allGroups = [
+        { id: 1, teacherId: 10 },
+        { id: 2, teacherId: 20 },
+      ];
+
+      const adminUser = { id: "99", role: "admin", permissions: ["admin"] };
+      expect(filterGroupsForUser(allGroups, adminUser)).toHaveLength(2);
+    });
+  });
 });

@@ -290,6 +290,81 @@ describe("attendanceRouter & Server-side Authorization", () => {
     });
   });
 
+  describe("attendance.getSheet", () => {
+    it("returns enrolled students with attendance records and absence comments", async () => {
+      // 1. Group query
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([testGroup]),
+            }),
+          }),
+        })
+        // 2. Enrolled students query
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockResolvedValue([
+                  {
+                    studentId: 101,
+                    studentName: "Alex Popescu",
+                    studentPhone: "+37369000001",
+                    parentName: "Maria Popescu",
+                    parentPhone: "+37360000000",
+                    age: 14,
+                  },
+                ]),
+              }),
+            }),
+          }),
+        })
+        // 3. Existing attendance records query
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              {
+                studentId: 101,
+                status: "absent",
+                comment: "Bolnav - febră",
+                markedByUserId: 10,
+                updatedAt: new Date("2026-09-15"),
+              },
+            ]),
+          }),
+        });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      const result = await caller.getSheet({ groupId: 5, date: "2026-09-15" });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].studentName).toBe("Alex Popescu");
+      expect(result[0].parentPhone).toBe("+37360000000");
+      expect(result[0].status).toBe("absent");
+      expect(result[0].comment).toBe("Bolnav - febră");
+    });
+
+    it("prevents unassigned teacher from accessing the attendance sheet (FORBIDDEN)", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([testGroup]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: otherTeacher });
+      await expect(
+        caller.getSheet({ groupId: 5, date: "2026-09-15" }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "FORBIDDEN",
+        }),
+      );
+    });
+  });
+
   describe("attendance.getByStudent", () => {
     it("returns records and calculates summary statistics accurately", async () => {
       const mockStudent = {

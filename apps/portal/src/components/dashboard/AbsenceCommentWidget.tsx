@@ -40,6 +40,7 @@ export function AbsenceCommentWidget({
 
   useEffect(() => {
     if (isOpen) {
+      // Focus input field automatically when opened
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
@@ -68,11 +69,11 @@ export function AbsenceCommentWidget({
     <div
       className="mt-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/90 shadow-sm animate-fade-in-down"
       role="dialog"
-      aria-label={`Comentariu absență pentru ${studentName}`}
+      aria-label={`Comentariu pentru ${studentName}`}
     >
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-          <span>Notă / Motiv absență:</span>
+          <span>Notă / Motiv:</span>
           <span className="text-amber-700 font-normal truncate max-w-[160px]">
             {studentName}
           </span>
