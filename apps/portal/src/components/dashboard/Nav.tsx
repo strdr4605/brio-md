@@ -12,6 +12,7 @@ import {
   KeyIcon,
   DoorIcon,
   SettingsIcon,
+  CalendarIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -195,6 +196,7 @@ export function Nav({
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
               </div>
             )}
           </div>
