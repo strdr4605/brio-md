@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { CourseFormDrawer } from "@/components/dashboard/CourseForm";
@@ -231,7 +232,12 @@ export default function CoursesPage() {
                 {courses.map((course) => (
                   <tr key={course.id} className="hover:bg-neutral-50 transition">
                     <td className="px-4 py-3.5">
-                      <div className="font-semibold text-neutral-900">{course.name}</div>
+                      <Link
+                        href={`/dashboard/courses/${course.id}`}
+                        className="font-semibold text-neutral-900 hover:text-blue-600 transition hover:underline"
+                      >
+                        {course.name}
+                      </Link>
                       {course.description && (
                         <div className="text-xs text-neutral-500 truncate max-w-xs">
                           {course.description}
@@ -263,11 +269,17 @@ export default function CoursesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-right space-x-2">
+                      <Link
+                        href={`/dashboard/courses/${course.id}`}
+                        className="text-blue-600 hover:text-blue-800 font-semibold text-xs px-2 py-1 rounded hover:bg-blue-50"
+                      >
+                        Grupe
+                      </Link>
                       <button
                         onClick={() => setSelectedCourseForGroups({ id: course.id, name: course.name })}
                         className="text-indigo-600 hover:text-indigo-800 font-semibold text-xs px-2 py-1 rounded hover:bg-indigo-50"
                       >
-                        Grupe & Roster
+                        Roster
                       </button>
                       <button
                         onClick={() => handleEdit(course.id)}
@@ -303,7 +315,12 @@ export default function CoursesPage() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-neutral-900">{course.name}</h3>
+                    <Link
+                      href={`/dashboard/courses/${course.id}`}
+                      className="font-semibold text-neutral-900 hover:text-blue-600 transition hover:underline block"
+                    >
+                      {course.name}
+                    </Link>
                     <p className="text-xs text-neutral-500">
                       {formatSchedule(course.scheduleDays, course.scheduleTime)}
                     </p>
@@ -331,11 +348,17 @@ export default function CoursesPage() {
                     )}
                   </div>
                   <div className="space-x-2">
+                    <Link
+                      href={`/dashboard/courses/${course.id}`}
+                      className="text-blue-600 font-semibold"
+                    >
+                      Grupe
+                    </Link>
                     <button
                       onClick={() => setSelectedCourseForGroups({ id: course.id, name: course.name })}
                       className="text-indigo-600 font-semibold"
                     >
-                      Grupe
+                      Roster
                     </button>
                     <button
                       onClick={() => handleEdit(course.id)}
