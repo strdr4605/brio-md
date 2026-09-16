@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { SearchIcon, XIcon, CheckCircleIcon } from "@/components/ui/icons";
+import { detectStudentGroupScheduleConflicts } from "@/lib/scheduleConflicts";
 
 type Props = {
   isOpen: boolean;
@@ -62,6 +63,12 @@ export function EnrollmentDrawer({
       setSelectedGroupIds([]);
     }
   }, [isStudentMode, currentEnrollments]);
+
+  const studentGroupConflicts = useMemo(() => {
+    if (!isStudentMode || selectedGroupIds.length <= 1) return [];
+    const targetGroups = allGroups.filter((g) => selectedGroupIds.includes(g.id));
+    return detectStudentGroupScheduleConflicts({ targetGroups });
+  }, [isStudentMode, selectedGroupIds, allGroups]);
 
   // --- Mode B: Group Roster -> Pick Students to Enroll ---
   const isGroupMode = Boolean(groupId);
@@ -158,6 +165,10 @@ export function EnrollmentDrawer({
 
   const handleSaveStudentEnrollments = () => {
     if (!studentId) return;
+    if (studentGroupConflicts.length > 0) {
+      setError(studentGroupConflicts[0].message);
+      return;
+    }
     setError(null);
 
     // Groups newly added
@@ -262,6 +273,13 @@ export function EnrollmentDrawer({
               {error}
             </div>
           )}
+
+          {studentGroupConflicts.map((c, i) => (
+            <div key={i} className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-start gap-2">
+              <span className="text-amber-500 font-bold shrink-0">⚠️</span>
+              <span>{c.message}</span>
+            </div>
+          ))}
 
           {/* Mode A: Student Profile View */}
           {isStudentMode && (
@@ -456,7 +474,7 @@ export function EnrollmentDrawer({
               onClick={
                 isStudentMode ? handleSaveStudentEnrollments : handleSaveGroupEnrollments
               }
-              disabled={isSaving}
+              disabled={isSaving || (isStudentMode && studentGroupConflicts.length > 0)}
               className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-3.5 h-3.5" />

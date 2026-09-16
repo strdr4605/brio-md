@@ -5,6 +5,17 @@ import { students, courses, studentCourseProgress, schools } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { phoneSchema } from "@/lib/phone";
+import { checkStudentCourseConflicts } from "../conflictChecker";
+
+function getStudentRoles(user?: { permissions?: string[]; role?: string; schoolId?: number | null }) {
+  const permissions = user?.permissions || [];
+  const role = user?.role;
+  return {
+    isSuper: permissions.includes("super") || role === "superadmin",
+    isAdmin: permissions.includes("admin") || role === "admin",
+    isTeacher: permissions.includes("teach") || role === "teacher",
+  };
+}
 
 export const studentRouter = router({
   // Get student by ID
@@ -92,26 +103,13 @@ export const studentRouter = router({
     .query(async ({ ctx, input }) => {
       if (!ctx.user) return [];
       const user = ctx.user;
-      const permissions = user.permissions || [];
-      const role = user.role;
-
-      const isSuper = permissions.includes("super") || role === "superadmin";
-      const isAdmin = permissions.includes("admin") || role === "admin";
-      const isTeacher = permissions.includes("teach") || role === "teacher";
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
       const conditions = [];
 
       if (!isSuper && !isTeacher) {
-        if (isAdmin) {
-          // Admins see students in their school
-          if (user.schoolId) {
-            conditions.push(eq(students.schoolId, user.schoolId));
-          } else {
-            return [];
-          }
-        } else {
-          return [];
-        }
+        if (!isAdmin || !user.schoolId) return [];
+        conditions.push(eq(students.schoolId, user.schoolId));
       }
 
       if (input?.search) {
@@ -181,19 +179,13 @@ export const studentRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       const user = ctx.user;
-      const permissions = user.permissions || [];
-      const role = user.role;
-
-      const isSuper = permissions.includes("super") || role === "superadmin";
-      const isAdmin = permissions.includes("admin") || role === "admin";
-      const isTeacher = permissions.includes("teach") || role === "teacher";
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
       if (!isSuper && !isAdmin && !isTeacher) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu ai permisiunea de a adăuga studenți",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a adăuga studenți" });
       }
+
+      await checkStudentCourseConflicts(db, input.courseIds);
 
       const assignedSchoolId =
         isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
@@ -250,12 +242,7 @@ export const studentRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       const user = ctx.user;
-      const permissions = user.permissions || [];
-      const role = user.role;
-
-      const isSuper = permissions.includes("super") || role === "superadmin";
-      const isAdmin = permissions.includes("admin") || role === "admin";
-      const isTeacher = permissions.includes("teach") || role === "teacher";
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
       if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -267,10 +254,11 @@ export const studentRouter = router({
       }
 
       if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți modifica un student din altă școală",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
+      }
+
+      if (input.courseIds && input.courseIds.length > 1) {
+        await checkStudentCourseConflicts(db, input.courseIds);
       }
 
       const { id, courseIds, ...data } = input;
@@ -334,15 +322,14 @@ export const studentRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       const user = ctx.user;
-      const permissions = user.permissions || [];
-      const role = user.role;
-
-      const isSuper = permissions.includes("super") || role === "superadmin";
-      const isAdmin = permissions.includes("admin") || role === "admin";
-      const isTeacher = permissions.includes("teach") || role === "teacher";
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
       if (!isSuper && !isAdmin && !isTeacher) {
         throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      if (input.courseIds && input.courseIds.length > 1) {
+        await checkStudentCourseConflicts(db, input.courseIds);
       }
 
       const [student] = await db
@@ -356,10 +343,7 @@ export const studentRouter = router({
       }
 
       if (!isSuper && !isTeacher && isAdmin && student.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți modifica un student din altă școală",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
       }
 
       const existingEnrollments = await db
@@ -403,34 +387,20 @@ export const studentRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       const user = ctx.user;
-      const permissions = user.permissions || [];
-      const role = user.role;
-
-      const isSuper = permissions.includes("super") || role === "superadmin";
-      const isAdmin = permissions.includes("admin") || role === "admin";
-      const isTeacher = permissions.includes("teach") || role === "teacher";
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
       if (!isSuper && !isAdmin && !isTeacher) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu ai permisiunea de a șterge studenți",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a șterge studenți" });
       }
 
       const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
 
       if (!existing) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Studentul nu a fost găsit",
-        });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
       if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți șterge un student din altă școală",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți șterge un student din altă școală" });
       }
 
       await db.delete(students).where(eq(students.id, input.id));

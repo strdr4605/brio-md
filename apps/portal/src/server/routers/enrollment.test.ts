@@ -10,6 +10,10 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("../conflictChecker", () => ({
+  checkStudentGroupConflicts: vi.fn(),
+}));
+
 import { db } from "@/lib/db";
 
 describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => {
