@@ -73,7 +73,7 @@ export function AttendanceSheet({
     // If marked absent and no comment yet, automatically open the comment widget
     if (newStatus === "absent") {
       setOpenCommentStudentId(studentId);
-    } else if (openCommentStudentId === studentId) {
+    } else if (newStatus === "present" && openCommentStudentId === studentId && !localState[studentId]?.comment) {
       setOpenCommentStudentId(null);
     }
   };
@@ -169,6 +169,11 @@ export function AttendanceSheet({
           {students.map((student, idx) => {
             const current = localState[student.studentId] || { status: "present", comment: "" };
             const isAbsent = current.status === "absent";
+            const canAddComment =
+              current.status === "absent" ||
+              current.status === "late" ||
+              current.status === "excused" ||
+              Boolean(current.comment);
             const isCommentOpen = openCommentStudentId === student.studentId;
 
             return (
@@ -260,8 +265,8 @@ export function AttendanceSheet({
                       </button>
                     </div>
 
-                    {/* Button to toggle absence comment notes if absent or comment exists */}
-                    {(isAbsent || current.comment) && (
+                    {/* Button to toggle comment notes if absent, late, excused or if comment exists */}
+                    {canAddComment && (
                       <button
                         type="button"
                         onClick={() =>
@@ -274,7 +279,7 @@ export function AttendanceSheet({
                             ? "bg-amber-100/80 text-amber-900 border-amber-300"
                             : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                         }`}
-                        title={current.comment ? `Motiv: ${current.comment}` : "Adaugă motiv absență"}
+                        title={current.comment ? `Motiv: ${current.comment}` : "Adaugă motiv / notă"}
                       >
                         <span>💬</span>
                         <span className="max-w-[120px] truncate">

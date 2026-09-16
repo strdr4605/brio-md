@@ -31,12 +31,24 @@ export default function AttendancePage() {
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
   // 1. Fetch accessible groups
-  const { data: groupsList = [], isLoading: isGroupsLoading } = trpc.group.list.useQuery(undefined, {
+  const { data: rawGroupsList = [], isLoading: isGroupsLoading } = trpc.group.list.useQuery(undefined, {
     enabled: canAccessAttendance,
   });
 
+  // Filter groups for teachers so they only see and auto-select their own groups (prevents 403)
+  const groupsList = useMemo(() => {
+    if (isSuperOrAdmin) return rawGroupsList;
+    const currentUserId = Number(session?.user?.id);
+    return rawGroupsList.filter((g) => g.teacherId === currentUserId);
+  }, [rawGroupsList, isSuperOrAdmin, session?.user?.id]);
+
   // Automatically select first group when groups are loaded
-  const currentGroupId = selectedGroupId ?? (groupsList.length > 0 ? groupsList[0].id : null);
+  const currentGroupId =
+    selectedGroupId && groupsList.some((g) => g.id === selectedGroupId)
+      ? selectedGroupId
+      : groupsList.length > 0
+        ? groupsList[0].id
+        : null;
   const selectedGroup = groupsList.find((g) => g.id === currentGroupId);
 
   // 2. Fetch attendance sheet for current group & date
@@ -51,6 +63,7 @@ export default function AttendancePage() {
     },
     {
       enabled: canAccessAttendance && !!currentGroupId,
+      refetchOnWindowFocus: false,
     },
   );
 
@@ -168,7 +181,11 @@ export default function AttendancePage() {
         />
       ) : (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs">
-          <p className="text-sm font-semibold text-slate-700">Selectați o grupă pentru a deschide catalogul de prezență.</p>
+          <p className="text-sm font-semibold text-slate-700">
+            {!isGroupsLoading && groupsList.length === 0
+              ? "Nu aveți nicio grupă atribuită momentan."
+              : "Selectați o grupă pentru a deschide catalogul de prezență."}
+          </p>
         </div>
       )}
     </div>

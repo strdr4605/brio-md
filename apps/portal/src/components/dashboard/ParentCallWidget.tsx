@@ -1,7 +1,7 @@
 "use client";
 
 import { PhoneIcon } from "@/components/ui/icons";
-import { formatPhone } from "@/lib/phone";
+import { formatPhone, normalizePhone } from "@/lib/phone";
 
 export type ParentCallWidgetProps = {
   parentName?: string | null;
@@ -23,8 +23,9 @@ export function ParentCallWidget({
   const hasPhone = Boolean(parentPhone && parentPhone.trim());
   const formattedPhone = hasPhone ? formatPhone(parentPhone) : "Fără telefon";
 
-  // Clean phone number for tel: link (digits and leading plus only)
-  const cleanPhone = parentPhone ? parentPhone.replace(/[^\d+]/g, "") : "";
+  // Normalize phone number to standard E.164 (+373...) for tel: link
+  const normalizedPhone = parentPhone ? normalizePhone(parentPhone) : "";
+  const cleanPhone = normalizedPhone ? normalizedPhone.replace(/[^\d+]/g, "") : "";
 
   if (compact) {
     if (!hasPhone) {
