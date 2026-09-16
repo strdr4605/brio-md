@@ -4,13 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/phone";
-import {
-  XIcon,
-  PlusIcon,
-  PhoneIcon,
-  UsersIcon,
-  CalendarIcon,
-} from "@/components/ui/icons";
+import { XIcon, PlusIcon, PhoneIcon, UsersIcon, CalendarIcon } from "@/components/ui/icons";
 import { EnrollmentDrawer } from "./EnrollmentDrawer";
 
 type Props = {
@@ -23,13 +17,7 @@ type Props = {
 
 type StatusFilterTab = "active" | "inactive_or_archived" | "all";
 
-export function CourseGroupsDrawer({
-  isOpen,
-  onClose,
-  courseId,
-  courseName,
-  schoolId,
-}: Props) {
+export function CourseGroupsDrawer({ isOpen, onClose, courseId, courseName, schoolId }: Props) {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<StatusFilterTab>("active");
   const [showAddStudentDrawer, setShowAddStudentDrawer] = useState(false);
@@ -44,10 +32,7 @@ export function CourseGroupsDrawer({
   const utils = trpc.useUtils();
 
   // 1. Fetch groups for this course
-  const {
-    data: groups = [],
-    isLoading: isLoadingGroups,
-  } = trpc.group.list.useQuery(
+  const { data: groups = [], isLoading: isLoadingGroups } = trpc.group.list.useQuery(
     { courseId },
     { enabled: isOpen && Boolean(courseId) },
   );
@@ -57,10 +42,7 @@ export function CourseGroupsDrawer({
   const activeGroup = groups.find((g) => g.id === activeGroupId) || groups[0] || null;
 
   // 2. Fetch roster for the active group filtered by status tab
-  const {
-    data: roster = [],
-    isLoading: isLoadingRoster,
-  } = trpc.enrollment.listByGroup.useQuery(
+  const { data: roster = [], isLoading: isLoadingRoster } = trpc.enrollment.listByGroup.useQuery(
     { groupId: activeGroupId!, status: activeTab },
     { enabled: isOpen && Boolean(activeGroupId) },
   );
@@ -111,7 +93,10 @@ export function CourseGroupsDrawer({
     });
   };
 
-  const handleStatusChange = (enrollmentId: number, nextStatus: "active" | "inactive" | "archived") => {
+  const handleStatusChange = (
+    enrollmentId: number,
+    nextStatus: "active" | "inactive" | "archived",
+  ) => {
     updateStatusMutation.mutate({
       enrollmentId,
       status: nextStatus,
@@ -274,9 +259,7 @@ export function CourseGroupsDrawer({
                   {activeGroup.scheduleTime}
                 </span>
               )}
-              {activeGroup.room && (
-                <span className="text-slate-500">📍 {activeGroup.room}</span>
-              )}
+              {activeGroup.room && <span className="text-slate-500">📍 {activeGroup.room}</span>}
               {activeGroup.teacherName && (
                 <span className="text-slate-500">👨‍🏫 {activeGroup.teacherName}</span>
               )}
@@ -358,7 +341,9 @@ export function CourseGroupsDrawer({
           {!activeGroup ? (
             <div className="p-12 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
               <UsersIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700">Nu a fost selectată nicio grupă</p>
+              <p className="text-sm font-semibold text-slate-700">
+                Nu a fost selectată nicio grupă
+              </p>
               <p className="text-xs text-slate-400 mt-1">
                 Apasă pe &quot;Adaugă Grupă&quot; de mai sus pentru a crea prima cohortă a cursului.
               </p>
@@ -397,9 +382,7 @@ export function CourseGroupsDrawer({
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-900">
-                        {member.studentName}
-                      </span>
+                      <span className="text-xs font-bold text-slate-900">{member.studentName}</span>
                       {member.status === "active" ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           Activ
@@ -491,6 +474,7 @@ export function CourseGroupsDrawer({
           onClose={() => setShowAddStudentDrawer(false)}
           groupId={activeGroupId}
           groupName={activeGroup?.name}
+          courseId={courseId}
           courseName={courseName}
           schoolId={schoolId}
         />
