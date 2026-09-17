@@ -117,20 +117,17 @@ export function AttendanceMatrix({
           </div>
         </div>
 
-        <div className="text-[11px] text-slate-500 font-medium">
-          💡 Click pe orice celulă pentru a edita statutul sau motivul retroactiv.
+        <div className="text-[11px] font-medium min-h-[22px] flex items-center">
+          {hoveredComment ? (
+            <span className="text-blue-700 font-bold animate-fade-in">
+              💬 {hoveredComment.studentName} ({hoveredComment.date}):{" "}
+              <span className="italic font-medium text-slate-700">"{hoveredComment.comment}"</span>
+            </span>
+          ) : (
+            <span className="text-slate-500">💡 Click pe orice celulă pentru a edita statutul sau motivul retroactiv.</span>
+          )}
         </div>
       </div>
-
-      {/* Floating Comment Preview Banner when hovering */}
-      {hoveredComment && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2 animate-fade-in">
-          <span className="font-bold text-blue-700">
-            💬 {hoveredComment.studentName} ({hoveredComment.date}):
-          </span>
-          <span className="font-medium italic">"{hoveredComment.comment}"</span>
-        </div>
-      )}
 
       {/* Main Matrix Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
@@ -144,7 +141,7 @@ export function AttendanceMatrix({
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200/80">
                   {/* Sticky Column: Student Info */}
-                  <th className="sticky left-0 z-20 bg-slate-50/95 backdrop-blur-xs py-3 px-4 min-w-[220px] font-bold text-slate-700 border-r border-slate-200/80 shadow-xs">
+                  <th className="sticky left-0 z-20 bg-slate-50 py-3 px-4 min-w-[220px] font-bold text-slate-700 border-r border-slate-200/80 shadow-xs">
                     Elev ({students.length})
                   </th>
                   {/* Attendance Rate */}
@@ -180,7 +177,7 @@ export function AttendanceMatrix({
                     }`}
                   >
                     {/* Sticky Student Column */}
-                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50/95 py-2.5 px-4 border-r border-slate-200/80 shadow-xs">
+                    <td className="sticky left-0 z-10 bg-white py-2.5 px-4 border-r border-slate-200/80 shadow-xs">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-bold text-slate-900">
@@ -258,7 +255,7 @@ export function AttendanceMatrix({
                               }
                             }}
                             onMouseLeave={() => setHoveredComment(null)}
-                            className={`w-9 h-8 mx-auto rounded-lg font-bold flex items-center justify-center text-xs transition-all relative group hover:scale-105 active:scale-95 ${
+                            className={`w-9 h-8 mx-auto rounded-lg font-bold flex items-center justify-center text-xs transition-colors relative group active:scale-95 hover:ring-2 hover:ring-blue-500/50 ${
                               status === "present"
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                                 : status === "absent"
