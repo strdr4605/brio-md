@@ -129,42 +129,42 @@ export default function AttendancePage() {
             </Link>
           </div>
         )}
+      </div>
 
-        {/* Filter Bar: Group and Date Selector */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Group Selector */}
-          <div className="relative">
-            <select
-              value={currentGroupId || ""}
-              onChange={(e) => {
-                setSelectedGroupId(Number(e.target.value));
-              }}
-              disabled={isGroupsLoading || groupsList.length === 0}
-              className="appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-xs disabled:opacity-50"
-            >
-              {groupsList.length === 0 ? (
-                <option value="">Nicio grupă disponibilă</option>
-              ) : (
-                groupsList.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} ({g.courseName})
-                  </option>
-                ))
-              )}
-            </select>
-            <ChevronDownIcon className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+      {/* Filter Bar: Group and Date Selector */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-3">
+        {/* Group Selector */}
+        <div className="relative min-w-[220px]">
+          <select
+            value={currentGroupId || ""}
+            onChange={(e) => {
+              setSelectedGroupId(Number(e.target.value));
+            }}
+            disabled={isGroupsLoading || groupsList.length === 0}
+            className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition disabled:opacity-50"
+          >
+            {groupsList.length === 0 ? (
+              <option value="">Nicio grupă disponibilă</option>
+            ) : (
+              groupsList.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} ({g.courseName})
+                </option>
+              ))
+            )}
+          </select>
+          <ChevronDownIcon className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
 
-          {/* Date Picker */}
-          <div className="relative flex items-center">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-8 pr-3.5 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-xs"
-            />
-            <CalendarIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
-          </div>
+        {/* Date Picker */}
+        <div className="relative flex items-center">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="pl-8 pr-3.5 py-1.5 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+          />
+          <CalendarIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
         </div>
       </div>
 
