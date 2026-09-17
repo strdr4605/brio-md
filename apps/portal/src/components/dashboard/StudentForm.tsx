@@ -81,11 +81,31 @@ export function StudentFormDrawer({
     e.preventDefault();
     if (courseConflicts.length > 0) return;
     const phoneErr = "Format invalid. Ex: +373 69 000 000 sau 069000000";
-    const pErr = formData.phone && !isValidPhone(formData.phone) ? phoneErr : null;
-    const ppErr = formData.parentPhone && !isValidPhone(formData.parentPhone) ? phoneErr : null;
-    setPhoneError(pErr);
-    setParentPhoneError(ppErr);
-    if (pErr || ppErr) return;
+    let hasError = false;
+
+    const hasAnyPhone = formData.phone.trim() !== "" || formData.parentPhone.trim() !== "";
+    if (!hasAnyPhone) {
+      const requiredMsg = "Introduceți cel puțin un număr de telefon (student sau părinte)";
+      setPhoneError(requiredMsg);
+      setParentPhoneError(requiredMsg);
+      hasError = true;
+    } else {
+      if (formData.phone && !isValidPhone(formData.phone)) {
+        setPhoneError(phoneErr);
+        hasError = true;
+      } else {
+        setPhoneError(null);
+      }
+
+      if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
+        setParentPhoneError(phoneErr);
+        hasError = true;
+      } else {
+        setParentPhoneError(null);
+      }
+    }
+
+    if (hasError) return;
 
     const payload = {
       name: formData.name,
@@ -156,13 +176,16 @@ export function StudentFormDrawer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Telefon</label>
+              <label className={labelCls}>
+                Telefon student <span className="text-slate-400 font-normal text-xs">(sau telefon părinte)*</span>
+              </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => {
                   setFormData({ ...formData, phone: e.target.value });
                   if (phoneError) setPhoneError(null);
+                  if (parentPhoneError) setParentPhoneError(null);
                 }}
                 onBlur={() => {
                   if (formData.phone && !isValidPhone(formData.phone)) {
@@ -222,12 +245,15 @@ export function StudentFormDrawer({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Telefon părinte</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Telefon părinte <span className="text-slate-400 font-normal text-xs">(sau telefon student)*</span>
+                </label>
                 <input
                   type="tel"
                   value={formData.parentPhone}
                   onChange={(e) => {
                     setFormData({ ...formData, parentPhone: e.target.value });
+                    if (phoneError) setPhoneError(null);
                     if (parentPhoneError) setParentPhoneError(null);
                   }}
                   onBlur={() => {

@@ -190,6 +190,13 @@ export const studentRouter = router({
       const assignedSchoolId =
         isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
 
+      // Require at least one contact phone number (student or parent)
+      if (!input.phone?.trim() && !input.parentPhone?.trim()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Este necesar cel puțin un număr de telefon (al studentului sau al părintelui).",
+        });
+      }
       const [result] = await db
         .insert(students)
         .values({
@@ -262,6 +269,18 @@ export const studentRouter = router({
       }
 
       const { id, courseIds, ...data } = input;
+
+      if (data.phone !== undefined || data.parentPhone !== undefined) {
+        const finalPhone = data.phone !== undefined ? data.phone : existing.phone;
+        const finalParentPhone =
+          data.parentPhone !== undefined ? data.parentPhone : existing.parentPhone;
+        if (!finalPhone?.trim() && !finalParentPhone?.trim()) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Este necesar cel puțin un număr de telefon (al studentului sau al părintelui).",
+          });
+        }
+      }
       const updateData: Record<string, any> = { ...data, lastChangedAt: new Date() };
       if (!isSuper) {
         delete updateData.schoolId;
