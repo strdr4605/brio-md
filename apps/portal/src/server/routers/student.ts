@@ -324,7 +324,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a adăuga studenți" });
       }
 
-      await checkStudentCourseConflicts(db, input.courseIds);
+      await checkStudentCourseConflicts(db, input.courseIds, input.groupIds);
 
       const assignedSchoolId =
         isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
@@ -448,7 +448,7 @@ export const studentRouter = router({
       }
 
       if (input.courseIds && input.courseIds.length > 1) {
-        await checkStudentCourseConflicts(db, input.courseIds);
+        await checkStudentCourseConflicts(db, input.courseIds, input.groupIds);
       }
 
       const { id, courseIds, groupIds, ...data } = input;
