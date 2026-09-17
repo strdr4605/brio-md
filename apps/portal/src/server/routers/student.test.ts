@@ -216,7 +216,97 @@ describe("studentRouter", () => {
         },
       });
 
-      await expect(caller.create({ name: "Unauthorized", phone: "069111222" })).rejects.toThrow(TRPCError);
+      await expect(caller.create({ name: "Unauthorized", phone: "069111222" })).rejects.toThrow(
+        TRPCError,
+      );
+    });
+
+    it("throws CONFLICT when a student with same name and same phone already exists in the same school", async () => {
+      const existingStudent = {
+        id: 1,
+        name: "Alex Popescu",
+        schoolId: 1,
+        phone: "+37369000001",
+        parentPhone: null,
+        parentName: null,
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([existingStudent]),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      await expect(
+        caller.create({
+          name: "Alex Popescu",
+          phone: "069000001",
+          schoolId: 1,
+        }),
+      ).rejects.toThrowError(/există deja/);
+    });
+
+    it("allows creating a student with same name but different profile info in the same school", async () => {
+      const existingStudent = {
+        id: 1,
+        name: "Alex Popescu",
+        schoolId: 1,
+        phone: "+37369000001",
+        parentPhone: "+37360000000",
+        parentName: "Maria Popescu",
+      };
+
+      const newStudentResult = {
+        id: 2,
+        name: "Alex Popescu",
+        schoolId: 1,
+        phone: "+37369999999",
+        parentPhone: "+37368888888",
+        parentName: "Ion Popescu",
+        active: true,
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([existingStudent]),
+        }),
+      });
+
+      (db.insert as any).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([newStudentResult]),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.create({
+        name: "Alex Popescu",
+        phone: "069999999",
+        parentPhone: "068888888",
+        parentName: "Ion Popescu",
+        schoolId: 1,
+      });
+
+      expect(result).toEqual(newStudentResult);
     });
   });
 
@@ -244,6 +334,15 @@ describe("studentRouter", () => {
           from: vi.fn().mockReturnValue({
             innerJoin: vi.fn().mockReturnValue({
               where: vi.fn().mockResolvedValue(mockEnrollments),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([]),
+              }),
             }),
           }),
         });
@@ -364,6 +463,12 @@ describe("studentRouter", () => {
         where: vi.fn().mockResolvedValue({}),
       });
 
+      (db.update as any).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue({}),
+        }),
+      });
+
       const insertValuesMock = vi.fn().mockResolvedValue({});
       (db.insert as any).mockReturnValue({
         values: insertValuesMock,
@@ -386,9 +491,67 @@ describe("studentRouter", () => {
 
       expect(result).toEqual({ success: true });
       expect(db.delete).toHaveBeenCalled();
+      expect(db.update).toHaveBeenCalled();
       expect(insertValuesMock).toHaveBeenCalledWith([
         { studentId: 10, courseId: 2, status: "in_progress" },
       ]);
+    });
+
+    it("deactivates active group enrollments when a course is removed", async () => {
+      const mockStudent = { id: 10, name: "Student", schoolId: 1 };
+      const existingEnrollments = [
+        { studentId: 10, courseId: 1 },
+        { studentId: 10, courseId: 2 },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(existingEnrollments),
+          }),
+        });
+
+      (db.delete as any).mockReturnValue({
+        where: vi.fn().mockResolvedValue({}),
+      });
+
+      const updateSetMock = vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue({}),
+      });
+      (db.update as any).mockReturnValue({
+        set: updateSetMock,
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      const result = await caller.updateCourses({
+        studentId: 10,
+        courseIds: [2],
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(db.delete).toHaveBeenCalled();
+      expect(db.update).toHaveBeenCalled();
+      expect(updateSetMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "inactive",
+        }),
+      );
     });
 
     it("throws NOT_FOUND when student does not exist", async () => {
@@ -613,6 +776,15 @@ describe("studentRouter", () => {
               where: vi.fn().mockResolvedValue(mockCourses),
             }),
           }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([]),
+              }),
+            }),
+          }),
         });
 
       const caller = studentRouter.createCaller({
@@ -630,6 +802,55 @@ describe("studentRouter", () => {
         ...mockStudent,
         courses: mockCourses,
       });
+    });
+
+    it("includes courses from active group enrollments even when missing from course progress", async () => {
+      const mockStudent = {
+        id: 1,
+        name: "Alex",
+        schoolId: 1,
+      };
+      const mockGroupCourses = [{ id: 202, name: "Robotică & STEM" }];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([mockStudent]),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]), // No progress records
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue(mockGroupCourses), // Has active group in Robotics
+              }),
+            }),
+          }),
+        });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.getById({ id: 1 });
+      expect(result.courses).toEqual(mockGroupCourses);
     });
 
     it("throws NOT_FOUND when student does not exist", async () => {

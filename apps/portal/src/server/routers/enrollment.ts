@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import { eq, and, inArray, asc } from "drizzle-orm";
-import { studentGroupEnrollments, groups, courses, students, users } from "@/db/schema";
+import {
+  studentGroupEnrollments,
+  studentCourseProgress,
+  groups,
+  courses,
+  students,
+  users,
+} from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { checkStudentGroupConflicts } from "../conflictChecker";
@@ -76,6 +83,28 @@ export const enrollmentRouter = router({
         assertAdminAccess(user, grp.schoolId);
       }
 
+      // Verify student is already enrolled in the course for each group
+      for (const grp of targetGroups) {
+        const [existingProgress] = await db
+          .select()
+          .from(studentCourseProgress)
+          .where(
+            and(
+              eq(studentCourseProgress.studentId, input.studentId),
+              eq(studentCourseProgress.courseId, grp.courseId),
+            ),
+          )
+          .limit(1);
+
+        if (!existingProgress) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "Studentul trebuie să fie mai întâi înscris în cursul respectiv înainte de a fi adăugat într-o grupă.",
+          });
+        }
+      }
+
       await checkStudentGroupConflicts(db, {
         studentId: input.studentId,
         groupIds: input.groupIds,
@@ -95,10 +124,7 @@ export const enrollmentRouter = router({
             leftAt: null,
           })
           .onConflictDoUpdate({
-            target: [
-              studentGroupEnrollments.studentId,
-              studentGroupEnrollments.groupId,
-            ],
+            target: [studentGroupEnrollments.studentId, studentGroupEnrollments.groupId],
             set: {
               status: "active",
               leftAt: null,
@@ -271,11 +297,7 @@ export const enrollmentRouter = router({
       const user = ctx.user;
       if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const [group] = await db
-        .select()
-        .from(groups)
-        .where(eq(groups.id, input.groupId))
-        .limit(1);
+      const [group] = await db.select().from(groups).where(eq(groups.id, input.groupId)).limit(1);
 
       if (!group) {
         throw new TRPCError({
@@ -289,9 +311,7 @@ export const enrollmentRouter = router({
       const conditions = [eq(studentGroupEnrollments.groupId, input.groupId)];
 
       if (input.status === "inactive_or_archived") {
-        conditions.push(
-          inArray(studentGroupEnrollments.status, ["inactive", "archived"]),
-        );
+        conditions.push(inArray(studentGroupEnrollments.status, ["inactive", "archived"]));
       } else if (input.status !== "all") {
         conditions.push(eq(studentGroupEnrollments.status, input.status));
       }
@@ -350,9 +370,7 @@ export const enrollmentRouter = router({
       const conditions = [eq(studentGroupEnrollments.courseId, input.courseId)];
 
       if (input.status === "inactive_or_archived") {
-        conditions.push(
-          inArray(studentGroupEnrollments.status, ["inactive", "archived"]),
-        );
+        conditions.push(inArray(studentGroupEnrollments.status, ["inactive", "archived"]));
       } else if (input.status !== "all") {
         conditions.push(eq(studentGroupEnrollments.status, input.status));
       }

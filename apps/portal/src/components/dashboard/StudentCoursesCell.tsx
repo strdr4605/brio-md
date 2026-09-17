@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 
 type CourseItem = {
@@ -67,6 +67,32 @@ export function StudentCoursesCell({
     },
   });
 
+  // Deduplicate current courses by normalized name for rendering badges
+  const uniqueCurrentCourses = useMemo(() => {
+    const seen = new Set<string>();
+    return currentCourses.filter((course) => {
+      const key = course.name.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [currentCourses]);
+
+  // Deduplicate available courses by normalized name for the popover
+  const uniqueAvailableCourses = useMemo(() => {
+    const seen = new Set<string>();
+    return availableCourses.filter((course) => {
+      const key = course.name.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [availableCourses]);
+
+  const currentCourseNamesSet = useMemo(() => {
+    return new Set(currentCourses.map((c) => c.name.trim().toLowerCase()));
+  }, [currentCourses]);
+
   // Close popover on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -89,34 +115,43 @@ export function StudentCoursesCell({
     };
   }, [isOpen]);
 
-  const currentCourseIds = new Set(currentCourses.map((c) => c.id));
-
-  const handleToggleCourse = (courseId: number) => {
+  const handleToggleCourse = (course: CourseItem) => {
     if (disabled || updateCoursesMutation.isPending) return;
+    const normName = course.name.trim().toLowerCase();
     let nextIds: number[];
-    if (currentCourseIds.has(courseId)) {
-      nextIds = currentCourses.filter((c) => c.id !== courseId).map((c) => c.id);
+    if (currentCourseNamesSet.has(normName)) {
+      // Remove all courses matching this name
+      nextIds = currentCourses
+        .filter((c) => c.name.trim().toLowerCase() !== normName)
+        .map((c) => c.id);
     } else {
-      nextIds = [...currentCourses.map((c) => c.id), courseId];
+      nextIds = [...currentCourses.map((c) => c.id), course.id];
     }
     updateCoursesMutation.mutate({ studentId, courseIds: nextIds });
   };
 
-  const handleRemoveCourse = (e: React.MouseEvent, courseId: number) => {
+  const handleRemoveCourse = (e: React.MouseEvent, course: CourseItem) => {
     e.stopPropagation();
     if (disabled || updateCoursesMutation.isPending) return;
-    const nextIds = currentCourses.filter((c) => c.id !== courseId).map((c) => c.id);
+    const normName = course.name.trim().toLowerCase();
+    const nextIds = currentCourses
+      .filter((c) => c.name.trim().toLowerCase() !== normName)
+      .map((c) => c.id);
     updateCoursesMutation.mutate({ studentId, courseIds: nextIds });
   };
 
-  const filteredCourses = availableCourses.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredCourses = useMemo(() => {
+    if (!search.trim()) return uniqueAvailableCourses;
+    const q = search.toLowerCase();
+    return uniqueAvailableCourses.filter((c) =>
+      c.name.toLowerCase().includes(q),
+    );
+  }, [uniqueAvailableCourses, search]);
 
   return (
     <div className="relative inline-flex items-center flex-wrap gap-1.5 py-1">
       {/* Course Pills (Discord Role Style) */}
-      {currentCourses.map((course) => {
+      {uniqueCurrentCourses.map((course) => {
         const color = getCourseColor(course.id);
         return (
           <span
@@ -128,9 +163,9 @@ export function StudentCoursesCell({
             {!disabled && (
               <button
                 type="button"
-                onClick={(e) => handleRemoveCourse(e, course.id)}
+                onClick={(e) => handleRemoveCourse(e, course)}
                 disabled={updateCoursesMutation.isPending}
-                className="text-neutral-400 hover:text-red-500 rounded-full p-0.5 transition-colors focus:outline-none"
+                className="text-neutral-400 hover:text-red-500 rounded-full p-0.5 transition-colors focus:outline-none cursor-pointer"
                 title={`Elimină ${course.name}`}
                 aria-label={`Elimină ${course.name}`}
               >
@@ -149,7 +184,7 @@ export function StudentCoursesCell({
           onClick={() => setIsOpen(!isOpen)}
           disabled={updateCoursesMutation.isPending}
           className={`inline-flex items-center justify-center rounded-full border text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            currentCourses.length === 0
+            uniqueCurrentCourses.length === 0
               ? "px-2.5 py-1 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 border-dashed border-neutral-300 gap-1"
               : "w-6 h-6 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 border-neutral-300"
           }`}
@@ -157,7 +192,7 @@ export function StudentCoursesCell({
           aria-label="Editează cursuri"
         >
           <span>+</span>
-          {currentCourses.length === 0 && <span className="text-xs font-normal">Adaugă curs</span>}
+          {uniqueCurrentCourses.length === 0 && <span className="text-xs font-normal">Adaugă curs</span>}
         </button>
       )}
 
@@ -172,11 +207,11 @@ export function StudentCoursesCell({
               Cursuri disponibile
             </span>
             <span className="text-xs text-neutral-400">
-              {currentCourses.length}/{availableCourses.length}
+              {uniqueCurrentCourses.length}/{uniqueAvailableCourses.length}
             </span>
           </div>
 
-          {availableCourses.length > 4 && (
+          {uniqueAvailableCourses.length > 4 && (
             <div className="mb-2">
               <input
                 type="text"
@@ -194,7 +229,7 @@ export function StudentCoursesCell({
               <p className="text-xs text-neutral-400 text-center py-3">Niciun curs găsit</p>
             ) : (
               filteredCourses.map((course) => {
-                const isSelected = currentCourseIds.has(course.id);
+                const isSelected = currentCourseNamesSet.has(course.name.trim().toLowerCase());
                 const color = getCourseColor(course.id);
                 return (
                   <label
@@ -212,7 +247,7 @@ export function StudentCoursesCell({
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => handleToggleCourse(course.id)}
+                      onChange={() => handleToggleCourse(course)}
                       disabled={updateCoursesMutation.isPending}
                       className="w-3.5 h-3.5 text-blue-600 rounded border-neutral-300 focus:ring-blue-500 flex-shrink-0 cursor-pointer"
                     />

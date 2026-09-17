@@ -219,9 +219,10 @@ export default function StudentProfilePage() {
   const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
     enabled: canAccess,
   });
-  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, {
-    enabled: canAccess,
-  });
+  const { data: courses = [] } = trpc.user.listCourses.useQuery(
+    { schoolId: student?.schoolId ?? undefined },
+    { enabled: canAccess },
+  );
 
   // Mutations
   const updateStatusMutation = trpc.enrollment.updateStatus.useMutation({
@@ -992,6 +993,7 @@ export default function StudentProfilePage() {
           studentId={student.id}
           studentName={student.name}
           schoolId={student.schoolId}
+          courses={student.courses}
         />
       )}
     </div>

@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import { eq, ilike, and, asc, inArray } from "drizzle-orm";
-import { students, courses, studentCourseProgress, schools } from "@/db/schema";
+import { eq, ilike, and, or, asc, inArray, isNull, ne } from "drizzle-orm";
+import {
+  students,
+  courses,
+  studentCourseProgress,
+  schools,
+  studentGroupEnrollments,
+  groups,
+} from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { phoneSchema } from "@/lib/phone";
@@ -15,6 +22,71 @@ function getStudentRoles(user?: { permissions?: string[]; role?: string; schoolI
     isAdmin: permissions.includes("admin") || role === "admin",
     isTeacher: permissions.includes("teach") || role === "teacher",
   };
+}
+
+async function checkDuplicateStudent({
+  schoolId,
+  name,
+  phone,
+  parentPhone,
+  parentName,
+  excludeStudentId,
+}: {
+  schoolId: number | null;
+  name: string;
+  phone?: string | null;
+  parentPhone?: string | null;
+  parentName?: string | null;
+  excludeStudentId?: number;
+}) {
+  const normalizedName = name.trim();
+  const conditions = [
+    schoolId ? eq(students.schoolId, schoolId) : isNull(students.schoolId),
+    ilike(students.name, normalizedName),
+  ];
+
+  if (excludeStudentId) {
+    conditions.push(ne(students.id, excludeStudentId));
+  }
+
+  const query = db
+    .select?.()
+    ?.from?.(students)
+    ?.where?.(and(...conditions));
+
+  const rawCandidates = query ? await query : [];
+  const existingCandidates = Array.isArray(rawCandidates) ? rawCandidates : [];
+
+  const hasDuplicate = existingCandidates.some((existing) => {
+    const inputPhone = phone?.trim();
+    const existingPhone = existing?.phone?.trim();
+    const inputParentPhone = parentPhone?.trim();
+    const existingParentPhone = existing?.parentPhone?.trim();
+
+    // If personal phone matches
+    if (inputPhone && existingPhone && inputPhone === existingPhone) return true;
+    // If parent phone matches
+    if (inputParentPhone && existingParentPhone && inputParentPhone === existingParentPhone)
+      return true;
+
+    // If neither record has contact phone numbers, compare parent names
+    if (!inputPhone && !existingPhone && !inputParentPhone && !existingParentPhone) {
+      const inputParent = parentName?.trim().toLowerCase();
+      const existingParent = existing?.parentName?.trim().toLowerCase();
+      if (inputParent && existingParent && inputParent === existingParent) return true;
+      if (!inputParent && !existingParent) return true;
+    }
+
+    return false;
+  });
+
+  if (hasDuplicate) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message:
+        "Un student cu acest nume și aceleași date de contact există deja în această școală.",
+    });
+  }
 }
 
 export const studentRouter = router({
@@ -72,7 +144,7 @@ export const studentRouter = router({
         });
       }
 
-      const enrollments = await db
+      const progressCourses = await db
         .select({
           id: courses.id,
           name: courses.name,
@@ -81,9 +153,38 @@ export const studentRouter = router({
         .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
         .where(eq(studentCourseProgress.studentId, input.id));
 
+      const groupCourses = await db
+        .select({
+          id: courses.id,
+          name: courses.name,
+        })
+        .from(studentGroupEnrollments)
+        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
+        .innerJoin(courses, eq(groups.courseId, courses.id))
+        .where(
+          and(
+            eq(studentGroupEnrollments.studentId, input.id),
+            eq(studentGroupEnrollments.status, "active"),
+          ),
+        );
+
+      const courseMap = new Map<string, { id: number; name: string }>();
+      for (const c of progressCourses) {
+        const key = c.name.trim().toLowerCase();
+        if (!courseMap.has(key)) {
+          courseMap.set(key, c);
+        }
+      }
+      for (const c of groupCourses) {
+        const key = c.name.trim().toLowerCase();
+        if (!courseMap.has(key)) {
+          courseMap.set(key, c);
+        }
+      }
+
       return {
         ...row,
-        courses: enrollments,
+        courses: Array.from(courseMap.values()),
       };
     }),
 
@@ -113,7 +214,15 @@ export const studentRouter = router({
       }
 
       if (input?.search) {
-        conditions.push(ilike(students.name, `%${input.search}%`));
+        const q = `%${input.search.trim()}%`;
+        conditions.push(
+          or(
+            ilike(students.name, q),
+            ilike(students.phone, q),
+            ilike(students.parentName, q),
+            ilike(students.parentPhone, q),
+          ),
+        );
       }
       if (input?.schoolId) {
         conditions.push(eq(students.schoolId, input.schoolId));
@@ -143,16 +252,45 @@ export const studentRouter = router({
         .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
         .where(inArray(studentCourseProgress.studentId, studentIds));
 
-      const coursesMap = new Map<number, Array<{ id: number; name: string }>>();
+      const groupEnrollments = await db
+        .select({
+          studentId: studentGroupEnrollments.studentId,
+          courseId: courses.id,
+          courseName: courses.name,
+        })
+        .from(studentGroupEnrollments)
+        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
+        .innerJoin(courses, eq(groups.courseId, courses.id))
+        .where(
+          and(
+            inArray(studentGroupEnrollments.studentId, studentIds),
+            eq(studentGroupEnrollments.status, "active"),
+          ),
+        );
+
+      const coursesMap = new Map<number, Map<string, { id: number; name: string }>>();
       for (const e of enrollments) {
-        const list = coursesMap.get(e.studentId) || [];
-        list.push({ id: e.courseId, name: e.courseName });
-        coursesMap.set(e.studentId, list);
+        const studentMap =
+          coursesMap.get(e.studentId) || new Map<string, { id: number; name: string }>();
+        const key = e.courseName.trim().toLowerCase();
+        if (!studentMap.has(key)) {
+          studentMap.set(key, { id: e.courseId, name: e.courseName });
+        }
+        coursesMap.set(e.studentId, studentMap);
+      }
+      for (const ge of groupEnrollments) {
+        const studentMap =
+          coursesMap.get(ge.studentId) || new Map<string, { id: number; name: string }>();
+        const key = ge.courseName.trim().toLowerCase();
+        if (!studentMap.has(key)) {
+          studentMap.set(key, { id: ge.courseId, name: ge.courseName });
+        }
+        coursesMap.set(ge.studentId, studentMap);
       }
 
       return result.map((s) => ({
         ...s,
-        courses: coursesMap.get(s.id) || [],
+        courses: Array.from(coursesMap.get(s.id)?.values() || []),
       }));
     }),
 
@@ -174,6 +312,7 @@ export const studentRouter = router({
         parentPhone: phoneSchema,
         info: z.string().optional().nullable(),
         courseIds: z.array(z.number()).optional(),
+        groupIds: z.array(z.number()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -197,6 +336,15 @@ export const studentRouter = router({
           message: "Este necesar cel puțin un număr de telefon (al studentului sau al părintelui).",
         });
       }
+
+      await checkDuplicateStudent({
+        schoolId: assignedSchoolId,
+        name: input.name,
+        phone: input.phone,
+        parentPhone: input.parentPhone,
+        parentName: input.parentName,
+      });
+
       const [result] = await db
         .insert(students)
         .values({
@@ -219,6 +367,40 @@ export const studentRouter = router({
             status: "in_progress" as const,
           })),
         );
+      }
+
+      if (input.groupIds && input.groupIds.length > 0) {
+        const targetGroups = await db
+          .select({ id: groups.id, courseId: groups.courseId })
+          .from(groups)
+          .where(inArray(groups.id, input.groupIds));
+
+        const studentCourseSet = new Set(input.courseIds || []);
+        for (const grp of targetGroups) {
+          if (!studentCourseSet.has(grp.courseId)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                "Studentul trebuie să fie mai întâi înscris în cursul respectiv înainte de a fi adăugat într-o grupă.",
+            });
+          }
+        }
+
+        for (const grp of targetGroups) {
+          await db
+            .insert(studentGroupEnrollments)
+            .values({
+              studentId: result.id,
+              groupId: grp.id,
+              courseId: grp.courseId,
+              status: "active",
+              joinedAt: new Date(),
+            })
+            .onConflictDoUpdate({
+              target: [studentGroupEnrollments.studentId, studentGroupEnrollments.groupId],
+              set: { status: "active", leftAt: null, courseId: grp.courseId },
+            });
+        }
       }
 
       return result;
@@ -244,6 +426,7 @@ export const studentRouter = router({
         info: z.string().optional().nullable(),
         active: z.boolean().optional(),
         courseIds: z.array(z.number()).optional(),
+        groupIds: z.array(z.number()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -268,7 +451,10 @@ export const studentRouter = router({
         await checkStudentCourseConflicts(db, input.courseIds);
       }
 
-      const { id, courseIds, ...data } = input;
+      const { id, courseIds, groupIds, ...data } = input;
+      const targetSchoolId =
+        isSuper && data.schoolId !== undefined ? data.schoolId : existing.schoolId;
+      const targetName = data.name ?? existing.name;
 
       if (data.phone !== undefined || data.parentPhone !== undefined) {
         const finalPhone = data.phone !== undefined ? data.phone : existing.phone;
@@ -277,10 +463,29 @@ export const studentRouter = router({
         if (!finalPhone?.trim() && !finalParentPhone?.trim()) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Este necesar cel puțin un număr de telefon (al studentului sau al părintelui).",
+            message:
+              "Este necesar cel puțin un număr de telefon (al studentului sau al părintelui).",
           });
         }
       }
+
+      if (
+        data.name !== undefined ||
+        data.phone !== undefined ||
+        data.parentPhone !== undefined ||
+        data.parentName !== undefined ||
+        (isSuper && data.schoolId !== undefined)
+      ) {
+        await checkDuplicateStudent({
+          schoolId: targetSchoolId,
+          name: targetName,
+          phone: data.phone !== undefined ? data.phone : existing.phone,
+          parentPhone: data.parentPhone !== undefined ? data.parentPhone : existing.parentPhone,
+          parentName: data.parentName !== undefined ? data.parentName : existing.parentName,
+          excludeStudentId: id,
+        });
+      }
+
       const updateData: Record<string, any> = { ...data, lastChangedAt: new Date() };
       if (!isSuper) {
         delete updateData.schoolId;
@@ -313,6 +518,20 @@ export const studentRouter = router({
                 inArray(studentCourseProgress.courseId, toDelete),
               ),
             );
+
+          // If groupIds was not explicitly passed, cascade deactivation to active group enrollments for deleted courses
+          if (groupIds === undefined) {
+            await db
+              .update(studentGroupEnrollments)
+              .set({ status: "inactive", leftAt: new Date() })
+              .where(
+                and(
+                  eq(studentGroupEnrollments.studentId, id),
+                  inArray(studentGroupEnrollments.courseId, toDelete),
+                  eq(studentGroupEnrollments.status, "active"),
+                ),
+              );
+          }
         }
 
         const toInsert = courseIds.filter((cid) => !existingIds.has(cid));
@@ -324,6 +543,76 @@ export const studentRouter = router({
               status: "in_progress" as const,
             })),
           );
+        }
+      }
+
+      if (groupIds !== undefined) {
+        const targetGroupIds = new Set(groupIds);
+
+        // Fetch current active group enrollments
+        const currentGroupEnrollments = await db
+          .select()
+          .from(studentGroupEnrollments)
+          .where(
+            and(
+              eq(studentGroupEnrollments.studentId, id),
+              eq(studentGroupEnrollments.status, "active"),
+            ),
+          );
+
+        // Deactivate groups not in groupIds
+        for (const enr of currentGroupEnrollments) {
+          if (!targetGroupIds.has(enr.groupId)) {
+            await db
+              .update(studentGroupEnrollments)
+              .set({ status: "inactive", leftAt: new Date() })
+              .where(eq(studentGroupEnrollments.id, enr.id));
+          }
+        }
+
+        // Activate or insert new groups
+        if (groupIds.length > 0) {
+          const targetGroups = await db
+            .select({ id: groups.id, courseId: groups.courseId })
+            .from(groups)
+            .where(inArray(groups.id, groupIds));
+
+          const activeCourseSet = new Set(
+            courseIds !== undefined
+              ? courseIds
+              : (
+                  await db
+                    .select({ courseId: studentCourseProgress.courseId })
+                    .from(studentCourseProgress)
+                    .where(eq(studentCourseProgress.studentId, id))
+                ).map((c) => c.courseId),
+          );
+
+          for (const grp of targetGroups) {
+            if (!activeCourseSet.has(grp.courseId)) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message:
+                  "Studentul trebuie să fie mai întâi înscris în cursul respectiv înainte de a fi adăugat într-o grupă.",
+              });
+            }
+          }
+
+          for (const grp of targetGroups) {
+            await db
+              .insert(studentGroupEnrollments)
+              .values({
+                studentId: id,
+                groupId: grp.id,
+                courseId: grp.courseId,
+                status: "active",
+                joinedAt: new Date(),
+              })
+              .onConflictDoUpdate({
+                target: [studentGroupEnrollments.studentId, studentGroupEnrollments.groupId],
+                set: { status: "active", leftAt: null, courseId: grp.courseId },
+              });
+          }
         }
       }
 
@@ -370,8 +659,9 @@ export const studentRouter = router({
         .from(studentCourseProgress)
         .where(eq(studentCourseProgress.studentId, input.studentId));
 
+      const uniqueCourseIds = Array.from(new Set(input.courseIds));
       const existingIds = new Set(existingEnrollments.map((e) => e.courseId));
-      const targetIds = new Set(input.courseIds);
+      const targetIds = new Set(uniqueCourseIds);
 
       const toDelete = existingEnrollments
         .filter((e) => !targetIds.has(e.courseId))
@@ -385,9 +675,21 @@ export const studentRouter = router({
               inArray(studentCourseProgress.courseId, toDelete),
             ),
           );
+
+        // Deactivate active group enrollments for the removed courses
+        await db
+          .update(studentGroupEnrollments)
+          .set({ status: "inactive", leftAt: new Date() })
+          .where(
+            and(
+              eq(studentGroupEnrollments.studentId, input.studentId),
+              inArray(studentGroupEnrollments.courseId, toDelete),
+              eq(studentGroupEnrollments.status, "active"),
+            ),
+          );
       }
 
-      const toInsert = input.courseIds.filter((cid) => !existingIds.has(cid));
+      const toInsert = uniqueCourseIds.filter((cid) => !existingIds.has(cid));
       if (toInsert.length > 0) {
         await db.insert(studentCourseProgress).values(
           toInsert.map((courseId) => ({
