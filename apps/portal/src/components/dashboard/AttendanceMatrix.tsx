@@ -34,7 +34,7 @@ export type MatrixStudent = {
 
 export type AttendanceMatrixProps = {
   groupId: number;
-  groupName: string;
+  groupName?: string;
   dates: string[];
   students: MatrixStudent[];
   onRefresh: () => void;
