@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { AttendanceSheet } from "@/components/dashboard/AttendanceSheet";
@@ -113,6 +114,21 @@ export default function AttendancePage() {
             Înregistrează prezența, notează motivele absențelor și contactează părinții în 1 click.
           </p>
         </div>
+
+        {/* Tab Switcher for Admins */}
+        {isSuperOrAdmin && (
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80 shrink-0">
+            <span className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-xs">
+              Catalog Zilnic
+            </span>
+            <Link
+              href="/dashboard/attendance/overview"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+            >
+              Matrice & Istoric
+            </Link>
+          </div>
+        )}
 
         {/* Filter Bar: Group and Date Selector */}
         <div className="flex flex-wrap items-center gap-3">
