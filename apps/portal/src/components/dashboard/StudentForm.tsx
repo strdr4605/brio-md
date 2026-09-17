@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { detectCourseScheduleConflicts } from "@/lib/scheduleConflicts";
+import { detectStudentScheduleConflicts } from "@/lib/scheduleConflicts";
 
 export type StudentFormStudent = {
   id?: number;
@@ -129,8 +129,38 @@ export function StudentFormDrawer({
 
   const courseConflicts = useMemo(() => {
     if (selectedCourseIds.length <= 1) return [];
-    return detectCourseScheduleConflicts(filteredCourses.filter((c) => selectedCourseIds.includes(c.id)));
-  }, [selectedCourseIds, filteredCourses]);
+
+    const scheduleItems = selectedCourseIds
+      .map((courseId) => {
+        const course = filteredCourses.find((c) => c.id === courseId);
+        if (!course) return null;
+        const selectedGroupId = courseGroups[courseId];
+        const group = selectedGroupId
+          ? schoolGroups.find((g) => g.id === selectedGroupId)
+          : null;
+
+        if (group) {
+          return {
+            courseId: course.id,
+            courseName: course.name,
+            groupId: group.id,
+            groupName: group.name,
+            scheduleDays: group.scheduleDays,
+            scheduleTime: group.scheduleTime,
+          };
+        }
+
+        return {
+          courseId: course.id,
+          courseName: course.name,
+          scheduleDays: course.scheduleDays,
+          scheduleTime: course.scheduleTime,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return detectStudentScheduleConflicts(scheduleItems);
+  }, [selectedCourseIds, filteredCourses, courseGroups, schoolGroups]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,8 +266,13 @@ export function StudentFormDrawer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>
-                Telefon student <span className="text-slate-400 font-normal text-xs">(sau telefon părinte)*</span>
+              <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
+                <span>
+                  Telefon student{" "}
+                  <span className="text-slate-400 font-normal text-xs normal-case">
+                    (sau telefon părinte)*
+                  </span>
+                </span>
               </label>
               <input
                 type="tel"
@@ -259,7 +294,9 @@ export function StudentFormDrawer({
             </div>
 
             <div>
-              <label className={labelCls}>Vârstă (ani)</label>
+              <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
+                <span>Vârstă (ani)</span>
+              </label>
               <input
                 type="number"
                 min={1}
@@ -377,10 +414,15 @@ export function StudentFormDrawer({
               {/* Group allocation per selected course */}
               {selectedCourseIds.length > 0 && (
                 <div className="space-y-2 pt-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Alocare Grupe (Opțional)
-                  </span>
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Alocare Grupe (Opțional)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {selectedCourseIds.length} {selectedCourseIds.length === 1 ? "curs selectat" : "cursuri selectate"}
+                    </span>
+                  </div>
+                  <div className="space-y-2.5">
                     {selectedCourseIds.map((courseId) => {
                       const course = filteredCourses.find((c) => c.id === courseId);
                       if (!course) return null;
@@ -390,11 +432,13 @@ export function StudentFormDrawer({
                       return (
                         <div
                           key={courseId}
-                          className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-1.5"
+                          className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2 shadow-xs"
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">{course.name}</span>
-                            <span className="text-[10px] text-slate-400 font-medium">
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 pb-1.5">
+                            <span className="text-xs font-bold text-slate-800 truncate" title={course.name}>
+                              {course.name}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 font-medium shrink-0">
                               {availableForCourse.length} {availableForCourse.length === 1 ? "grupă" : "grupe"}
                             </span>
                           </div>
@@ -413,7 +457,7 @@ export function StudentFormDrawer({
                                   [courseId]: val,
                                 }));
                               }}
-                              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
+                              className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
                             >
                               <option value="">Fără grupă (doar înscriere la curs)</option>
                               {availableForCourse.map((g) => {

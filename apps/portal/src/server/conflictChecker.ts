@@ -5,8 +5,9 @@ import { db } from "@/lib/db";
 import {
   detectGroupConflicts,
   parseTimeRange,
-  detectCourseScheduleConflicts,
   detectStudentGroupScheduleConflicts,
+  StudentScheduleItem,
+  detectStudentScheduleConflicts,
 } from "@/lib/scheduleConflicts";
 
 type DBType = typeof db;
@@ -131,6 +132,7 @@ export async function checkCourseNameConflict(
 export async function checkStudentCourseConflicts(
   database: DBType,
   courseIds?: number[] | null,
+  groupIds?: number[] | null,
 ) {
   if (!courseIds || courseIds.length <= 1) return;
 
@@ -144,7 +146,53 @@ export async function checkStudentCourseConflicts(
     .from(courses)
     .where(inArray(courses.id, courseIds));
 
-  const conflicts = detectCourseScheduleConflicts(selectedCourses);
+  let selectedGroups: Array<{
+    id: number;
+    courseId: number;
+    name: string;
+    scheduleDays: string[] | null;
+    scheduleTime: string | null;
+  }> = [];
+
+  if (groupIds && groupIds.length > 0) {
+    selectedGroups = await database
+      .select({
+        id: groups.id,
+        courseId: groups.courseId,
+        name: groups.name,
+        scheduleDays: groups.scheduleDays,
+        scheduleTime: groups.scheduleTime,
+      })
+      .from(groups)
+      .where(inArray(groups.id, groupIds));
+  }
+
+  const groupMap = new Map<number, (typeof selectedGroups)[0]>();
+  for (const g of selectedGroups) {
+    groupMap.set(g.courseId, g);
+  }
+
+  const scheduleItems: StudentScheduleItem[] = selectedCourses.map((c) => {
+    const grp = groupMap.get(c.id);
+    if (grp) {
+      return {
+        courseId: c.id,
+        courseName: c.name,
+        groupId: grp.id,
+        groupName: grp.name,
+        scheduleDays: grp.scheduleDays,
+        scheduleTime: grp.scheduleTime,
+      };
+    }
+    return {
+      courseId: c.id,
+      courseName: c.name,
+      scheduleDays: c.scheduleDays,
+      scheduleTime: c.scheduleTime,
+    };
+  });
+
+  const conflicts = detectStudentScheduleConflicts(scheduleItems);
   if (conflicts.length > 0) {
     throw new TRPCError({
       code: "BAD_REQUEST",

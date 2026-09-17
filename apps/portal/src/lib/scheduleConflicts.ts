@@ -238,3 +238,48 @@ export function detectStudentGroupScheduleConflicts(params: {
 
   return warnings;
 }
+
+export type StudentScheduleItem = {
+  courseId: number;
+  courseName: string;
+  groupId?: number | null;
+  groupName?: string | null;
+  scheduleDays?: string[] | null;
+  scheduleTime?: string | null;
+};
+
+export function formatScheduleItemTitle(item: StudentScheduleItem, isFirst = true): string {
+  if (item.groupName) {
+    return `${isFirst ? "Grupa" : "grupa"} "${item.groupName}" (${item.courseName})`;
+  }
+  return `${isFirst ? "Cursul" : "cursul"} "${item.courseName}"`;
+}
+
+export function detectStudentScheduleConflicts(items: StudentScheduleItem[]): ConflictWarning[] {
+  const warnings: ConflictWarning[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const s1 = items[i];
+    const t1 = parseTimeRange(s1.scheduleTime);
+    if (!t1 || !s1.scheduleDays?.length) continue;
+
+    for (let j = i + 1; j < items.length; j++) {
+      const s2 = items[j];
+      const t2 = parseTimeRange(s2.scheduleTime);
+      if (!t2 || !s2.scheduleDays?.length) continue;
+
+      if (areTimesOverlapping(t1, t2)) {
+        const commonDays = getOverlappingDays(s1.scheduleDays, s2.scheduleDays);
+        if (commonDays.length > 0) {
+          const daysStr = commonDays.map((d) => DAY_LABELS[d] || d).join(", ");
+          const title1 = formatScheduleItemTitle(s1, true);
+          const title2 = formatScheduleItemTitle(s2, false);
+          warnings.push({
+            type: "time",
+            message: `Conflict de orar: ${title1} (${s1.scheduleTime}) și ${title2} (${s2.scheduleTime}) au loc în același timp (${daysStr}).`,
+          });
+        }
+      }
+    }
+  }
+  return warnings;
+}

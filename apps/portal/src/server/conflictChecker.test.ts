@@ -7,6 +7,7 @@ import {
   detectGroupConflicts,
   detectCourseScheduleConflicts,
   detectStudentGroupScheduleConflicts,
+  detectStudentScheduleConflicts,
 } from "@/lib/scheduleConflicts";
 import {
   checkGroupConflicts,
@@ -429,10 +430,81 @@ describe("detectStudentGroupScheduleConflicts", () => {
     expect(warnings[0].message).toContain("Grupa Veche");
     expect(warnings[0].message).toContain("Grupa Nouă");
   });
+
+  describe("detectStudentScheduleConflicts", () => {
+    it("flags conflict when student items overlap in schedule", () => {
+      const items = [
+        {
+          courseId: 1,
+          courseName: "English",
+          scheduleDays: ["tue", "thu"],
+          scheduleTime: "17:30 - 19:00",
+        },
+        {
+          courseId: 2,
+          courseName: "Robotics",
+          scheduleDays: ["tue", "thu"],
+          scheduleTime: "16:30 - 18:00",
+        },
+      ];
+      const warnings = detectStudentScheduleConflicts(items);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('Cursul "English"');
+      expect(warnings[0].message).toContain('cursul "Robotics"');
+    });
+
+    it("clears conflict when an allocated group changes the schedule to a different day", () => {
+      const items = [
+        {
+          courseId: 1,
+          courseName: "English",
+          groupId: 10,
+          groupName: "Grupa A",
+          scheduleDays: ["tue", "thu"],
+          scheduleTime: "17:30 - 19:00",
+        },
+        {
+          courseId: 2,
+          courseName: "Robotics",
+          groupId: 20,
+          groupName: "Grupa 2",
+          scheduleDays: ["sat"],
+          scheduleTime: "10:00 - 11:30",
+        },
+      ];
+      const warnings = detectStudentScheduleConflicts(items);
+      expect(warnings).toHaveLength(0);
+    });
+
+    it("flags conflict when allocated groups themselves overlap", () => {
+      const items = [
+        {
+          courseId: 1,
+          courseName: "English",
+          groupId: 10,
+          groupName: "Grupa A",
+          scheduleDays: ["tue"],
+          scheduleTime: "17:00 - 18:30",
+        },
+        {
+          courseId: 2,
+          courseName: "Robotics",
+          groupId: 20,
+          groupName: "Grupa B",
+          scheduleDays: ["tue"],
+          scheduleTime: "18:00 - 19:30",
+        },
+      ];
+      const warnings = detectStudentScheduleConflicts(items);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('Grupa "Grupa A" (English)');
+      expect(warnings[0].message).toContain('grupa "Grupa B" (Robotics)');
+    });
+  });
 });
 
 describe("checkStudentCourseConflicts server function", () => {
-  it("throws BAD_REQUEST when student courses conflict", async () => {
+  it("throws BAD_REQUEST when student courses conflict without group overrides", async () => {
     const mockDb = {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
@@ -445,6 +517,39 @@ describe("checkStudentCourseConflicts server function", () => {
     };
 
     await expect(checkStudentCourseConflicts(mockDb as any, [1, 2])).rejects.toThrow(TRPCError);
+  });
+
+  it("passes when conflicting courses have non-conflicting group overrides", async () => {
+    const mockDb = {
+      select: vi.fn()
+        // First call: courses
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              { id: 1, name: "Curs 1", scheduleDays: ["mon"], scheduleTime: "17:00 - 18:00" },
+              { id: 2, name: "Curs 2", scheduleDays: ["mon"], scheduleTime: "17:30 - 18:30" },
+            ]),
+          }),
+        })
+        // Second call: groups
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              {
+                id: 20,
+                courseId: 2,
+                name: "Grupa Sâmbătă",
+                scheduleDays: ["sat"],
+                scheduleTime: "10:00 - 11:30",
+              },
+            ]),
+          }),
+        }),
+    };
+
+    await expect(
+      checkStudentCourseConflicts(mockDb as any, [1, 2], [20]),
+    ).resolves.toBeUndefined();
   });
 });
 
