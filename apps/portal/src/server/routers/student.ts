@@ -728,4 +728,120 @@ export const studentRouter = router({
 
       return { success: true };
     }),
+
+  // Search students globally (by student name/phone, parent name/phone)
+  search: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(1),
+        limit: z.number().int().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) return [];
+      const user = ctx.user;
+      const permissions = user.permissions || [];
+      const role = user.role;
+
+      const isSuper = permissions.includes("super") || role === "superadmin";
+      const isAdmin = permissions.includes("admin") || role === "admin";
+      const isTeacher = permissions.includes("teach") || role === "teacher";
+
+      // Only authenticated staff with a valid role can search
+      if (!isSuper && !isAdmin && !isTeacher) {
+        return [];
+      }
+
+      // Non-super users MUST have a schoolId to enforce tenant isolation
+      if (!isSuper && !user.schoolId) {
+        return [];
+      }
+
+      const rawQuery = input.query.trim();
+      if (!rawQuery) return [];
+
+      const searchConditions = [
+        ilike(students.name, `%${rawQuery}%`),
+        ilike(students.parentName, `%${rawQuery}%`),
+        ilike(students.phone, `%${rawQuery}%`),
+        ilike(students.parentPhone, `%${rawQuery}%`),
+      ];
+
+      // Strip non-digit characters to match partial phone numbers (e.g., last 4-6 digits)
+      const digitsOnly = rawQuery.replace(/\D/g, "");
+      if (digitsOnly.length >= 3 && digitsOnly !== rawQuery) {
+        searchConditions.push(ilike(students.phone, `%${digitsOnly}%`));
+        searchConditions.push(ilike(students.parentPhone, `%${digitsOnly}%`));
+      }
+
+      const whereConditions = [or(...searchConditions)];
+
+      // Enforce school-scoped access for ALL non-super users (admin AND teacher)
+      if (!isSuper && user.schoolId) {
+        whereConditions.push(eq(students.schoolId, user.schoolId));
+      }
+
+      const matchingStudents = await db
+        .select()
+        .from(students)
+        .where(and(...whereConditions))
+        .orderBy(asc(students.name))
+        .limit(input.limit);
+
+      if (matchingStudents.length === 0) return [];
+
+      const studentIds = matchingStudents.map((s) => s.id);
+
+      // Fetch active group enrollments with group & course info
+      const groupEnrollments = await db
+        .select({
+          studentId: studentGroupEnrollments.studentId,
+          groupId: groups.id,
+          groupName: groups.name,
+          courseId: courses.id,
+          courseName: courses.name,
+        })
+        .from(studentGroupEnrollments)
+        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
+        .innerJoin(courses, eq(groups.courseId, courses.id))
+        .where(
+          and(
+            inArray(studentGroupEnrollments.studentId, studentIds),
+            eq(studentGroupEnrollments.status, "active"),
+          ),
+        );
+
+      // Fetch direct course enrollments
+      const courseProgressRows = await db
+        .select({
+          studentId: studentCourseProgress.studentId,
+          courseId: courses.id,
+          courseName: courses.name,
+        })
+        .from(studentCourseProgress)
+        .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
+        .where(inArray(studentCourseProgress.studentId, studentIds));
+
+      const groupsMap = new Map<number, Array<{ id: number; name: string; courseName: string }>>();
+      for (const ge of groupEnrollments) {
+        const list = groupsMap.get(ge.studentId) || [];
+        list.push({ id: ge.groupId, name: ge.groupName, courseName: ge.courseName });
+        groupsMap.set(ge.studentId, list);
+      }
+
+      const coursesMap = new Map<number, Array<{ id: number; name: string }>>();
+      for (const cp of courseProgressRows) {
+        const list = coursesMap.get(cp.studentId) || [];
+        if (!list.some((c) => c.id === cp.courseId)) {
+          list.push({ id: cp.courseId, name: cp.courseName });
+        }
+        coursesMap.set(cp.studentId, list);
+      }
+
+      return matchingStudents.map((s) => ({
+        ...s,
+        groups: groupsMap.get(s.id) || [],
+        courses: coursesMap.get(s.id) || [],
+      }));
+    }),
 });

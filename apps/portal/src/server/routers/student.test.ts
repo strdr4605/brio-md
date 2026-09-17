@@ -911,4 +911,94 @@ describe("studentRouter", () => {
       );
     });
   });
+
+  describe("search", () => {
+    it("returns matching students with groups and courses", async () => {
+      const mockStudent = {
+        id: 1,
+        name: "Mihai Popescu",
+        phone: "+37369123456",
+        parentName: "Elena Popescu",
+        parentPhone: "+37369987654",
+        schoolId: 1,
+        active: true,
+      };
+
+      const mockGroupEnrollment = {
+        studentId: 1,
+        groupId: 10,
+        groupName: "Grupa A",
+        courseId: 20,
+        courseName: "Robotică",
+      };
+
+      const mockCourseProgress = {
+        studentId: 1,
+        courseId: 20,
+        courseName: "Robotică",
+      };
+
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => ({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockStudent]),
+            }),
+          })),
+          innerJoin: vi.fn().mockImplementation(() => ({
+            innerJoin: vi.fn().mockImplementation(() => ({
+              where: vi.fn().mockResolvedValue([mockGroupEnrollment]),
+            })),
+            where: vi.fn().mockResolvedValue([mockCourseProgress]),
+          })),
+        })),
+      }));
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.search({ query: "Popescu" });
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Mihai Popescu");
+      expect(result[0].parentName).toBe("Elena Popescu");
+    });
+
+    it("returns empty array when query is empty string", async () => {
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "superadmin",
+          permissions: ["super"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.search({ query: "   " });
+      expect(result).toEqual([]);
+    });
+
+    it("returns empty array when non-super user has no schoolId (multi-tenancy guard)", async () => {
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "2",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: null,
+        },
+      });
+
+      const result = await caller.search({ query: "Popescu" });
+      expect(result).toEqual([]);
+    });
+  });
 });
+
