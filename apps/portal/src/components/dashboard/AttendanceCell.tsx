@@ -62,10 +62,10 @@ export function AttendanceCell({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [popoverOpen]);
 
-  // Fast 1-click & 2-click cycle: null -> present -> absent -> null
+  // Fast 1-click & 2-click cycle: null -> present -> absent -> null (only enabled for today)
   const handleClick = (e: MouseEvent) => {
     e.preventDefault();
-    if (popoverOpen) return;
+    if (!isToday || popoverOpen) return;
 
     if (!status) {
       // 1 click: Green Present
@@ -79,10 +79,12 @@ export function AttendanceCell({
     }
   };
 
-  // Right click opens comment / status modal
+  // Right click opens comment / status modal (only enabled for today)
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isToday) return;
+
     // Resolve current fullscreen container so portal is inside fullscreen top layer
     setPortalTarget(document.fullscreenElement || document.body);
     setSelectedStatus(status || "absent");
@@ -106,21 +108,31 @@ export function AttendanceCell({
         type="button"
         onClick={handleClick}
         onContextMenu={handleContextMenu}
+        aria-disabled={!isToday}
+        tabIndex={isToday ? 0 : -1}
         title={
-          status
-            ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Click pentru a schimba, click dreapta pentru notă)`
-            : "Click: Prezent (P) | 2x: Absent (A) | Click dreapta: Notă"
+          !isToday
+            ? status
+              ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Arhivă: doar ziua de astăzi (${date}) se poate edita)`
+              : `Arhivă (${date}): doar prezența de astăzi poate fi marcată`
+            : status
+              ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Click pentru a schimba, click dreapta pentru notă)`
+              : "Click: Prezent (P) | 2x: Absent (A) | Click dreapta: Notă"
         }
-        className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center transition-all cursor-pointer relative ${
+        className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center transition-all relative ${
+          isToday ? "cursor-pointer" : "cursor-not-allowed opacity-80 select-none"
+        } ${
           status === "present"
-            ? "bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 active:scale-95"
+            ? `bg-emerald-600 text-white shadow-xs ${isToday ? "hover:bg-emerald-700 active:scale-95" : ""}`
             : status === "absent"
-              ? "bg-rose-600 text-white shadow-xs hover:bg-rose-700 active:scale-95"
+              ? `bg-rose-600 text-white shadow-xs ${isToday ? "hover:bg-rose-700 active:scale-95" : ""}`
               : status === "late"
-                ? "bg-amber-500 text-white shadow-xs hover:bg-amber-600 active:scale-95"
+                ? `bg-amber-500 text-white shadow-xs ${isToday ? "hover:bg-amber-600 active:scale-95" : ""}`
                 : status === "excused"
-                  ? "bg-blue-600 text-white shadow-xs hover:bg-blue-700 active:scale-95"
-                  : "text-slate-300 hover:text-slate-700 hover:bg-slate-100/90 active:scale-95 font-medium"
+                  ? `bg-blue-600 text-white shadow-xs ${isToday ? "hover:bg-blue-700 active:scale-95" : ""}`
+                  : isToday
+                    ? "text-slate-300 hover:text-slate-700 hover:bg-slate-100/90 active:scale-95 font-medium"
+                    : "text-slate-200 font-medium"
         }`}
       >
         {status === "present" && "P"}

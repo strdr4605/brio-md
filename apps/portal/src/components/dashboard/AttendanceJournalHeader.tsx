@@ -212,6 +212,10 @@ export function AttendanceJournalHeader({
             <span className="flex items-center gap-1">
               <span className="text-slate-400">🖱️ Dreapta: Notă</span>
             </span>
+            <span className="ml-1 pl-2 border-l border-slate-200 text-blue-700 font-extrabold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+              <span>Doar ziua curentă</span>
+            </span>
           </div>
 
           {onSave && (

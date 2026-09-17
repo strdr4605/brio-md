@@ -235,12 +235,17 @@ export function AttendanceJournalTable({
                   {data.dates.map((d) => (
                     <th
                       key={d.date}
-                      className={`w-10 sm:w-11 p-1 text-center border-r border-slate-200/80 ${
-                        d.isToday ? "bg-blue-100/80 text-blue-900 ring-1 ring-blue-400" : ""
+                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : `Arhivă ${d.date} (Doar ziua de azi se poate edita)`}
+                      className={`w-10 sm:w-11 p-1 text-center border-r border-slate-200/80 transition-colors ${
+                        d.isToday ? "bg-blue-100/90 text-blue-900 ring-2 ring-blue-500 ring-inset" : "bg-slate-100/60"
                       }`}
                     >
-                      <div className="text-[9px] font-bold text-slate-500 uppercase">{d.shortDay}</div>
-                      <div className="text-xs font-black">{d.dayNumber}</div>
+                      <div className={`text-[9px] uppercase ${d.isToday ? "font-black text-blue-700" : "font-bold text-slate-400"}`}>
+                        {d.shortDay}
+                      </div>
+                      <div className={`text-xs ${d.isToday ? "font-black text-blue-950" : "font-bold text-slate-700"}`}>
+                        {d.dayNumber}
+                      </div>
                     </th>
                   ))}
                   <th className="w-12 p-2 text-center text-[10px] font-bold text-emerald-700 bg-emerald-50/50 border-r border-slate-200">
