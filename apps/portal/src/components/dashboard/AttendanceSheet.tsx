@@ -235,7 +235,7 @@ export function AttendanceSheet({
                     <button
                       type="button"
                       onClick={() => handleStatusChange(student.studentId, "present")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
+                      className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
                         current.status === "present"
                           ? "bg-emerald-600 text-white shadow-2xs"
                           : "text-slate-600 hover:text-slate-900"
@@ -247,7 +247,7 @@ export function AttendanceSheet({
                     <button
                       type="button"
                       onClick={() => handleStatusChange(student.studentId, "absent")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
+                      className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
                         current.status === "absent"
                           ? "bg-rose-600 text-white shadow-2xs"
                           : "text-slate-600 hover:text-slate-900"
@@ -259,7 +259,7 @@ export function AttendanceSheet({
                     <button
                       type="button"
                       onClick={() => handleStatusChange(student.studentId, "late")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
+                      className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
                         current.status === "late"
                           ? "bg-amber-500 text-white shadow-2xs"
                           : "text-slate-600 hover:text-slate-900"
@@ -271,7 +271,7 @@ export function AttendanceSheet({
                     <button
                       type="button"
                       onClick={() => handleStatusChange(student.studentId, "excused")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
+                      className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
                         current.status === "excused"
                           ? "bg-blue-600 text-white shadow-2xs"
                           : "text-slate-600 hover:text-slate-900"
