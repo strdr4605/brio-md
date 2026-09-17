@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Nav } from "./Nav";
 import { TopHeader } from "./TopHeader";
+import { TeacherActiveSessionDetector } from "./TeacherActiveSessionDetector";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -66,6 +67,7 @@ export function DashboardShell({
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-10 max-w-[1600px] w-full mx-auto">
+          <TeacherActiveSessionDetector />
           {children}
         </main>
       </div>
