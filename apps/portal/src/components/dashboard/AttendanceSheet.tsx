@@ -21,7 +21,7 @@ export type AttendanceSheetProps = {
   groupName: string;
   date: string;
   isSaving?: boolean;
-  onSave: (records: { studentId: number; status: "present" | "absent" | "late" | "excused"; comment?: string | null }[]) => void;
+  onSaveAction: (records: { studentId: number; status: "present" | "absent" | "late" | "excused"; comment?: string | null }[]) => void;
 };
 
 type LocalAttendanceState = Record<
@@ -41,7 +41,7 @@ export function AttendanceSheet({
   groupName: _groupName,
   date: _date,
   isSaving = false,
-  onSave,
+  onSaveAction,
 }: AttendanceSheetProps) {
   const [localState, setLocalState] = useState<LocalAttendanceState>({});
   const [openCommentStudentId, setOpenCommentStudentId] = useState<number | null>(null);
@@ -107,7 +107,7 @@ export function AttendanceSheet({
       status: localState[s.studentId]?.status || "present",
       comment: localState[s.studentId]?.comment || null,
     }));
-    onSave(payload);
+    onSaveAction(payload);
   };
 
   if (students.length === 0) {

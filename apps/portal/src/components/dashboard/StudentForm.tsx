@@ -31,7 +31,7 @@ type Props = {
     scheduleTime?: string | null;
   }[];
   isSuperAdmin: boolean;
-  onClose: () => void;
+  onCloseAction: () => void;
   currentUserSchoolId?: number;
 };
 
@@ -43,7 +43,7 @@ export function StudentFormDrawer({
   schools,
   courses = [],
   isSuperAdmin,
-  onClose,
+  onCloseAction,
   currentUserSchoolId,
 }: Props) {
   const utils = trpc.useUtils();
@@ -101,7 +101,7 @@ export function StudentFormDrawer({
       utils.enrollment.getByStudent.invalidate({ studentId: student.id });
     }
     utils.group.invalidate();
-    onClose();
+    onCloseAction();
   };
   const onFail = (err: { message?: string }) => alert(err.message || "A apărut o eroare");
 
@@ -227,7 +227,7 @@ export function StudentFormDrawer({
     <div className="fixed inset-0 z-[100] flex justify-end">
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
+        onClick={onCloseAction}
         aria-hidden="true"
       />
 
@@ -242,7 +242,7 @@ export function StudentFormDrawer({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             type="button"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
             aria-label="Închide"
@@ -516,7 +516,7 @@ export function StudentFormDrawer({
         <div className="p-4 px-6 border-t border-slate-200/80 bg-slate-50/95 flex items-center justify-end gap-3 shrink-0">
           <button
             type="button"
-            onClick={onClose}
+            onClick={onCloseAction}
             className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-xl transition"
           >
             Anulează
