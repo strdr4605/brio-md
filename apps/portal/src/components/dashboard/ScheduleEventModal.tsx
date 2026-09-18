@@ -11,6 +11,7 @@ import {
   UsersIcon,
   BookOpenIcon,
   ShieldCheckIcon,
+  UserCheckIcon,
 } from "@/components/ui/icons";
 
 type ScheduleEventModalProps = {
@@ -23,6 +24,7 @@ type ScheduleEventModalProps = {
   isSuperOrAdmin?: boolean;
   onOpenEdit?: (group: GroupItem) => void;
   onOpenRoster?: (group: GroupItem) => void;
+  onOpenAttendance?: (group: GroupItem) => void;
 };
 
 const DAY_LABELS: Record<string, string> = {
@@ -55,6 +57,7 @@ export function ScheduleEventModal({
   isSuperOrAdmin = false,
   onOpenEdit,
   onOpenRoster,
+  onOpenAttendance,
 }: ScheduleEventModalProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -175,32 +178,46 @@ export function ScheduleEventModal({
         {/* Footer Actions */}
         <div className="p-4 border-t border-neutral-100 bg-neutral-50/50 flex flex-col gap-2">
           {canManage && (
-            <div className="flex items-center gap-2">
+            <>
               <button
                 type="button"
                 onClick={() => {
-                  onOpenEdit?.(group);
+                  onOpenAttendance?.(group);
                   onClose();
                 }}
-                className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition text-center"
+                className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shadow-emerald-500/20 transition flex items-center justify-center gap-2 active:scale-95"
               >
-                Editează Grupa / Setări
+                <UserCheckIcon className="w-4 h-4" />
+                <span>Verifică / Notează Prezența</span>
               </button>
-              {onOpenRoster && (
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    onOpenRoster(group);
+                    onOpenEdit?.(group);
                     onClose();
                   }}
-                  className="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl transition flex items-center gap-1.5"
+                  className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition text-center"
                 >
-                  <UsersIcon className="w-4 h-4" />
-                  <span>Elevi</span>
+                  Editează Grupa / Setări
                 </button>
-              )}
-            </div>
-          )}
+                  {onOpenRoster && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenRoster(group);
+                        onClose();
+                      }}
+                      className="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl transition flex items-center gap-1.5"
+                    >
+                      <UsersIcon className="w-4 h-4" />
+                      <span>Elevi</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
 
           <Link
             href={`/dashboard/courses/${group.courseId}`}

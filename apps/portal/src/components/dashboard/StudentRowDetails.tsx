@@ -210,6 +210,7 @@ export function StudentRowDetails({
           studentId={student.id}
           studentName={student.name}
           schoolId={student.schoolId}
+          courses={student.courses}
         />
       )}
     </div>

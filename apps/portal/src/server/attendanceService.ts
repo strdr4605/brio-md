@@ -318,7 +318,7 @@ export async function findTeacherActiveSession(
   }
 
   if (uncompletedPastSession) {
-    const { endMinutes, ...cleanSession } = uncompletedPastSession;
+    const { endMinutes: _endMinutes, ...cleanSession } = uncompletedPastSession;
     return { activeSession: cleanSession };
   }
 

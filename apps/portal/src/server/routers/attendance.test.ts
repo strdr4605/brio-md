@@ -728,5 +728,174 @@ describe("attendanceRouter & Server-side Authorization", () => {
       expect(result.activeSession).toBeNull();
     });
   });
+
+  describe("attendanceRouter.getMatrix & Historical Analytics", () => {
+    it("throws FORBIDDEN when a teacher attempts to access matrix", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 1, teacherId: 10 }]),
+            }),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      await expect(caller.getMatrix({ groupId: 1 })).rejects.toThrow(
+        expect.objectContaining({ code: "FORBIDDEN" }),
+      );
+    });
+
+    it("throws FORBIDDEN when admin attempts to access group from another school", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 99 }]),
+            }),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      await expect(caller.getMatrix({ groupId: 1 })).rejects.toThrow(
+        expect.objectContaining({ code: "FORBIDDEN" }),
+      );
+    });
+
+    it("returns matrix view and flags 3+ consecutive absences for admin", async () => {
+      const mockGroup = { id: 1, name: "Grupa Alpha", schoolId: 1, courseId: 5, courseName: "Robotică" };
+      const mockStudents = [
+        { studentId: 101, studentName: "Ana Popa", studentPhone: "069123456", parentName: "Ion Popa", parentPhone: "069111222", age: 10 },
+        { studentId: 102, studentName: "Bogdan Rusu", studentPhone: "068222333", parentName: "Maria Rusu", parentPhone: "068333444", age: 11 },
+      ];
+      const mockRecords = [
+        // Ana: 3 consecutive absences
+        { id: 1, studentId: 101, date: "2026-09-01", status: "absent", comment: "Bolnavă" },
+        { id: 2, studentId: 101, date: "2026-09-03", status: "absent", comment: "Familie" },
+        { id: 3, studentId: 101, date: "2026-09-05", status: "absent", comment: "Fără motiv" },
+        { id: 4, studentId: 101, date: "2026-09-08", status: "present", comment: null },
+        // Bogdan: 1 absence, 3 present
+        { id: 5, studentId: 102, date: "2026-09-01", status: "present", comment: null },
+        { id: 6, studentId: 102, date: "2026-09-03", status: "absent", comment: null },
+        { id: 7, studentId: 102, date: "2026-09-05", status: "present", comment: null },
+        { id: 8, studentId: 102, date: "2026-09-08", status: "present", comment: null },
+      ];
+
+      // 1. Group query
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([mockGroup]),
+            }),
+          }),
+        }),
+      });
+
+      // 2. Enrolled students query
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockResolvedValue(mockStudents),
+            }),
+          }),
+        }),
+      });
+
+      // 3. Attendance records query
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue(mockRecords),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: adminUser });
+      const result = await caller.getMatrix({ groupId: 1, month: "2026-09" });
+
+      expect(result.dates).toEqual(["2026-09-01", "2026-09-03", "2026-09-05", "2026-09-08"]);
+      expect(result.summary.totalStudents).toBe(2);
+      expect(result.summary.totalDates).toBe(4);
+      expect(result.summary.atRiskCount).toBe(1);
+
+      const ana = result.students.find((s) => s.studentId === 101);
+      expect(ana?.stats.hasConsecutiveAbsences).toBe(true);
+      expect(ana?.stats.maxConsecutiveAbsences).toBe(3);
+      expect(ana?.stats.attendanceRate).toBe(25); // 1 present out of 4 sessions
+      expect(ana?.cells["2026-09-01"].comment).toBe("Bolnavă");
+
+      const bogdan = result.students.find((s) => s.studentId === 102);
+      expect(bogdan?.stats.hasConsecutiveAbsences).toBe(false);
+      expect(bogdan?.stats.maxConsecutiveAbsences).toBe(1);
+      expect(bogdan?.stats.attendanceRate).toBe(75); // 3 present out of 4 sessions
+    });
+  });
+
+  describe("attendanceRouter.updateCell", () => {
+    it("throws FORBIDDEN when teacher attempts to update cell", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 1, courseId: 10 }]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      await expect(
+        caller.updateCell({
+          groupId: 1,
+          studentId: 101,
+          date: "2026-09-01",
+          status: "present",
+          comment: "Corectat de admin",
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "FORBIDDEN" }));
+    });
+
+    it("allows admin to retroactively update attendance cell", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 1, courseId: 10 }]),
+          }),
+        }),
+      });
+
+      const mockUpdated = {
+        id: 99,
+        groupId: 1,
+        studentId: 101,
+        date: "2026-09-01",
+        status: "excused",
+        comment: "Certificat medical prezentat",
+      };
+
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([mockUpdated]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: superUser });
+      const res = await caller.updateCell({
+        groupId: 1,
+        studentId: 101,
+        date: "2026-09-01",
+        status: "excused",
+        comment: "Certificat medical prezentat",
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.record.status).toBe("excused");
+      expect(res.record.comment).toBe("Certificat medical prezentat");
+    });
+  });
 });
 

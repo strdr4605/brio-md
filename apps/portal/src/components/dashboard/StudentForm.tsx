@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { detectCourseScheduleConflicts } from "@/lib/scheduleConflicts";
+import { detectStudentScheduleConflicts } from "@/lib/scheduleConflicts";
 
 export type StudentFormStudent = {
   id?: number;
@@ -22,7 +22,14 @@ export type StudentFormStudent = {
 type Props = {
   student: StudentFormStudent | null;
   schools: { id: number; name: string }[];
-  courses?: { id: number; name: string; level?: string | null; scheduleDays?: string[] | null; scheduleTime?: string | null }[];
+  courses?: {
+    id: number;
+    name: string;
+    level?: string | null;
+    schoolId?: number | null;
+    scheduleDays?: string[] | null;
+    scheduleTime?: string | null;
+  }[];
   isSuperAdmin: boolean;
   onClose: () => void;
   currentUserSchoolId?: number;
@@ -47,16 +54,6 @@ export function StudentFormDrawer({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const onDone = () => {
-    utils.student.list.invalidate();
-    onClose();
-  };
-  const onFail = (err: { message?: string }) => alert(err.message || "A apărut o eroare");
-
-  const createMutation = trpc.student.create.useMutation({ onSuccess: onDone, onError: onFail });
-  const updateMutation = trpc.student.update.useMutation({ onSuccess: onDone, onError: onFail });
-  const deleteMutation = trpc.student.delete.useMutation({ onSuccess: onDone, onError: onFail });
-
   const [formData, setFormData] = useState({
     name: student?.name || "",
     phone: student?.phone || "",
@@ -68,24 +65,136 @@ export function StudentFormDrawer({
     active: student?.active ?? true,
   });
 
+  const currentSchoolId = formData.schoolId || student?.schoolId || currentUserSchoolId;
+
+  // Query groups available for the current school
+  const { data: schoolGroups = [] } = trpc.group.list.useQuery(
+    { schoolId: currentSchoolId || undefined },
+    { enabled: mounted },
+  );
+
+  // Query student's active group enrollments if editing
+  const { data: currentEnrollments = [] } = trpc.enrollment.getByStudent.useQuery(
+    { studentId: student?.id ?? 0 },
+    { enabled: mounted && isEditing && Boolean(student?.id) },
+  );
+
+  // Map of courseId -> groupId | null
+  const [courseGroups, setCourseGroups] = useState<Record<number, number | null>>({});
+
+  useEffect(() => {
+    if (currentEnrollments.length > 0) {
+      const map: Record<number, number | null> = {};
+      for (const enr of currentEnrollments) {
+        if (enr.status === "active") {
+          map[enr.courseId] = enr.groupId;
+        }
+      }
+      setCourseGroups((prev) => ({ ...map, ...prev }));
+    }
+  }, [currentEnrollments]);
+
+  const onDone = () => {
+    utils.student.list.invalidate();
+    if (student?.id) {
+      utils.student.getById.invalidate({ id: student.id });
+      utils.enrollment.getByStudent.invalidate({ studentId: student.id });
+    }
+    utils.group.invalidate();
+    onClose();
+  };
+  const onFail = (err: { message?: string }) => alert(err.message || "A apărut o eroare");
+
+  const createMutation = trpc.student.create.useMutation({ onSuccess: onDone, onError: onFail });
+  const updateMutation = trpc.student.update.useMutation({ onSuccess: onDone, onError: onFail });
+  const deleteMutation = trpc.student.delete.useMutation({ onSuccess: onDone, onError: onFail });
+
   const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>(
     student?.courses?.map((c) => c.id) || [],
   );
 
+  // Filter courses by current school to avoid duplicates across multi-tenant schools
+  const filteredCourses = useMemo(() => {
+    let list = courses;
+    if (currentSchoolId) {
+      list = list.filter((c: any) => !c.schoolId || c.schoolId === currentSchoolId);
+    }
+    const seen = new Set<number>();
+    return list.filter((c) => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
+  }, [courses, currentSchoolId]);
+
   const courseConflicts = useMemo(() => {
     if (selectedCourseIds.length <= 1) return [];
-    return detectCourseScheduleConflicts(courses.filter((c) => selectedCourseIds.includes(c.id)));
-  }, [selectedCourseIds, courses]);
+
+    const scheduleItems = selectedCourseIds
+      .map((courseId) => {
+        const course = filteredCourses.find((c) => c.id === courseId);
+        if (!course) return null;
+        const selectedGroupId = courseGroups[courseId];
+        const group = selectedGroupId
+          ? schoolGroups.find((g) => g.id === selectedGroupId)
+          : null;
+
+        if (group) {
+          return {
+            courseId: course.id,
+            courseName: course.name,
+            groupId: group.id,
+            groupName: group.name,
+            scheduleDays: group.scheduleDays,
+            scheduleTime: group.scheduleTime,
+          };
+        }
+
+        return {
+          courseId: course.id,
+          courseName: course.name,
+          scheduleDays: course.scheduleDays,
+          scheduleTime: course.scheduleTime,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return detectStudentScheduleConflicts(scheduleItems);
+  }, [selectedCourseIds, filteredCourses, courseGroups, schoolGroups]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (courseConflicts.length > 0) return;
     const phoneErr = "Format invalid. Ex: +373 69 000 000 sau 069000000";
-    const pErr = formData.phone && !isValidPhone(formData.phone) ? phoneErr : null;
-    const ppErr = formData.parentPhone && !isValidPhone(formData.parentPhone) ? phoneErr : null;
-    setPhoneError(pErr);
-    setParentPhoneError(ppErr);
-    if (pErr || ppErr) return;
+    let hasError = false;
+
+    const hasAnyPhone = formData.phone.trim() !== "" || formData.parentPhone.trim() !== "";
+    if (!hasAnyPhone) {
+      const requiredMsg = "Introduceți cel puțin un număr de telefon (student sau părinte)";
+      setPhoneError(requiredMsg);
+      setParentPhoneError(requiredMsg);
+      hasError = true;
+    } else {
+      if (formData.phone && !isValidPhone(formData.phone)) {
+        setPhoneError(phoneErr);
+        hasError = true;
+      } else {
+        setPhoneError(null);
+      }
+
+      if (formData.parentPhone && !isValidPhone(formData.parentPhone)) {
+        setParentPhoneError(phoneErr);
+        hasError = true;
+      } else {
+        setParentPhoneError(null);
+      }
+    }
+
+    if (hasError) return;
+
+    const chosenGroupIds = Object.values(courseGroups).filter(
+      (gid): gid is number => typeof gid === "number" && gid > 0,
+    );
 
     const payload = {
       name: formData.name,
@@ -95,6 +204,7 @@ export function StudentFormDrawer({
       parentPhone: formData.parentPhone ? normalizePhone(formData.parentPhone) : null,
       info: formData.info || null,
       courseIds: selectedCourseIds,
+      groupIds: chosenGroupIds,
     };
 
     if (isEditing) {
@@ -156,13 +266,21 @@ export function StudentFormDrawer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Telefon</label>
+              <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
+                <span>
+                  Telefon student{" "}
+                  <span className="text-slate-400 font-normal text-xs normal-case">
+                    (sau telefon părinte)*
+                  </span>
+                </span>
+              </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => {
                   setFormData({ ...formData, phone: e.target.value });
                   if (phoneError) setPhoneError(null);
+                  if (parentPhoneError) setParentPhoneError(null);
                 }}
                 onBlur={() => {
                   if (formData.phone && !isValidPhone(formData.phone)) {
@@ -176,7 +294,9 @@ export function StudentFormDrawer({
             </div>
 
             <div>
-              <label className={labelCls}>Vârstă (ani)</label>
+              <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
+                <span>Vârstă (ani)</span>
+              </label>
               <input
                 type="number"
                 min={1}
@@ -222,12 +342,15 @@ export function StudentFormDrawer({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Telefon părinte</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Telefon părinte <span className="text-slate-400 font-normal text-xs">(sau telefon student)*</span>
+                </label>
                 <input
                   type="tel"
                   value={formData.parentPhone}
                   onChange={(e) => {
                     setFormData({ ...formData, parentPhone: e.target.value });
+                    if (phoneError) setPhoneError(null);
                     if (parentPhoneError) setParentPhoneError(null);
                   }}
                   onBlur={() => {
@@ -243,32 +366,43 @@ export function StudentFormDrawer({
             </div>
           </div>
 
-          {courses.length > 0 && (
-            <div className="pt-2 border-t border-slate-100">
-              <label className={labelCls}>Cursuri înscrise</label>
-              <div className="flex flex-wrap gap-1.5 p-3 bg-slate-50 border border-slate-200/80 rounded-xl max-h-48 overflow-y-auto">
-                {courses.map((course) => {
-                  const isSelected = selectedCourseIds.includes(course.id);
-                  return (
-                    <button
-                      key={course.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCourseIds((prev) =>
-                          prev.includes(course.id) ? prev.filter((id) => id !== course.id) : [...prev, course.id]
-                        );
-                      }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                        isSelected
-                          ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <span>{isSelected ? "✓" : "+"}</span>
-                      <span>{course.name}</span>
-                    </button>
-                  );
-                })}
+          {filteredCourses.length > 0 && (
+            <div className="pt-2 border-t border-slate-100 space-y-2.5">
+              <div>
+                <label className={labelCls}>Cursuri înscrise</label>
+                <div className="flex flex-wrap gap-1.5 p-3 bg-slate-50 border border-slate-200/80 rounded-xl max-h-48 overflow-y-auto">
+                  {filteredCourses.map((course) => {
+                    const isSelected = selectedCourseIds.includes(course.id);
+                    return (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCourseIds((prev) => {
+                            if (prev.includes(course.id)) {
+                              setCourseGroups((g) => {
+                                const next = { ...g };
+                                delete next[course.id];
+                                return next;
+                              });
+                              return prev.filter((id) => id !== course.id);
+                            } else {
+                              return [...prev, course.id];
+                            }
+                          });
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          isSelected
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <span>{isSelected ? "✓" : "+"}</span>
+                        <span>{course.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {courseConflicts.map((c, idx) => (
                 <div key={idx} className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
@@ -276,6 +410,74 @@ export function StudentFormDrawer({
                   <span>{c.message}</span>
                 </div>
               ))}
+
+              {/* Group allocation per selected course */}
+              {selectedCourseIds.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Alocare Grupe (Opțional)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {selectedCourseIds.length} {selectedCourseIds.length === 1 ? "curs selectat" : "cursuri selectate"}
+                    </span>
+                  </div>
+                  <div className="space-y-2.5">
+                    {selectedCourseIds.map((courseId) => {
+                      const course = filteredCourses.find((c) => c.id === courseId);
+                      if (!course) return null;
+                      const availableForCourse = schoolGroups.filter((g) => g.courseId === courseId);
+                      const selectedGroupId = courseGroups[courseId] ?? null;
+
+                      return (
+                        <div
+                          key={courseId}
+                          className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 pb-1.5">
+                            <span className="text-xs font-bold text-slate-800 truncate" title={course.name}>
+                              {course.name}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 font-medium shrink-0">
+                              {availableForCourse.length} {availableForCourse.length === 1 ? "grupă" : "grupe"}
+                            </span>
+                          </div>
+
+                          {availableForCourse.length === 0 ? (
+                            <p className="text-[11px] text-slate-400 italic">
+                              Nu există grupe active pentru acest curs. (Elevul va fi înscris doar la nivel de curs).
+                            </p>
+                          ) : (
+                            <select
+                              value={selectedGroupId || ""}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : null;
+                                setCourseGroups((prev) => ({
+                                  ...prev,
+                                  [courseId]: val,
+                                }));
+                              }}
+                              className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
+                            >
+                              <option value="">Fără grupă (doar înscriere la curs)</option>
+                              {availableForCourse.map((g) => {
+                                const days = Array.isArray(g.scheduleDays) ? g.scheduleDays.join(", ") : "";
+                                const time = g.scheduleTime || "";
+                                const scheduleStr = [days, time].filter(Boolean).join(" • ");
+                                return (
+                                  <option key={g.id} value={g.id}>
+                                    {g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

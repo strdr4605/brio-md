@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { GroupItem, GroupFormModal } from "./GroupFormModal";
 import { ScheduleEventModal } from "./ScheduleEventModal";
 import { CourseGroupsDrawer } from "./CourseGroupsDrawer";
+import { ScheduleAttendanceModal } from "./ScheduleAttendanceModal";
 import { ScheduleMatrixView } from "./ScheduleMatrixView";
 import { ScheduleRoomView } from "./ScheduleRoomView";
 import { ScheduleWeekView } from "./ScheduleWeekView";
@@ -35,6 +36,7 @@ export function ScheduleCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<GroupItem | null>(null);
   const [groupToEdit, setGroupToEdit] = useState<GroupItem | null>(null);
   const [rosterGroup, setRosterGroup] = useState<GroupItem | null>(null);
+  const [attendanceGroup, setAttendanceGroup] = useState<GroupItem | null>(null);
 
   const { data: groups = [], isLoading } = trpc.group.list.useQuery({ active: true });
 
@@ -304,6 +306,7 @@ export function ScheduleCalendar() {
         isSuperOrAdmin={isSuperOrAdmin}
         onOpenEdit={(grp) => setGroupToEdit(grp)}
         onOpenRoster={(grp) => setRosterGroup(grp)}
+        onOpenAttendance={(grp) => setAttendanceGroup(grp)}
       />
 
       {/* Edit Group Modal */}
@@ -325,6 +328,17 @@ export function ScheduleCalendar() {
           courseId={rosterGroup.courseId}
           courseName={rosterGroup.courseName || "Curs"}
           schoolId={rosterGroup.schoolId}
+        />
+      )}
+
+      {/* Attendance Modal */}
+      {attendanceGroup && (
+        <ScheduleAttendanceModal
+          isOpen={Boolean(attendanceGroup)}
+          onClose={() => setAttendanceGroup(null)}
+          groupId={attendanceGroup.id}
+          groupName={attendanceGroup.name}
+          courseName={attendanceGroup.courseName}
         />
       )}
     </div>

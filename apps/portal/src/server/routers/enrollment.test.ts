@@ -80,7 +80,23 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
         }),
       });
 
-      // 3. Mock upsert inserts
+      // 3. Mock course progress check for group 1 & group 2
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 1, studentId: 10, courseId: 1 }]),
+          }),
+        }),
+      });
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 2, studentId: 10, courseId: 2 }]),
+          }),
+        }),
+      });
+
+      // 4. Mock upsert inserts
       (db.insert as any)
         .mockReturnValueOnce({
           values: vi.fn().mockReturnValue({
@@ -167,6 +183,42 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
       ).rejects.toThrow(
         expect.objectContaining({
           code: "NOT_FOUND",
+        }),
+      );
+    });
+
+    it("throws BAD_REQUEST if student is not enrolled in the course for a group", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([student1]),
+          }),
+        }),
+      });
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([groupA_Course1]),
+        }),
+      });
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      await expect(
+        caller.enrollStudent({
+          studentId: 10,
+          groupIds: [101],
+        }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "BAD_REQUEST",
         }),
       );
     });

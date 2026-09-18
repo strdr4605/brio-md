@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MenuIcon, SchoolIcon, SparklesIcon, ChevronRightIcon } from "@/components/ui/icons";
+import { GlobalSearch } from "./GlobalSearch";
 
 type TopHeaderProps = {
   userName?: string;
@@ -73,6 +74,11 @@ export function TopHeader({
             {current.title}
           </Link>
         </nav>
+      </div>
+
+      {/* Global Student & Parent Search */}
+      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-2 sm:mx-4 flex justify-center">
+        <GlobalSearch />
       </div>
 
       {/* Right controls */}

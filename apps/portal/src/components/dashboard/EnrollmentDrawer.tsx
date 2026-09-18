@@ -12,9 +12,11 @@ type Props = {
   // Student-centric mode (e.g. opened from Student Profile)
   studentId?: number | null;
   studentName?: string;
+  courses?: Array<{ id: number; name: string }>;
   // Group-centric mode (e.g. opened from Group Roster)
   groupId?: number | null;
   groupName?: string;
+  courseId?: number | null;
   courseName?: string;
   schoolId?: number | null;
 };
@@ -24,8 +26,10 @@ export function EnrollmentDrawer({
   onClose,
   studentId,
   studentName,
+  courses: coursesProp,
   groupId,
   groupName,
+  courseId,
   courseName,
   schoolId,
 }: Props) {
@@ -43,6 +47,18 @@ export function EnrollmentDrawer({
 
   // --- Mode A: Student Profile -> Pick Groups across Courses ---
   const isStudentMode = Boolean(studentId);
+
+  // Fetch student details if studentId is provided and courses not passed via props
+  const { data: fetchedStudent } = trpc.student.getById.useQuery(
+    { id: studentId! },
+    { enabled: isOpen && isStudentMode && !coursesProp },
+  );
+
+  const studentCourses = coursesProp || fetchedStudent?.courses || [];
+  const enrolledCourseIds = useMemo(
+    () => new Set(studentCourses.map((c) => c.id)),
+    [studentCourses],
+  );
 
   const { data: allGroups = [], isLoading: isLoadingGroups } = trpc.group.list.useQuery(
     { schoolId: schoolId || undefined },
@@ -74,7 +90,11 @@ export function EnrollmentDrawer({
   const isGroupMode = Boolean(groupId);
 
   const { data: allStudents = [], isLoading: isLoadingStudents } = trpc.student.list.useQuery(
-    { schoolId: schoolId || undefined, limit: 100 },
+    {
+      schoolId: schoolId || undefined,
+      search: search.trim() || undefined,
+      limit: 100,
+    },
     { enabled: isOpen && isGroupMode },
   );
 
@@ -117,10 +137,20 @@ export function EnrollmentDrawer({
     onError: (err) => setError(err.message),
   });
 
+  // In student mode, if student is enrolled in specific courses, only show groups for those courses.
+  // If the student has 0 courses, no groups can be selected until courses are added.
+  const studentGroups = useMemo(() => {
+    if (!isStudentMode) return allGroups;
+    if (enrolledCourseIds.size > 0) {
+      return allGroups.filter((g) => enrolledCourseIds.has(g.courseId));
+    }
+    return [];
+  }, [allGroups, isStudentMode, enrolledCourseIds]);
+
   // Grouping available groups by course for clean UI in student mode
   const groupsByCourse = useMemo(() => {
     const map = new Map<string, typeof allGroups>();
-    for (const g of allGroups) {
+    for (const g of studentGroups) {
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchesCourse = g.courseName.toLowerCase().includes(q);
@@ -133,19 +163,28 @@ export function EnrollmentDrawer({
       map.set(g.courseName, list);
     }
     return map;
-  }, [allGroups, search]);
+  }, [studentGroups, search]);
+
+  // In group mode, only allow picking students who are already enrolled in this group's course
+  const eligibleStudents = useMemo(() => {
+    if (!isGroupMode) return allStudents;
+    if (courseId) {
+      return allStudents.filter((s) => s.courses?.some((c) => c.id === courseId));
+    }
+    return allStudents;
+  }, [allStudents, isGroupMode, courseId]);
 
   // Filter students in group mode
   const filteredStudents = useMemo(() => {
-    if (!search.trim()) return allStudents;
+    if (!search.trim()) return eligibleStudents;
     const q = search.toLowerCase();
-    return allStudents.filter(
+    return eligibleStudents.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
         (s.phone || "").includes(q) ||
         (s.parentName || "").toLowerCase().includes(q),
     );
-  }, [allStudents, search]);
+  }, [eligibleStudents, search]);
 
   if (!mounted || !isOpen) return null;
 
@@ -234,8 +273,10 @@ export function EnrollmentDrawer({
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {isStudentMode
-                ? "Atribuie studentul la una sau mai multe grupe de curs și gestionează statusul fiecăreia"
-                : `Selectează studenții pentru cohorta din cadrul cursului ${courseName || ""}`}
+                ? enrolledCourseIds.size > 0
+                  ? `Afișează doar grupele pentru cele ${enrolledCourseIds.size} ${enrolledCourseIds.size === 1 ? "curs" : "cursuri"} la care este înscris studentul`
+                  : "Studentul nu este înscris la niciun curs"
+                : `Afișează doar studenții înscriși la cursul ${courseName || ""}`}
             </p>
           </div>
           <button
@@ -290,11 +331,24 @@ export function EnrollmentDrawer({
                   <div className="h-16 bg-slate-100 rounded-xl" />
                   <div className="h-16 bg-slate-100 rounded-xl" />
                 </div>
-              ) : allGroups.length === 0 ? (
+              ) : enrolledCourseIds.size === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-2">
+                  <p className="text-sm font-semibold text-slate-800">
+                    Studentul nu este înscris la niciun curs
+                  </p>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Conform regulilor academice, un student trebuie să fie mai întâi înscris la un
+                    curs înainte de a putea fi adăugat într-o grupă. Accesați{" "}
+                    <strong>«Editează profil»</strong> pentru a-i atribui cursuri.
+                  </p>
+                </div>
+              ) : allGroups.length === 0 || studentGroups.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <p className="text-sm font-semibold text-slate-700">Nu există grupe disponibile</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Nu există grupe disponibile
+                  </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Creați mai întâi grupe în cadrul cursurilor pentru a putea înrola studenți.
+                    Nu există încă grupe create pentru cursurile la care este înscris acest student.
                   </p>
                 </div>
               ) : (
@@ -397,9 +451,22 @@ export function EnrollmentDrawer({
                   <div className="h-12 bg-slate-100 rounded-xl" />
                   <div className="h-12 bg-slate-100 rounded-xl" />
                 </div>
+              ) : eligibleStudents.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-2">
+                  <p className="text-sm font-semibold text-slate-800">
+                    Niciun student înscris la acest curs
+                  </p>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Doar studenții deja înscriși la cursul{" "}
+                    <strong>{courseName || "respectiv"}</strong> pot fi adăugați în această grupă.
+                    Înscrieți mai întâi studenții la curs din profilul lor.
+                  </p>
+                </div>
               ) : filteredStudents.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <p className="text-sm font-semibold text-slate-700">Nu a fost găsit niciun student</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Nu a fost găsit niciun student
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -471,10 +538,13 @@ export function EnrollmentDrawer({
             </button>
             <button
               type="button"
-              onClick={
-                isStudentMode ? handleSaveStudentEnrollments : handleSaveGroupEnrollments
+              onClick={isStudentMode ? handleSaveStudentEnrollments : handleSaveGroupEnrollments}
+              disabled={
+                isSaving ||
+                (isStudentMode && studentGroupConflicts.length > 0) ||
+                (isStudentMode && enrolledCourseIds.size === 0) ||
+                (isGroupMode && eligibleStudents.length === 0)
               }
-              disabled={isSaving || (isStudentMode && studentGroupConflicts.length > 0)}
               className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-3.5 h-3.5" />

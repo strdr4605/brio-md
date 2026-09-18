@@ -2,10 +2,12 @@
 
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { AttendanceGroupPicker } from "@/components/dashboard/AttendanceGroupPicker";
 import { AttendanceJournalTable } from "@/components/dashboard/AttendanceJournalTable";
+import { CalendarIcon } from "@/components/ui/icons";
 
 function AttendanceContent() {
   const searchParams = useSearchParams();
@@ -99,6 +101,32 @@ function AttendanceContent() {
           <p className="text-xs text-slate-500 mt-1">
             Selectează o grupă pentru a deschide catalogul tip școală și a marca prezența în 1-click.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Tab Switcher for Admins */}
+          {isSuperOrAdmin && (
+            <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80 shrink-0">
+              <span className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-xs">
+                Catalog Jurnal
+              </span>
+              <Link
+                href="/dashboard/attendance/overview"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+              >
+                Matrice & Istoric
+              </Link>
+            </div>
+          )}
+
+          {/* Quick Link to Orar */}
+          <Link
+            href="/dashboard/schedule"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 font-bold text-xs transition active:scale-95 shrink-0"
+          >
+            <CalendarIcon className="w-4 h-4 text-blue-600" />
+            <span>Notează prezența în Orar →</span>
+          </Link>
         </div>
       </div>
 

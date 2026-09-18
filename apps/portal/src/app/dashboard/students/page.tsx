@@ -214,6 +214,9 @@ export default function StudentiPage() {
                   const school = schools.find((s) => s.id === student.schoolId);
                   const isExpanded = expandedStudentId === student.id;
                   const displayPhone = student.phone || student.parentPhone;
+                  const studentAvailableCourses = courses.filter(
+                    (c) => !c.schoolId || !student.schoolId || c.schoolId === student.schoolId,
+                  );
 
                   return (
                     <Fragment key={student.id}>
@@ -287,7 +290,7 @@ export default function StudentiPage() {
                           <StudentCoursesCell
                             studentId={student.id}
                             currentCourses={(student as any).courses || []}
-                            availableCourses={courses}
+                            availableCourses={studentAvailableCourses}
                           />
                         </td>
 
@@ -323,7 +326,7 @@ export default function StudentiPage() {
                             <StudentRowDetails
                               student={student}
                               schoolName={school?.name}
-                              availableCourses={courses}
+                              availableCourses={studentAvailableCourses}
                               onEdit={() => handleEdit(student)}
                               onDelete={() => handleDelete(student.id)}
                               deletePending={deleteMutation.isPending}
