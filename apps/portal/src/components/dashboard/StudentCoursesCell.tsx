@@ -74,9 +74,14 @@ export function StudentCoursesCell({
         if (!old) return old;
         return old.map((s) => {
           if (s.id !== sId) return s;
+          const kept = (s.courses || []).filter((c) => targetCourseIdsSet.has(c.id));
+          const keptIds = new Set(kept.map((c) => c.id));
+          const added = availableCourses.filter(
+            (c) => targetCourseIdsSet.has(c.id) && !keptIds.has(c.id),
+          );
           return {
             ...s,
-            courses: (s.courses || []).filter((c) => targetCourseIdsSet.has(c.id)),
+            courses: [...kept, ...added],
           };
         });
       });

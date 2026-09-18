@@ -101,10 +101,12 @@ export function EnrollmentDrawer({
 
   const [expandedCourseIds, setExpandedCourseIds] = useState<Set<number>>(new Set());
 
-  // Sync current student enrollments into selection
+  // Sync current active student enrollments into selection
   useEffect(() => {
     if (isStudentMode && currentEnrollments.length > 0) {
-      setSelectedGroupIds(currentEnrollments.map((e) => e.groupId));
+      setSelectedGroupIds(
+        currentEnrollments.filter((e) => e.status === "active").map((e) => e.groupId),
+      );
     } else if (isStudentMode && currentEnrollments.length === 0) {
       setSelectedGroupIds([]);
     }
@@ -217,13 +219,17 @@ export function EnrollmentDrawer({
 
   // Expand enrolled courses initially
   useEffect(() => {
-    if (isStudentMode && currentEnrollments.length > 0) {
-      const initial = new Set(
-        currentEnrollments.map((e) => e.courseId).filter((cid): cid is number => cid !== null),
-      );
+    if (isStudentMode) {
+      const initial = new Set<number>();
+      studentCourses.forEach((c) => initial.add(c.id));
+      currentEnrollments
+        .filter((e) => e.status === "active")
+        .forEach((e) => {
+          if (e.courseId) initial.add(e.courseId);
+        });
       setExpandedCourseIds(initial);
     }
-  }, [isStudentMode, currentEnrollments]);
+  }, [isStudentMode, studentCourses, currentEnrollments]);
 
   const toggleCourseExpand = (cId: number) => {
     setExpandedCourseIds((prev) => {
@@ -282,23 +288,29 @@ export function EnrollmentDrawer({
     }
     setError(null);
 
-    const initialGroupIds = currentEnrollments.map((e) => e.groupId);
-    const toAdd = selectedGroupIds.filter((id) => !initialGroupIds.includes(id));
-    const toRemove = initialGroupIds.filter((id) => !selectedGroupIds.includes(id));
+    const initialActiveGroupIds = currentEnrollments
+      .filter((e) => e.status === "active")
+      .map((e) => e.groupId);
+    const toAdd = selectedGroupIds.filter((id) => !initialActiveGroupIds.includes(id));
+    const toRemove = initialActiveGroupIds.filter((id) => !selectedGroupIds.includes(id));
 
     try {
       for (const removeGId of toRemove) {
-        await removeEnrollmentMutation.mutateAsync({ studentId, groupId: removeGId });
+        await updateStatusMutation.mutateAsync({
+          studentId,
+          groupId: removeGId,
+          status: "inactive",
+        });
       }
 
       if (toAdd.length > 0) {
         await enrollMutation.mutateAsync({ studentId, groupIds: toAdd });
-      } else {
-        await utils.enrollment.invalidate();
-        await utils.student.invalidate();
-        await utils.group.invalidate();
-        onClose();
       }
+
+      await utils.enrollment.invalidate();
+      await utils.student.invalidate();
+      await utils.group.invalidate();
+      onClose();
     } catch (err: any) {
       setError(err?.message || "Eroare la salvarea înscrierilor.");
     }
@@ -513,34 +525,36 @@ export function EnrollmentDrawer({
                                         </div>
                                       </label>
 
-                                      {/* Per-Course/Group Status Dropdown for Enrolled Student */}
+                                      {/* Per-Course/Group Status Indicator / Dropdown */}
                                       {existingEnrollment && (
                                         <div className="shrink-0 flex items-center gap-1.5">
-                                          <span className="text-[10px] font-semibold text-slate-400">
-                                            Status:
-                                          </span>
-                                          <select
-                                            value={existingEnrollment.status || "active"}
-                                            onChange={(e) => {
-                                              updateStatusMutation.mutate({
-                                                enrollmentId: existingEnrollment.id,
-                                                status: e.target.value as any,
-                                              });
-                                            }}
-                                            disabled={updateStatusMutation.isPending}
-                                            className={`text-xs font-semibold px-2 py-1 rounded-md border outline-none ${
-                                              existingEnrollment.status === "active"
-                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                : existingEnrollment.status === "inactive"
-                                                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                                                  : "bg-slate-100 text-slate-600 border-slate-200"
-                                            }`}
-                                          >
-                                            <option value="active">Activ</option>
-                                            <option value="inactive">Inactiv</option>
-                                            <option value="archived">Arhivat</option>
-                                            <option value="completed">Completat</option>
-                                          </select>
+                                          {existingEnrollment.status === "active" ? (
+                                            <>
+                                              <span className="text-[10px] font-semibold text-slate-400">
+                                                Status:
+                                              </span>
+                                              <select
+                                                value={existingEnrollment.status}
+                                                onChange={(e) => {
+                                                  updateStatusMutation.mutate({
+                                                    enrollmentId: existingEnrollment.id,
+                                                    status: e.target.value as any,
+                                                  });
+                                                }}
+                                                disabled={updateStatusMutation.isPending}
+                                                className="text-xs font-semibold px-2 py-1 rounded-md border outline-none bg-emerald-50 text-emerald-700 border-emerald-200"
+                                              >
+                                                <option value="active">Activ</option>
+                                                <option value="inactive">Inactiv</option>
+                                                <option value="archived">Arhivat</option>
+                                                <option value="completed">Completat</option>
+                                              </select>
+                                            </>
+                                          ) : (
+                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                              Inactiv anterior
+                                            </span>
+                                          )}
                                         </div>
                                       )}
                                     </div>
