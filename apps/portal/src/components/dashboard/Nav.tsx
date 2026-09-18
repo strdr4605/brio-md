@@ -18,6 +18,7 @@ import {
   ChevronRightIcon,
   LogOutIcon,
   XIcon,
+  UserCheckIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 
@@ -193,11 +194,11 @@ export function Nav({
 
             {(academicOpen || isCollapsed) && (
               <div className="space-y-1">
-                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
+                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon)}
+                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
-                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
-                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", CalendarIcon)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
               </div>
             )}
           </div>
