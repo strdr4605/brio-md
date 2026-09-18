@@ -980,7 +980,7 @@ export default function StudentProfilePage() {
           schools={schools}
           courses={courses}
           isSuperAdmin={isSuperAdmin}
-          onClose={() => setShowEditDrawer(false)}
+          onCloseAction={() => setShowEditDrawer(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
       )}
@@ -989,7 +989,7 @@ export default function StudentProfilePage() {
       {showEnrollDrawer && (
         <EnrollmentDrawer
           isOpen={showEnrollDrawer}
-          onClose={() => setShowEnrollDrawer(false)}
+          onCloseAction={() => setShowEnrollDrawer(false)}
           studentId={student.id}
           studentName={student.name}
           schoolId={student.schoolId}

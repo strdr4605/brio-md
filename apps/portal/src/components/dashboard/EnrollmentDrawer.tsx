@@ -8,7 +8,7 @@ import { detectStudentGroupScheduleConflicts } from "@/lib/scheduleConflicts";
 
 type Props = {
   isOpen: boolean;
-  onClose: () => void;
+  onCloseAction: () => void;
   // Student-centric mode (e.g. opened from Student Profile)
   studentId?: number | null;
   studentName?: string;
@@ -23,7 +23,7 @@ type Props = {
 
 export function EnrollmentDrawer({
   isOpen,
-  onClose,
+  onCloseAction,
   studentId,
   studentName,
   courses: coursesProp,
@@ -117,7 +117,7 @@ export function EnrollmentDrawer({
       utils.enrollment.invalidate();
       utils.student.invalidate();
       utils.group.invalidate();
-      onClose();
+      onCloseAction();
     },
     onError: (err) => setError(err.message),
   });
@@ -224,7 +224,7 @@ export function EnrollmentDrawer({
     if (toAdd.length > 0) {
       enrollMutation.mutate({ studentId, groupIds: toAdd });
     } else {
-      onClose();
+      onCloseAction();
     }
   };
 
@@ -244,7 +244,7 @@ export function EnrollmentDrawer({
       enrollMutation.mutate({ studentId: sId, groupIds: [groupId] });
     }
 
-    onClose();
+    onCloseAction();
   };
 
   const isSaving =
@@ -257,7 +257,7 @@ export function EnrollmentDrawer({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
+        onClick={onCloseAction}
         aria-hidden="true"
       />
 
@@ -280,7 +280,7 @@ export function EnrollmentDrawer({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             type="button"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
             aria-label="Închide"
@@ -531,7 +531,7 @@ export function EnrollmentDrawer({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={onCloseAction}
               className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 rounded-lg transition"
             >
               Anulează

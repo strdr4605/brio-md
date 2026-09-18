@@ -9,7 +9,7 @@ type TopHeaderProps = {
   userName?: string;
   role?: string;
   schoolId?: number | null;
-  onOpenMobileNav?: () => void;
+  onOpenMobileNavAction?: () => void;
 };
 
 const ROUTE_TITLES: Record<string, { title: string; section: string; sectionHref: string }> = {
@@ -26,7 +26,7 @@ export function TopHeader({
   userName,
   role,
   schoolId,
-  onOpenMobileNav,
+  onOpenMobileNavAction,
 }: TopHeaderProps) {
   const pathname = usePathname();
   const current = ROUTE_TITLES[pathname] || {
@@ -40,7 +40,7 @@ export function TopHeader({
       <div className="flex items-center gap-3">
         {/* Mobile menu button */}
         <button
-          onClick={onOpenMobileNav}
+          onClick={onOpenMobileNavAction}
           className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition active:scale-95"
           aria-label="Deschide meniu"
         >

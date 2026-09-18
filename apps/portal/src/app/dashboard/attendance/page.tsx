@@ -445,7 +445,7 @@ export default function AttendancePage() {
               groupName={activeGroup?.name || "Grupă"}
               date={selectedDate}
               isSaving={submitMutation.isPending}
-              onSave={handleSaveAttendance}
+              onSaveAction={handleSaveAttendance}
             />
           </div>
         )
