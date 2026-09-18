@@ -546,6 +546,189 @@ describe("attendanceRouter & Server-side Authorization", () => {
     });
   });
 
+  describe("attendance.getJournal", () => {
+    it("returns gradebook matrix data for an authorized user", async () => {
+      const mockGroup = {
+        id: 5,
+        name: "Grupa Robotică A1",
+        courseId: 1,
+        courseName: "Robotică",
+        schoolId: 1,
+        room: "Sala 3",
+        scheduleDays: ["mon", "wed"],
+        scheduleTime: "17:00 - 18:30",
+        teacherId: 10,
+        teacherName: "Assigned Teacher",
+      };
+
+      const mockStudents = [
+        {
+          studentId: 101,
+          studentName: "Ana Ionescu",
+          studentPhone: "+37368000001",
+          parentName: "Elena Ionescu",
+          parentPhone: "+37368000002",
+          age: 12,
+        },
+      ];
+
+      const mockRecords = [
+        {
+          id: 1,
+          groupId: 5,
+          studentId: 101,
+          date: "2026-09-02",
+          status: "present",
+          comment: null,
+        },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              leftJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue([mockGroup]),
+                }),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockResolvedValue(mockStudents),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(mockRecords),
+          }),
+        });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      const result = await caller.getJournal({ groupId: 5, month: "2026-09" });
+
+      expect(result.group.id).toBe(5);
+      expect(result.students).toHaveLength(1);
+      expect(result.dates.length).toBeGreaterThan(0);
+      expect(result.records["101_2026-09-02"]).toEqual({
+        status: "present",
+        comment: null,
+      });
+    });
+
+    it("rejects unauthorized teacher trying to view another teacher's journal", async () => {
+      const mockGroup = {
+        id: 5,
+        name: "Grupa Robotică A1",
+        teacherId: 10, // Assigned to 10
+      };
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([mockGroup]),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: otherTeacher }); // id: 99
+      await expect(caller.getJournal({ groupId: 5, month: "2026-09" })).rejects.toThrow(
+        expect.objectContaining({ code: "FORBIDDEN" }),
+      );
+    });
+  });
+
+  describe("attendance.quickMark", () => {
+    it("upserts attendance status on 1-click / 2-click", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([testGroup]),
+          }),
+        }),
+      });
+
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: 1,
+                groupId: 5,
+                studentId: 101,
+                date: "2026-09-17",
+                status: "present",
+              },
+            ]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      const result = await caller.quickMark({
+        groupId: 5,
+        studentId: 101,
+        date: "2026-09-17",
+        status: "present",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.record?.status).toBe("present");
+    });
+
+    it("clears attendance record when status is null (3-click cycle)", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([testGroup]),
+          }),
+        }),
+      });
+
+      (db.delete as any).mockReturnValueOnce({
+        where: vi.fn().mockResolvedValue(undefined),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      const result = await caller.quickMark({
+        groupId: 5,
+        studentId: 101,
+        date: "2026-09-17",
+        status: null,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.cleared).toBe(true);
+    });
+  });
+
+  describe("attendance.getTeacherActiveSession", () => {
+    it("returns null if teacher has no lessons scheduled today", async () => {
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = attendanceRouter.createCaller({ user: assignedTeacher });
+      const result = await caller.getTeacherActiveSession();
+
+      expect(result.activeSession).toBeNull();
+    });
+  });
+
   describe("attendanceRouter.getMatrix & Historical Analytics", () => {
     it("throws FORBIDDEN when a teacher attempts to access matrix", async () => {
       (db.select as any).mockReturnValueOnce({
@@ -715,3 +898,4 @@ describe("attendanceRouter & Server-side Authorization", () => {
     });
   });
 });
+

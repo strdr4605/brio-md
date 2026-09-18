@@ -4,34 +4,26 @@ import { eq, and, asc, desc, gte, lte } from "drizzle-orm";
 import { groups, courses, students, attendanceRecords, studentGroupEnrollments } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
+import {
+  assertTeacherGroupAccess,
+  attendanceRecordItemSchema,
+  submitAttendanceSchema,
+  quickMarkSchema,
+  getJournalSchema,
+} from "../attendanceUtils";
+import {
+  fetchJournalData,
+  executeQuickMark,
+  findTeacherActiveSession,
+} from "../attendanceService";
 
-export function assertTeacherGroupAccess(
-  group: { id: number; teacherId: number | null },
-  user: { id: string; role: string; permissions: string[] },
-) {
-  const permissions = user.permissions || [];
-  const role = user.role;
-  const isSuper = permissions.includes("super") || role === "superadmin";
-  const isAdmin = permissions.includes("admin") || role === "admin";
-
-  // Admins have global permission across all groups and dates
-  if (isSuper || isAdmin) {
-    return { isAdmin: true };
-  }
-
-  // Teachers are only allowed for their own assigned groups
-  const isTeacher = permissions.includes("teach") || role === "teacher";
-  const userIdNumber = Number(user.id);
-
-  if (isTeacher && group.teacherId === userIdNumber) {
-    return { isTeacher: true, isAdmin: false };
-  }
-
-  throw new TRPCError({
-    code: "FORBIDDEN",
-    message: "Profesorii au permisiunea de a gestiona prezența doar pentru grupele atribuite.",
-  });
-}
+export {
+  assertTeacherGroupAccess,
+  attendanceRecordItemSchema,
+  submitAttendanceSchema,
+  quickMarkSchema,
+  getJournalSchema,
+};
 
 export function assertAdminAccess(
   user: { id: string; role: string; permissions: string[]; schoolId?: number | null },
@@ -72,18 +64,6 @@ export const updateCellSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formatul datei trebuie să fie YYYY-MM-DD"),
   status: z.enum(["present", "absent", "late", "excused"]),
   comment: z.string().optional().nullable(),
-});
-
-export const attendanceRecordItemSchema = z.object({
-  studentId: z.number().int().positive(),
-  status: z.enum(["present", "absent", "late", "excused"]),
-  comment: z.string().optional().nullable(),
-});
-
-export const submitAttendanceSchema = z.object({
-  groupId: z.number().int().positive(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formatul datei trebuie să fie YYYY-MM-DD"),
-  records: z.array(attendanceRecordItemSchema),
 });
 
 export const attendanceRouter = router({
@@ -368,6 +348,35 @@ export const attendanceRouter = router({
         records,
       };
     }),
+
+  // Get multi-date school journal for a group and month
+  getJournal: protectedProcedure
+    .input(getJournalSchema)
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const now = new Date();
+      const monthStr =
+        input.month ||
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      return fetchJournalData(input.groupId, monthStr, user);
+    }),
+
+  // Quick 1-click / 2-click / clear mark for a single student on a date
+  quickMark: protectedProcedure
+    .input(quickMarkSchema)
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return executeQuickMark(input, user);
+    }),
+
+  // Detect if logged-in teacher has an active or uncompleted session today
+  getTeacherActiveSession: protectedProcedure.query(async ({ ctx }) => {
+    const user = ctx.user;
+    if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+    return findTeacherActiveSession(user);
+  }),
 
   // Get attendance matrix view across historical sessions for admin overview
   getMatrix: protectedProcedure
