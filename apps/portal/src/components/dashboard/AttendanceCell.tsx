@@ -10,6 +10,7 @@ type AttendanceCellProps = {
   studentId: number;
   date: string;
   isToday: boolean;
+  canEditAnyDate?: boolean;
   status: AttendanceStatus;
   comment?: string | null;
   studentName: string;
@@ -22,8 +23,10 @@ export function AttendanceCell({
   studentName,
   date,
   isToday,
+  canEditAnyDate = false,
   onUpdate,
 }: AttendanceCellProps) {
+  const canEdit = isToday || canEditAnyDate;
   const [mounted, setMounted] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [noteText, setNoteText] = useState(comment || "");
@@ -62,10 +65,10 @@ export function AttendanceCell({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [popoverOpen]);
 
-  // Fast 1-click & 2-click cycle: null -> present -> absent -> null (only enabled for today)
+  // Fast 1-click & 2-click cycle: null -> present -> absent -> null (enabled for today or for admins)
   const handleClick = (e: MouseEvent) => {
     e.preventDefault();
-    if (!isToday || popoverOpen) return;
+    if (!canEdit || popoverOpen) return;
 
     if (!status) {
       // 1 click: Green Present
@@ -79,11 +82,11 @@ export function AttendanceCell({
     }
   };
 
-  // Right click opens comment / status modal (only enabled for today)
+  // Right click opens comment / status modal (enabled for today or for admins)
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isToday) return;
+    if (!canEdit) return;
 
     // Resolve current fullscreen container so portal is inside fullscreen top layer
     setPortalTarget(document.fullscreenElement || document.body);
@@ -108,29 +111,29 @@ export function AttendanceCell({
         type="button"
         onClick={handleClick}
         onContextMenu={handleContextMenu}
-        aria-disabled={!isToday}
-        tabIndex={isToday ? 0 : -1}
+        aria-disabled={!canEdit}
+        tabIndex={canEdit ? 0 : -1}
         title={
-          !isToday
+          !canEdit
             ? status
-              ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Arhivă: doar ziua de astăzi (${date}) se poate edita)`
-              : `Arhivă (${date}): doar prezența de astăzi poate fi marcată`
+              ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Arhivă: doar ziua de astăzi (${date}) se poate edita de către profesor)`
+              : `Arhivă (${date}): doar prezența de astăzi poate fi marcată (administratorii pot edita orice dată)`
             : status
               ? `${status.toUpperCase()}: ${comment || "Fără comentariu"}\n(Click pentru a schimba, click dreapta pentru notă)`
               : "Click: Prezent (P) | 2x: Absent (A) | Click dreapta: Notă"
         }
         className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center transition-all relative ${
-          isToday ? "cursor-pointer" : "cursor-not-allowed opacity-80 select-none"
+          canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-80 select-none"
         } ${
           status === "present"
-            ? `bg-emerald-600 text-white shadow-xs ${isToday ? "hover:bg-emerald-700 active:scale-95" : ""}`
+            ? `bg-emerald-600 text-white shadow-xs ${canEdit ? "hover:bg-emerald-700 active:scale-95" : ""}`
             : status === "absent"
-              ? `bg-rose-600 text-white shadow-xs ${isToday ? "hover:bg-rose-700 active:scale-95" : ""}`
+              ? `bg-rose-600 text-white shadow-xs ${canEdit ? "hover:bg-rose-700 active:scale-95" : ""}`
               : status === "late"
-                ? `bg-amber-500 text-white shadow-xs ${isToday ? "hover:bg-amber-600 active:scale-95" : ""}`
+                ? `bg-amber-500 text-white shadow-xs ${canEdit ? "hover:bg-amber-600 active:scale-95" : ""}`
                 : status === "excused"
-                  ? `bg-blue-600 text-white shadow-xs ${isToday ? "hover:bg-blue-700 active:scale-95" : ""}`
-                  : isToday
+                  ? `bg-blue-600 text-white shadow-xs ${canEdit ? "hover:bg-blue-700 active:scale-95" : ""}`
+                  : canEdit
                     ? "text-slate-300 hover:text-slate-700 hover:bg-slate-100/90 active:scale-95 font-medium"
                     : "text-slate-200 font-medium"
         }`}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { AttendanceCell, AttendanceStatus } from "./AttendanceCell";
 import { AttendanceJournalHeader } from "./AttendanceJournalHeader";
@@ -34,6 +35,12 @@ export function AttendanceJournalTable({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(initialFullscreen);
 
+  const { data: session } = useSession();
+  const permissions = (session?.user?.permissions ?? []) as string[];
+  const role = session?.user?.role;
+  const isSuperOrAdmin =
+    permissions.includes("super") || permissions.includes("admin") || role === "superadmin" || role === "admin";
+
   // Current month state in YYYY-MM format
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (initialMonthStr) return initialMonthStr;
@@ -56,9 +63,7 @@ export function AttendanceJournalTable({
   >({});
 
   useEffect(() => {
-    if (data?.records) {
-      setLocalRecords(data.records);
-    }
+    if (data?.records) setLocalRecords(data.records);
   }, [data?.records]);
 
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -147,15 +152,11 @@ export function AttendanceJournalTable({
   // Handle ESC key and browser fullscreen exit
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && isFullscreen) {
-        setIsFullscreen(false);
-      }
+      if (!document.fullscreenElement && isFullscreen) setIsFullscreen(false);
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isFullscreen) {
-        if (document.fullscreenElement && document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
+        if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
         setIsFullscreen(false);
       }
     };
@@ -204,6 +205,7 @@ export function AttendanceJournalTable({
         onSwitchGroup={onSwitchGroup}
         saveStatus={saveStatus}
         onSave={handleManualSave}
+        canEditAnyDate={isSuperOrAdmin}
       />
 
       {/* Loading & Error States */}
@@ -235,15 +237,15 @@ export function AttendanceJournalTable({
                   {data.dates.map((d) => (
                     <th
                       key={d.date}
-                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : `Arhivă ${d.date} (Doar ziua de azi se poate edita)`}
+                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : isSuperOrAdmin ? `Arhivă ${d.date} (Editabilă - Admin)` : `Arhivă ${d.date} (Doar ziua de azi editabilă)`}
                       className={`w-10 sm:w-11 p-1 text-center border-r border-slate-200/80 transition-colors ${
-                        d.isToday ? "bg-blue-100/90 text-blue-900 ring-2 ring-blue-500 ring-inset" : "bg-slate-100/60"
+                        d.isToday ? "bg-blue-100/90 text-blue-900 ring-2 ring-blue-500 ring-inset" : isSuperOrAdmin ? "bg-slate-50 hover:bg-slate-100/80" : "bg-slate-100/60"
                       }`}
                     >
-                      <div className={`text-[9px] uppercase ${d.isToday ? "font-black text-blue-700" : "font-bold text-slate-400"}`}>
+                      <div className={`text-[9px] uppercase ${d.isToday ? "font-black text-blue-700" : isSuperOrAdmin ? "font-bold text-slate-500" : "font-bold text-slate-400"}`}>
                         {d.shortDay}
                       </div>
-                      <div className={`text-xs ${d.isToday ? "font-black text-blue-950" : "font-bold text-slate-700"}`}>
+                      <div className={`text-xs ${d.isToday ? "font-black text-blue-950" : isSuperOrAdmin ? "font-extrabold text-slate-800" : "font-bold text-slate-700"}`}>
                         {d.dayNumber}
                       </div>
                     </th>
@@ -300,11 +302,10 @@ export function AttendanceJournalTable({
                                 studentName={student.studentName}
                                 date={d.date}
                                 isToday={d.isToday}
+                                canEditAnyDate={isSuperOrAdmin}
                                 status={record?.status || null}
                                 comment={record?.comment}
-                                onUpdate={(newStatus, newComment) =>
-                                  handleCellUpdate(student.studentId, d.date, newStatus, newComment)
-                                }
+                                onUpdate={(newStatus, newComment) => handleCellUpdate(student.studentId, d.date, newStatus, newComment)}
                               />
                             </td>
                           );
