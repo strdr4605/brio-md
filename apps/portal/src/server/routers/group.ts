@@ -52,13 +52,14 @@ export const updateGroupSchema = z.object({
 });
 
 export const groupRouter = router({
-  // List groups (filtered by course, school, or active status)
+  // List groups (filtered by course, school, teacher, or active status)
   list: protectedProcedure
     .input(
       z
         .object({
           courseId: z.number().int().positive().optional(),
           schoolId: z.number().int().positive().optional(),
+          teacherId: z.number().int().positive().optional(),
           active: z.boolean().optional(),
         })
         .optional(),
@@ -67,7 +68,7 @@ export const groupRouter = router({
       const user = ctx.user;
       if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const { isSuper } = assertGroupAccess(user, input?.schoolId);
+      const { isSuper, isAdmin, isTeacher } = assertGroupAccess(user, input?.schoolId);
 
       const conditions = [];
 
@@ -77,6 +78,13 @@ export const groupRouter = router({
         conditions.push(eq(groups.schoolId, user.schoolId));
       } else if (input?.schoolId) {
         conditions.push(eq(groups.schoolId, input.schoolId));
+      }
+
+      // Automatically scope teachers to their assigned groups, or allow admin to filter by teacherId
+      if (isTeacher && !isAdmin && !isSuper) {
+        conditions.push(eq(groups.teacherId, Number(user.id)));
+      } else if (input?.teacherId) {
+        conditions.push(eq(groups.teacherId, input.teacherId));
       }
 
       if (input?.courseId) {
