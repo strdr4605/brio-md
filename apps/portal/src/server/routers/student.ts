@@ -151,7 +151,12 @@ export const studentRouter = router({
         })
         .from(studentCourseProgress)
         .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
-        .where(eq(studentCourseProgress.studentId, input.id));
+        .where(
+          and(
+            eq(studentCourseProgress.studentId, input.id),
+            eq(courses.active, true),
+          ),
+        );
 
       const groupCourses = await db
         .select({
@@ -165,6 +170,8 @@ export const studentRouter = router({
           and(
             eq(studentGroupEnrollments.studentId, input.id),
             eq(studentGroupEnrollments.status, "active"),
+            eq(courses.active, true),
+            eq(groups.active, true),
           ),
         );
 
@@ -250,7 +257,12 @@ export const studentRouter = router({
         })
         .from(studentCourseProgress)
         .innerJoin(courses, eq(studentCourseProgress.courseId, courses.id))
-        .where(inArray(studentCourseProgress.studentId, studentIds));
+        .where(
+          and(
+            inArray(studentCourseProgress.studentId, studentIds),
+            eq(courses.active, true),
+          ),
+        );
 
       const groupEnrollments = await db
         .select({
@@ -265,6 +277,8 @@ export const studentRouter = router({
           and(
             inArray(studentGroupEnrollments.studentId, studentIds),
             eq(studentGroupEnrollments.status, "active"),
+            eq(courses.active, true),
+            eq(groups.active, true),
           ),
         );
 
@@ -659,20 +673,36 @@ export const studentRouter = router({
         .from(studentCourseProgress)
         .where(eq(studentCourseProgress.studentId, input.studentId));
 
+      const activeGroupEnrollments = await db
+        .select({ id: studentGroupEnrollments.id, courseId: studentGroupEnrollments.courseId })
+        .from(studentGroupEnrollments)
+        .where(
+          and(
+            eq(studentGroupEnrollments.studentId, input.studentId),
+            eq(studentGroupEnrollments.status, "active"),
+          ),
+        );
+
+      const existingProgressList = Array.isArray(existingEnrollments) ? existingEnrollments : [];
+      const activeGroupList = Array.isArray(activeGroupEnrollments) ? activeGroupEnrollments : [];
+
       const uniqueCourseIds = Array.from(new Set(input.courseIds));
-      const existingIds = new Set(existingEnrollments.map((e) => e.courseId));
+      const existingIds = new Set(existingProgressList.map((e) => e.courseId));
       const targetIds = new Set(uniqueCourseIds);
 
-      const toDelete = existingEnrollments
-        .filter((e) => !targetIds.has(e.courseId))
-        .map((e) => e.courseId);
-      if (toDelete.length > 0) {
+      const allExistingCourseIds = new Set([
+        ...existingProgressList.map((e) => e.courseId),
+        ...activeGroupList.map((g) => g.courseId).filter((cid): cid is number => cid !== null),
+      ]);
+
+      const toRemoveCourseIds = Array.from(allExistingCourseIds).filter((cid) => !targetIds.has(cid));
+      if (toRemoveCourseIds.length > 0) {
         await db
           .delete(studentCourseProgress)
           .where(
             and(
               eq(studentCourseProgress.studentId, input.studentId),
-              inArray(studentCourseProgress.courseId, toDelete),
+              inArray(studentCourseProgress.courseId, toRemoveCourseIds),
             ),
           );
 
@@ -683,7 +713,7 @@ export const studentRouter = router({
           .where(
             and(
               eq(studentGroupEnrollments.studentId, input.studentId),
-              inArray(studentGroupEnrollments.courseId, toDelete),
+              inArray(studentGroupEnrollments.courseId, toRemoveCourseIds),
               eq(studentGroupEnrollments.status, "active"),
             ),
           );

@@ -318,9 +318,14 @@ export const userRouter = router({
 
       let rows;
       if (targetSchoolId) {
-        rows = await db.select().from(courses).where(eq(courses.schoolId, targetSchoolId));
+        rows = await db
+          .select()
+          .from(courses)
+          .where(and(eq(courses.schoolId, targetSchoolId), eq(courses.active, true)));
       } else {
-        rows = isSuper ? await db.select().from(courses) : [];
+        rows = isSuper
+          ? await db.select().from(courses).where(eq(courses.active, true))
+          : [];
       }
 
       const seen = new Set<string>();

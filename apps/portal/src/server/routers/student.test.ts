@@ -457,6 +457,11 @@ describe("studentRouter", () => {
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue(existingEnrollments),
           }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
         });
 
       (db.delete as any).mockReturnValue({
@@ -515,6 +520,11 @@ describe("studentRouter", () => {
         .mockReturnValueOnce({
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue(existingEnrollments),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ id: 101, courseId: 1 }]),
           }),
         });
 

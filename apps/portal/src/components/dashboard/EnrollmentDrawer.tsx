@@ -3,8 +3,34 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
-import { SearchIcon, XIcon, CheckCircleIcon } from "@/components/ui/icons";
+import { SearchIcon, XIcon, CheckCircleIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { detectStudentGroupScheduleConflicts } from "@/lib/scheduleConflicts";
+import { getCourseColor } from "./StudentCoursesCell";
+
+function getLevelBadge(level: string | null | undefined) {
+  switch (level?.toLowerCase()) {
+    case "beginner":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          Începător
+        </span>
+      );
+    case "intermediate":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+          Mediu
+        </span>
+      );
+    case "advanced":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          Avansat
+        </span>
+      );
+    default:
+      return null;
+  }
+}
 
 type Props = {
   isOpen: boolean;
@@ -55,10 +81,12 @@ export function EnrollmentDrawer({
   );
 
   const studentCourses = coursesProp || fetchedStudent?.courses || [];
-  const enrolledCourseIds = useMemo(
-    () => new Set(studentCourses.map((c) => c.id)),
-    [studentCourses],
-  );
+
+  const { data: availableCourses = [], isLoading: isLoadingCourses } =
+    trpc.user.listCourses.useQuery(
+      { schoolId: schoolId || undefined },
+      { enabled: isOpen && isStudentMode },
+    );
 
   const { data: allGroups = [], isLoading: isLoadingGroups } = trpc.group.list.useQuery(
     { schoolId: schoolId || undefined },
@@ -70,6 +98,8 @@ export function EnrollmentDrawer({
       { studentId: studentId! },
       { enabled: isOpen && isStudentMode && Boolean(studentId) },
     );
+
+  const [expandedCourseIds, setExpandedCourseIds] = useState<Set<number>>(new Set());
 
   // Sync current student enrollments into selection
   useEffect(() => {
@@ -137,33 +167,75 @@ export function EnrollmentDrawer({
     onError: (err) => setError(err.message),
   });
 
-  // In student mode, if student is enrolled in specific courses, only show groups for those courses.
-  // If the student has 0 courses, no groups can be selected until courses are added.
-  const studentGroups = useMemo(() => {
-    if (!isStudentMode) return allGroups;
-    if (enrolledCourseIds.size > 0) {
-      return allGroups.filter((g) => enrolledCourseIds.has(g.courseId));
-    }
-    return [];
-  }, [allGroups, isStudentMode, enrolledCourseIds]);
-
-  // Grouping available groups by course for clean UI in student mode
-  const groupsByCourse = useMemo(() => {
-    const map = new Map<string, typeof allGroups>();
-    for (const g of studentGroups) {
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const matchesCourse = g.courseName.toLowerCase().includes(q);
-        const matchesGroup = g.name.toLowerCase().includes(q);
-        const matchesRoom = (g.room || "").toLowerCase().includes(q);
-        if (!matchesCourse && !matchesGroup && !matchesRoom) continue;
-      }
-      const list = map.get(g.courseName) || [];
+  // Group active groups by courseId for clean lookup in student mode
+  const groupsByCourseId = useMemo(() => {
+    const map = new Map<number, typeof allGroups>();
+    for (const g of allGroups) {
+      if (g.active === false) continue;
+      const list = map.get(g.courseId) || [];
       list.push(g);
-      map.set(g.courseName, list);
+      map.set(g.courseId, list);
     }
     return map;
-  }, [studentGroups, search]);
+  }, [allGroups]);
+
+  // Combined list of courses from available courses, studentCourses, and groups
+  const allAvailableCourses = useMemo(() => {
+    const courseMap = new Map<number, { id: number; name: string; level?: string | null }>();
+    for (const c of studentCourses) {
+      courseMap.set(c.id, { id: c.id, name: c.name, level: null });
+    }
+    for (const c of availableCourses) {
+      courseMap.set(c.id, { id: c.id, name: c.name, level: c.level });
+    }
+    for (const g of allGroups) {
+      if (g.active !== false && !courseMap.has(g.courseId)) {
+        courseMap.set(g.courseId, { id: g.courseId, name: g.courseName, level: null });
+      }
+    }
+    return Array.from(courseMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, "ro", { sensitivity: "base" }),
+    );
+  }, [studentCourses, availableCourses, allGroups]);
+
+  // Filter courses by search input (matches course name or group attributes)
+  const filteredCourses = useMemo(() => {
+    if (!search.trim()) return allAvailableCourses;
+    const q = search.toLowerCase();
+    return allAvailableCourses.filter((course) => {
+      const matchesCourse = course.name.toLowerCase().includes(q);
+      const cGroups = groupsByCourseId.get(course.id) || [];
+      const matchesGroup = cGroups.some(
+        (g) =>
+          g.name.toLowerCase().includes(q) ||
+          (g.room || "").toLowerCase().includes(q) ||
+          (g.teacherName || "").toLowerCase().includes(q),
+      );
+      return matchesCourse || matchesGroup;
+    });
+  }, [allAvailableCourses, groupsByCourseId, search]);
+
+  // Expand enrolled courses initially
+  useEffect(() => {
+    if (isStudentMode && currentEnrollments.length > 0) {
+      const initial = new Set(
+        currentEnrollments.map((e) => e.courseId).filter((cid): cid is number => cid !== null),
+      );
+      setExpandedCourseIds(initial);
+    }
+  }, [isStudentMode, currentEnrollments]);
+
+  const toggleCourseExpand = (cId: number) => {
+    setExpandedCourseIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cId)) {
+        next.delete(cId);
+      } else {
+        next.add(cId);
+      }
+      return next;
+    });
+  };
 
   // In group mode, only allow picking students who are already enrolled in this group's course
   const eligibleStudents = useMemo(() => {
@@ -202,7 +274,7 @@ export function EnrollmentDrawer({
     );
   };
 
-  const handleSaveStudentEnrollments = () => {
+  const handleSaveStudentEnrollments = async () => {
     if (!studentId) return;
     if (studentGroupConflicts.length > 0) {
       setError(studentGroupConflicts[0].message);
@@ -210,21 +282,25 @@ export function EnrollmentDrawer({
     }
     setError(null);
 
-    // Groups newly added
     const initialGroupIds = currentEnrollments.map((e) => e.groupId);
     const toAdd = selectedGroupIds.filter((id) => !initialGroupIds.includes(id));
     const toRemove = initialGroupIds.filter((id) => !selectedGroupIds.includes(id));
 
-    // Execute removes
-    for (const removeGId of toRemove) {
-      removeEnrollmentMutation.mutate({ studentId, groupId: removeGId });
-    }
+    try {
+      for (const removeGId of toRemove) {
+        await removeEnrollmentMutation.mutateAsync({ studentId, groupId: removeGId });
+      }
 
-    // Execute adds
-    if (toAdd.length > 0) {
-      enrollMutation.mutate({ studentId, groupIds: toAdd });
-    } else {
-      onClose();
+      if (toAdd.length > 0) {
+        await enrollMutation.mutateAsync({ studentId, groupIds: toAdd });
+      } else {
+        await utils.enrollment.invalidate();
+        await utils.student.invalidate();
+        await utils.group.invalidate();
+        onClose();
+      }
+    } catch (err: any) {
+      setError(err?.message || "Eroare la salvarea înscrierilor.");
     }
   };
 
@@ -273,9 +349,7 @@ export function EnrollmentDrawer({
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {isStudentMode
-                ? enrolledCourseIds.size > 0
-                  ? `Afișează doar grupele pentru cele ${enrolledCourseIds.size} ${enrolledCourseIds.size === 1 ? "curs" : "cursuri"} la care este înscris studentul`
-                  : "Studentul nu este înscris la niciun curs"
+                ? "Caută un curs și selectează grupele pentru înrolare"
                 : `Afișează doar studenții înscriși la cursul ${courseName || ""}`}
             </p>
           </div>
@@ -297,7 +371,7 @@ export function EnrollmentDrawer({
               type="text"
               placeholder={
                 isStudentMode
-                  ? "Caută după curs, grupă sau sală..."
+                  ? "Caută curs sau grupă..."
                   : "Caută student după nume sau telefon..."
               }
               value={search}
@@ -325,119 +399,160 @@ export function EnrollmentDrawer({
           {/* Mode A: Student Profile View */}
           {isStudentMode && (
             <>
-              {isLoadingGroups || isLoadingEnrollments ? (
+              {isLoadingCourses || isLoadingGroups || isLoadingEnrollments ? (
                 <div className="space-y-3 animate-pulse">
                   <div className="h-16 bg-slate-100 rounded-xl" />
                   <div className="h-16 bg-slate-100 rounded-xl" />
                   <div className="h-16 bg-slate-100 rounded-xl" />
                 </div>
-              ) : enrolledCourseIds.size === 0 ? (
-                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-2">
-                  <p className="text-sm font-semibold text-slate-800">
-                    Studentul nu este înscris la niciun curs
-                  </p>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Conform regulilor academice, un student trebuie să fie mai întâi înscris la un
-                    curs înainte de a putea fi adăugat într-o grupă. Accesați{" "}
-                    <strong>«Editează profil»</strong> pentru a-i atribui cursuri.
-                  </p>
-                </div>
-              ) : allGroups.length === 0 || studentGroups.length === 0 ? (
+              ) : allAvailableCourses.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
                   <p className="text-sm font-semibold text-slate-700">
-                    Nu există grupe disponibile
+                    Nu există cursuri disponibile
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Nu există încă grupe create pentru cursurile la care este înscris acest student.
+                    Nu au fost găsite cursuri active configurate pentru această școală.
+                  </p>
+                </div>
+              ) : filteredCourses.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  <p className="text-sm font-semibold text-slate-700">
+                    Niciun curs găsit
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Nu s-a găsit niciun curs sau grupă care să corespundă căutării «{search}».
                   </p>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  {Array.from(groupsByCourse.entries()).map(([cName, cGroups]) => (
-                    <div
-                      key={cName}
-                      className="border border-slate-200/80 rounded-xl p-4 bg-slate-50/40 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                          {cName}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          {cGroups.length} {cGroups.length === 1 ? "grupă" : "grupe"}
-                        </span>
-                      </div>
+                <div className="space-y-3">
+                  {filteredCourses.map((course) => {
+                    const courseGroups = groupsByCourseId.get(course.id) || [];
+                    const isExpanded = expandedCourseIds.has(course.id);
+                    const courseColor = getCourseColor(course.id);
+                    const selectedCountInCourse = courseGroups.filter((g) =>
+                      selectedGroupIds.includes(g.id),
+                    ).length;
 
-                      <div className="space-y-2">
-                        {cGroups.map((grp) => {
-                          const isSelected = selectedGroupIds.includes(grp.id);
-                          const existingEnrollment = currentEnrollments.find(
-                            (e) => e.groupId === grp.id,
-                          );
-
-                          return (
-                            <div
-                              key={grp.id}
-                              className={`p-3 rounded-lg border transition-all ${
-                                isSelected
-                                  ? "bg-white border-blue-400/80 shadow-xs"
-                                  : "bg-white/70 border-slate-200 hover:border-slate-300"
+                    return (
+                      <div
+                        key={course.id}
+                        className={`border rounded-xl overflow-hidden transition-all ${
+                          isExpanded
+                            ? "border-slate-300 shadow-xs bg-white"
+                            : "border-slate-200/80 bg-white hover:border-slate-300"
+                        }`}
+                      >
+                        {/* Course Header (Click to expand/collapse groups) */}
+                        <button
+                          type="button"
+                          onClick={() => toggleCourseExpand(course.id)}
+                          className={`w-full flex items-center justify-between p-3.5 text-left transition-colors cursor-pointer ${
+                            isExpanded ? "bg-slate-50/80 border-b border-slate-200/80" : "hover:bg-slate-50/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <span className={`w-2.5 h-2.5 rounded-full ${courseColor.dot} flex-shrink-0`} />
+                            <span className="text-xs font-bold text-slate-900">{course.name}</span>
+                            {course.level && getLevelBadge(course.level)}
+                            {selectedCountInCourse > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                {selectedCountInCourse} {selectedCountInCourse === 1 ? "grupă selectată" : "grupe selectate"}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {courseGroups.length} {courseGroups.length === 1 ? "grupă" : "grupe"}
+                            </span>
+                            <ChevronDownIcon
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                isExpanded ? "rotate-180" : ""
                               }`}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <label className="flex items-start gap-3 cursor-pointer flex-1 select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => handleToggleGroup(grp.id)}
-                                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
-                                  />
-                                  <div>
-                                    <p className="text-xs font-bold text-slate-800">{grp.name}</p>
-                                    <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 mt-1">
-                                      {grp.scheduleTime && <span>⏰ {grp.scheduleTime}</span>}
-                                      {grp.room && <span>📍 {grp.room}</span>}
-                                      {grp.teacherName && <span>👨‍🏫 {grp.teacherName}</span>}
+                            />
+                          </div>
+                        </button>
+
+                        {/* Expanded Groups with Checkboxes */}
+                        {isExpanded && (
+                          <div className="p-3 bg-slate-50/30 space-y-2">
+                            {courseGroups.length === 0 ? (
+                              <p className="text-xs text-slate-400 italic py-2 px-1">
+                                Nu există încă grupe create pentru acest curs.
+                              </p>
+                            ) : (
+                              courseGroups.map((grp) => {
+                                const isSelected = selectedGroupIds.includes(grp.id);
+                                const existingEnrollment = currentEnrollments.find(
+                                  (e) => e.groupId === grp.id,
+                                );
+
+                                return (
+                                  <div
+                                    key={grp.id}
+                                    className={`p-3 rounded-lg border transition-all ${
+                                      isSelected
+                                        ? "bg-white border-blue-400/80 shadow-xs"
+                                        : "bg-white/80 border-slate-200 hover:border-slate-300"
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <label className="flex items-start gap-3 cursor-pointer flex-1 select-none">
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected}
+                                          onChange={() => handleToggleGroup(grp.id)}
+                                          className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                                        />
+                                        <div>
+                                          <p className="text-xs font-bold text-slate-800">{grp.name}</p>
+                                          <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 mt-1">
+                                            {grp.scheduleTime && <span>⏰ {grp.scheduleTime}</span>}
+                                            {grp.room && <span>📍 {grp.room}</span>}
+                                            {grp.teacherName && <span>👨‍🏫 {grp.teacherName}</span>}
+                                          </div>
+                                        </div>
+                                      </label>
+
+                                      {/* Per-Course/Group Status Dropdown for Enrolled Student */}
+                                      {existingEnrollment && (
+                                        <div className="shrink-0 flex items-center gap-1.5">
+                                          <span className="text-[10px] font-semibold text-slate-400">
+                                            Status:
+                                          </span>
+                                          <select
+                                            value={existingEnrollment.status || "active"}
+                                            onChange={(e) => {
+                                              updateStatusMutation.mutate({
+                                                enrollmentId: existingEnrollment.id,
+                                                status: e.target.value as any,
+                                              });
+                                            }}
+                                            disabled={updateStatusMutation.isPending}
+                                            className={`text-xs font-semibold px-2 py-1 rounded-md border outline-none ${
+                                              existingEnrollment.status === "active"
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : existingEnrollment.status === "inactive"
+                                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                  : "bg-slate-100 text-slate-600 border-slate-200"
+                                            }`}
+                                          >
+                                            <option value="active">Activ</option>
+                                            <option value="inactive">Inactiv</option>
+                                            <option value="archived">Arhivat</option>
+                                            <option value="completed">Completat</option>
+                                          </select>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
-                                </label>
-
-                                {/* Per-Course/Group Status Dropdown for Enrolled Student */}
-                                {existingEnrollment && (
-                                  <div className="shrink-0 flex items-center gap-1.5">
-                                    <span className="text-[10px] font-semibold text-slate-400">
-                                      Status:
-                                    </span>
-                                    <select
-                                      value={existingEnrollment.status || "active"}
-                                      onChange={(e) => {
-                                        updateStatusMutation.mutate({
-                                          enrollmentId: existingEnrollment.id,
-                                          status: e.target.value as any,
-                                        });
-                                      }}
-                                      disabled={updateStatusMutation.isPending}
-                                      className={`text-xs font-semibold px-2 py-1 rounded-md border outline-none ${
-                                        existingEnrollment.status === "active"
-                                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                          : existingEnrollment.status === "inactive"
-                                            ? "bg-amber-50 text-amber-700 border-amber-200"
-                                            : "bg-slate-100 text-slate-600 border-slate-200"
-                                      }`}
-                                    >
-                                      <option value="active">Activ</option>
-                                      <option value="inactive">Inactiv</option>
-                                      <option value="archived">Arhivat</option>
-                                      <option value="completed">Completat</option>
-                                    </select>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
@@ -542,7 +657,6 @@ export function EnrollmentDrawer({
               disabled={
                 isSaving ||
                 (isStudentMode && studentGroupConflicts.length > 0) ||
-                (isStudentMode && enrolledCourseIds.size === 0) ||
                 (isGroupMode && eligibleStudents.length === 0)
               }
               className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
