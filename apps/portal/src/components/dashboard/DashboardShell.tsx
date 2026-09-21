@@ -62,7 +62,7 @@ export function DashboardShell({
           userName={userName}
           role={role}
           schoolId={schoolId}
-          onOpenMobileNav={() => setMobileOpen(true)}
+          onOpenMobileNavAction={() => setMobileOpen(true)}
         />
 
         {/* Page Content */}

@@ -471,7 +471,7 @@ export function CourseGroupsDrawer({ isOpen, onClose, courseId, courseName, scho
       {showAddStudentDrawer && activeGroupId && (
         <EnrollmentDrawer
           isOpen={showAddStudentDrawer}
-          onClose={() => setShowAddStudentDrawer(false)}
+          onCloseAction={() => setShowAddStudentDrawer(false)}
           groupId={activeGroupId}
           groupName={activeGroup?.name}
           courseId={courseId}

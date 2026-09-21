@@ -351,7 +351,7 @@ export default function StudentiPage() {
           schools={schools}
           courses={courses}
           isSuperAdmin={permissions.includes("super") || role === "superadmin"}
-          onClose={() => setShowForm(false)}
+          onCloseAction={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
       )}
