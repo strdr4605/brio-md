@@ -55,6 +55,74 @@ export function StudentRowDetails({
     [studentEnrollments],
   );
 
+  type GroupDisplayItem =
+    | {
+        type: "enrolled";
+        key: string;
+        courseId: number;
+        courseName: string;
+        groupName: string;
+      }
+    | {
+        type: "no_group";
+        key: string;
+        courseId: number;
+        courseName: string;
+      };
+
+  const groupDisplayItems = useMemo<GroupDisplayItem[]>(() => {
+    // Deduplicate courses by normalized name to preserve exact course order
+    const seenCourseKeys = new Set<string>();
+    const uniqueCourses = (student.courses || []).filter((course) => {
+      const key = course.name.trim().toLowerCase();
+      if (seenCourseKeys.has(key)) return false;
+      seenCourseKeys.add(key);
+      return true;
+    });
+
+    const items: GroupDisplayItem[] = [];
+    const matchedEnrollmentIds = new Set<number>();
+
+    // 1. Follow the exact order of enrolled courses
+    for (const course of uniqueCourses) {
+      const courseEnrollments = activeEnrollments.filter((enr) => enr.courseId === course.id);
+      if (courseEnrollments.length > 0) {
+        for (const enr of courseEnrollments) {
+          matchedEnrollmentIds.add(enr.id);
+          items.push({
+            type: "enrolled",
+            key: `enr-${enr.id}`,
+            courseId: course.id,
+            courseName: course.name,
+            groupName: enr.groupName,
+          });
+        }
+      } else {
+        items.push({
+          type: "no_group",
+          key: `no-group-${course.id}`,
+          courseId: course.id,
+          courseName: course.name,
+        });
+      }
+    }
+
+    // 2. Append any active group enrollments not tied to courses in student.courses
+    for (const enr of activeEnrollments) {
+      if (!matchedEnrollmentIds.has(enr.id)) {
+        items.push({
+          type: "enrolled",
+          key: `enr-${enr.id}`,
+          courseId: enr.courseId,
+          courseName: enr.courseName,
+          groupName: enr.groupName,
+        });
+      }
+    }
+
+    return items;
+  }, [student.courses, activeEnrollments]);
+
   const createdDateStr = student.createdAt
     ? new Date(student.createdAt).toLocaleDateString("ro-RO", {
         day: "numeric",
@@ -144,22 +212,39 @@ export function StudentRowDetails({
               </button>
             </div>
 
-            {activeEnrollments.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">Nu este înrolat în nicio grupă activă</p>
+            {groupDisplayItems.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Nu este înrolat în niciun curs sau grupă</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
-                {activeEnrollments.map((enr) => {
-                  const color = getCourseColor(enr.courseId);
+                {groupDisplayItems.map((item) => {
+                  const color = getCourseColor(item.courseId);
+
+                  if (item.type === "enrolled") {
+                    return (
+                      <span
+                        key={item.key}
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border shadow-xs transition-all ${color.bg} ${color.text} ${color.border}`}
+                        title={`${item.courseName} - ${item.groupName} (activ)`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${color.dot} flex-shrink-0`} />
+                        <span className="font-semibold">{item.courseName}:</span>
+                        <span>{item.groupName}</span>
+                      </span>
+                    );
+                  }
+
                   return (
-                    <span
-                      key={enr.id}
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border shadow-xs transition-all ${color.bg} ${color.text} ${color.border}`}
-                      title={`${enr.courseName} - ${enr.groupName} (activ)`}
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setShowEnrollmentDrawer(true)}
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed shadow-xs transition-all cursor-pointer hover:opacity-90 ${color.bg} ${color.text} ${color.border}`}
+                      title={`${item.courseName}: Nicio grupă selectată. Click pentru a înrola într-o grupă.`}
                     >
                       <span className={`w-2 h-2 rounded-full ${color.dot} flex-shrink-0`} />
-                      <span className="font-semibold">{enr.courseName}:</span>
-                      <span>{enr.groupName}</span>
-                    </span>
+                      <span className="font-semibold">{item.courseName}:</span>
+                      <span className="italic opacity-80">Nicio grupă selectată</span>
+                    </button>
                   );
                 })}
               </div>
