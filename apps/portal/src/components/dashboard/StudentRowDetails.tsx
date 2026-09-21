@@ -291,7 +291,7 @@ export function StudentRowDetails({
       {showEnrollmentDrawer && (
         <EnrollmentDrawer
           isOpen={showEnrollmentDrawer}
-          onClose={() => setShowEnrollmentDrawer(false)}
+          onCloseAction={() => setShowEnrollmentDrawer(false)}
           studentId={student.id}
           studentName={student.name}
           schoolId={student.schoolId}

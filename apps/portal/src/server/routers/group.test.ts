@@ -106,6 +106,47 @@ describe("groupRouter", () => {
       expect(result[0].room).toBe("Sala 204");
     });
 
+    it("scopes groups to teacher when user is a teacher", async () => {
+      const mockGroups = [
+        {
+          id: 2,
+          courseId: 10,
+          courseName: "Robotics Basics",
+          schoolId: 1,
+          name: "Grupa Teacher",
+          scheduleDays: ["tue", "thu"],
+          scheduleTime: "15:00 - 16:00",
+          room: "Sala 101",
+          teacherId: 4,
+          teacherName: "Teacher",
+          active: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          studentCount: 5,
+        },
+      ];
+
+      const mockQuery = {
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockResolvedValue(mockGroups),
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue(mockQuery),
+          }),
+        }),
+      });
+
+      const caller = groupRouter.createCaller({ user: regularUser });
+      const result = await caller.list({});
+
+      expect(result).toHaveLength(1);
+      expect(result[0].teacherId).toBe(4);
+      expect(mockQuery.where).toHaveBeenCalled();
+    });
+
     it("throws UNAUTHORIZED when user is not authenticated", async () => {
       const caller = groupRouter.createCaller({ user: null });
       await expect(caller.list({})).rejects.toThrow(TRPCError);

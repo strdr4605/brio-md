@@ -104,7 +104,7 @@ export function GlobalSearch() {
           <span className="truncate">Caută elev, părinte, telefon...</span>
         </div>
         <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-xs">
-          ⌘K
+          CTRL + K
         </kbd>
       </button>
 

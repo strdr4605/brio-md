@@ -149,7 +149,7 @@ export function ScheduleAttendanceModal({
               groupName={groupName}
               date={selectedDate}
               isSaving={submitMutation.isPending}
-              onSave={handleSaveAttendance}
+              onSaveAction={handleSaveAttendance}
             />
           )}
         </div>
