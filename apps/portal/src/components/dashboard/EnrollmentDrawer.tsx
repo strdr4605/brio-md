@@ -4,7 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { SearchIcon, XIcon, CheckCircleIcon, ChevronDownIcon } from "@/components/ui/icons";
-import { detectStudentGroupScheduleConflicts } from "@/lib/scheduleConflicts";
+import {
+  detectStudentGroupScheduleConflicts,
+  findGroupConflictWithSelected,
+  findStudentConflictWithTargetGroup,
+} from "@/lib/scheduleConflicts";
 import { getCourseColor } from "./StudentCoursesCell";
 
 function getLevelBadge(level: string | null | undefined) {
@@ -90,7 +94,7 @@ export function EnrollmentDrawer({
 
   const { data: allGroups = [], isLoading: isLoadingGroups } = trpc.group.list.useQuery(
     { schoolId: schoolId || undefined },
-    { enabled: isOpen && isStudentMode },
+    { enabled: isOpen },
   );
 
   const { data: currentEnrollments = [], isLoading: isLoadingEnrollments } =
@@ -121,6 +125,11 @@ export function EnrollmentDrawer({
   // --- Mode B: Group Roster -> Pick Students to Enroll ---
   const isGroupMode = Boolean(groupId);
 
+  const targetGroup = useMemo(
+    () => (groupId ? allGroups.find((g) => g.id === groupId) : undefined),
+    [groupId, allGroups],
+  );
+
   const { data: allStudents = [], isLoading: isLoadingStudents } = trpc.student.list.useQuery(
     {
       schoolId: schoolId || undefined,
@@ -142,6 +151,20 @@ export function EnrollmentDrawer({
       setSelectedStudentIds([]);
     }
   }, [isGroupMode, existingGroupMembers]);
+
+  const groupModeHasConflict = useMemo(() => {
+    if (!isGroupMode || !targetGroup) return false;
+    const initialMemberIds = new Set(existingGroupMembers.map((m) => m.studentId));
+    return selectedStudentIds.some((sId) => {
+      if (initialMemberIds.has(sId)) return false;
+      const s = allStudents.find((st) => st.id === sId);
+      if (!s) return false;
+      return findStudentConflictWithTargetGroup({
+        targetGroup,
+        studentActiveGroups: s.groups || [],
+      }).hasConflict;
+    });
+  }, [isGroupMode, targetGroup, selectedStudentIds, allStudents, existingGroupMembers]);
 
   // Mutations
   const enrollMutation = trpc.enrollment.enrollStudent.useMutation({
@@ -268,16 +291,42 @@ export function EnrollmentDrawer({
 
   // Toggle group selection for student
   const handleToggleGroup = (gId: number) => {
-    setSelectedGroupIds((prev) =>
-      prev.includes(gId) ? prev.filter((id) => id !== gId) : [...prev, gId],
-    );
+    setSelectedGroupIds((prev) => {
+      if (prev.includes(gId)) {
+        return prev.filter((id) => id !== gId);
+      }
+      const candidateGroup = allGroups.find((g) => g.id === gId);
+      if (!candidateGroup) return [...prev, gId];
+      const currentlySelected = allGroups.filter((g) => prev.includes(g.id));
+      const conflict = findGroupConflictWithSelected({
+        candidateGroup,
+        selectedGroups: currentlySelected,
+      });
+      if (conflict.hasConflict) {
+        return prev;
+      }
+      return [...prev, gId];
+    });
   };
 
   // Toggle student selection for group
   const handleToggleStudent = (sId: number) => {
-    setSelectedStudentIds((prev) =>
-      prev.includes(sId) ? prev.filter((id) => id !== sId) : [...prev, sId],
-    );
+    setSelectedStudentIds((prev) => {
+      if (prev.includes(sId)) {
+        return prev.filter((id) => id !== sId);
+      }
+      if (targetGroup) {
+        const student = allStudents.find((s) => s.id === sId);
+        const conflict = findStudentConflictWithTargetGroup({
+          targetGroup,
+          studentActiveGroups: student?.groups || [],
+        });
+        if (conflict.hasConflict) {
+          return prev;
+        }
+      }
+      return [...prev, sId];
+    });
   };
 
   const handleSaveStudentEnrollments = async () => {
@@ -323,6 +372,20 @@ export function EnrollmentDrawer({
     const initialStudentIds = existingGroupMembers.map((m) => m.studentId);
     const toAdd = selectedStudentIds.filter((id) => !initialStudentIds.includes(id));
     const toRemove = initialStudentIds.filter((id) => !selectedStudentIds.includes(id));
+
+    if (targetGroup) {
+      for (const sId of toAdd) {
+        const student = allStudents.find((s) => s.id === sId);
+        const conflict = findStudentConflictWithTargetGroup({
+          targetGroup,
+          studentActiveGroups: student?.groups || [],
+        });
+        if (conflict.hasConflict) {
+          setError(`Nu se poate înrola studentul ${student?.name || ""}: ${conflict.reason}`);
+          return;
+        }
+      }
+    }
 
     for (const sId of toRemove) {
       removeEnrollmentMutation.mutate({ studentId: sId, groupId });
@@ -497,6 +560,14 @@ export function EnrollmentDrawer({
                                 const existingEnrollment = currentEnrollments.find(
                                   (e) => e.groupId === grp.id,
                                 );
+                                const currentlySelected = allGroups.filter(
+                                  (g) => selectedGroupIds.includes(g.id) && g.id !== grp.id,
+                                );
+                                const conflict = findGroupConflictWithSelected({
+                                  candidateGroup: grp,
+                                  selectedGroups: currentlySelected,
+                                });
+                                const isConflicted = conflict.hasConflict && !isSelected;
 
                                 return (
                                   <div
@@ -504,24 +575,49 @@ export function EnrollmentDrawer({
                                     className={`p-3 rounded-lg border transition-all ${
                                       isSelected
                                         ? "bg-white border-blue-400/80 shadow-xs"
-                                        : "bg-white/80 border-slate-200 hover:border-slate-300"
+                                        : isConflicted
+                                          ? "bg-slate-50/70 border-dashed border-slate-200 opacity-60"
+                                          : "bg-white/80 border-slate-200 hover:border-slate-300"
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-3">
-                                      <label className="flex items-start gap-3 cursor-pointer flex-1 select-none">
+                                      <label
+                                        onClick={(e) => {
+                                          if (isConflicted) e.preventDefault();
+                                        }}
+                                        className={`flex items-start gap-3 flex-1 select-none ${
+                                          isConflicted ? "cursor-not-allowed" : "cursor-pointer"
+                                        }`}
+                                      >
                                         <input
                                           type="checkbox"
                                           checked={isSelected}
-                                          onChange={() => handleToggleGroup(grp.id)}
-                                          className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                                          disabled={isConflicted}
+                                          onChange={() => {
+                                            if (!isConflicted) handleToggleGroup(grp.id);
+                                          }}
+                                          className={`mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 ${
+                                            isConflicted ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                                          }`}
                                         />
-                                        <div>
-                                          <p className="text-xs font-bold text-slate-800">{grp.name}</p>
+                                        <div className="flex-1">
+                                          <p
+                                            className={`text-xs font-bold ${
+                                              isConflicted ? "text-slate-500" : "text-slate-800"
+                                            }`}
+                                          >
+                                            {grp.name}
+                                          </p>
                                           <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 mt-1">
                                             {grp.scheduleTime && <span>⏰ {grp.scheduleTime}</span>}
                                             {grp.room && <span>📍 {grp.room}</span>}
                                             {grp.teacherName && <span>👨‍🏫 {grp.teacherName}</span>}
                                           </div>
+                                          {isConflicted && (
+                                            <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-md">
+                                              <span>⚠️ Conflict de orar: {conflict.reason}</span>
+                                            </div>
+                                          )}
                                         </div>
                                       </label>
 
@@ -602,36 +698,67 @@ export function EnrollmentDrawer({
                   {filteredStudents.map((s) => {
                     const isSelected = selectedStudentIds.includes(s.id);
                     const isAlreadyMember = existingGroupMembers.some((m) => m.studentId === s.id);
+                    const conflict = targetGroup
+                      ? findStudentConflictWithTargetGroup({
+                          targetGroup,
+                          studentActiveGroups: s.groups || [],
+                        })
+                      : { hasConflict: false };
+                    const isConflicted = conflict.hasConflict && !isSelected;
 
                     return (
                       <label
                         key={s.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer select-none ${
+                        onClick={(e) => {
+                          if (isConflicted) e.preventDefault();
+                        }}
+                        className={`flex flex-col p-3 rounded-lg border transition-all select-none ${
                           isSelected
                             ? "bg-blue-50/50 border-blue-400"
-                            : "bg-white border-slate-200 hover:border-slate-300"
+                            : isConflicted
+                              ? "bg-slate-50/70 border-dashed border-slate-200 opacity-60 cursor-not-allowed"
+                              : "bg-white border-slate-200 hover:border-slate-300 cursor-pointer"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleToggleStudent(s.id)}
-                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
-                          />
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">{s.name}</p>
-                            <p className="text-[11px] text-slate-400">
-                              {s.phone || "Fără telefon"}
-                              {s.parentName ? ` • Tutore: ${s.parentName}` : ""}
-                            </p>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isConflicted}
+                              onChange={() => {
+                                if (!isConflicted) handleToggleStudent(s.id);
+                              }}
+                              className={`w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 ${
+                                isConflicted ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                              }`}
+                            />
+                            <div>
+                              <p
+                                className={`text-xs font-bold ${
+                                  isConflicted ? "text-slate-500" : "text-slate-800"
+                                }`}
+                              >
+                                {s.name}
+                              </p>
+                              <p className="text-[11px] text-slate-400">
+                                {s.phone || "Fără telefon"}
+                                {s.parentName ? ` • Tutore: ${s.parentName}` : ""}
+                              </p>
+                            </div>
                           </div>
+
+                          {isAlreadyMember && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              Înrolat
+                            </span>
+                          )}
                         </div>
 
-                        {isAlreadyMember && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            Înrolat
-                          </span>
+                        {isConflicted && (
+                          <div className="mt-2 ml-7 flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-md">
+                            <span>⚠️ Conflict de orar: {conflict.reason}</span>
+                          </div>
                         )}
                       </label>
                     );
@@ -671,6 +798,7 @@ export function EnrollmentDrawer({
               disabled={
                 isSaving ||
                 (isStudentMode && studentGroupConflicts.length > 0) ||
+                (isGroupMode && groupModeHasConflict) ||
                 (isGroupMode && eligibleStudents.length === 0)
               }
               className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"

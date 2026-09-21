@@ -269,6 +269,10 @@ export const studentRouter = router({
           studentId: studentGroupEnrollments.studentId,
           courseId: courses.id,
           courseName: courses.name,
+          groupId: groups.id,
+          groupName: groups.name,
+          scheduleDays: groups.scheduleDays,
+          scheduleTime: groups.scheduleTime,
         })
         .from(studentGroupEnrollments)
         .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
@@ -292,6 +296,18 @@ export const studentRouter = router({
         }
         coursesMap.set(e.studentId, studentMap);
       }
+      const studentGroupsMap = new Map<
+        number,
+        Array<{
+          id: number;
+          name: string;
+          courseId: number;
+          courseName: string;
+          scheduleDays: string[] | null;
+          scheduleTime: string | null;
+          active: boolean;
+        }>
+      >();
       for (const ge of groupEnrollments) {
         const studentMap =
           coursesMap.get(ge.studentId) || new Map<string, { id: number; name: string }>();
@@ -300,11 +316,24 @@ export const studentRouter = router({
           studentMap.set(key, { id: ge.courseId, name: ge.courseName });
         }
         coursesMap.set(ge.studentId, studentMap);
+
+        const list = studentGroupsMap.get(ge.studentId) || [];
+        list.push({
+          id: ge.groupId,
+          name: ge.groupName,
+          courseId: ge.courseId,
+          courseName: ge.courseName,
+          scheduleDays: ge.scheduleDays,
+          scheduleTime: ge.scheduleTime,
+          active: true,
+        });
+        studentGroupsMap.set(ge.studentId, list);
       }
 
       return result.map((s) => ({
         ...s,
         courses: Array.from(coursesMap.get(s.id)?.values() || []),
+        groups: studentGroupsMap.get(s.id) || [],
       }));
     }),
 

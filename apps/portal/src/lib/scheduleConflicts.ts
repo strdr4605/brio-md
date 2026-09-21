@@ -283,3 +283,87 @@ export function detectStudentScheduleConflicts(items: StudentScheduleItem[]): Co
   }
   return warnings;
 }
+
+export type GroupConflictResult = {
+  hasConflict: boolean;
+  conflictingGroup?: GroupScheduleItem;
+  reason?: string;
+};
+
+/**
+ * Checks if a candidate group has a schedule time conflict with any already selected group.
+ * If candidateGroup is already part of selectedGroups, it does NOT conflict with itself.
+ */
+export function findGroupConflictWithSelected({
+  candidateGroup,
+  selectedGroups,
+}: {
+  candidateGroup: GroupScheduleItem;
+  selectedGroups: GroupScheduleItem[];
+}): GroupConflictResult {
+  if (selectedGroups.some((g) => g.id === candidateGroup.id)) {
+    return { hasConflict: false };
+  }
+
+  const candidateTime = parseTimeRange(candidateGroup.scheduleTime);
+  if (!candidateTime || !candidateGroup.scheduleDays?.length) {
+    return { hasConflict: false };
+  }
+
+  for (const selected of selectedGroups) {
+    if (selected.id === candidateGroup.id || selected.active === false) continue;
+    const selectedTime = parseTimeRange(selected.scheduleTime);
+    if (!selectedTime || !selected.scheduleDays?.length) continue;
+
+    if (areTimesOverlapping(candidateTime, selectedTime)) {
+      const commonDays = getOverlappingDays(candidateGroup.scheduleDays, selected.scheduleDays);
+      if (commonDays.length > 0) {
+        const daysStr = commonDays.map((d) => DAY_LABELS[d] || d).join(", ");
+        return {
+          hasConflict: true,
+          conflictingGroup: selected,
+          reason: `Se suprapune cu "${selected.name}" (${selected.courseName || "Curs"}) ${daysStr} (${selected.scheduleTime})`,
+        };
+      }
+    }
+  }
+
+  return { hasConflict: false };
+}
+
+/**
+ * Checks if a student (who has a list of active group enrollments) has a schedule conflict with a target group.
+ */
+export function findStudentConflictWithTargetGroup({
+  targetGroup,
+  studentActiveGroups,
+}: {
+  targetGroup: GroupScheduleItem;
+  studentActiveGroups: GroupScheduleItem[];
+}): GroupConflictResult {
+  const targetTime = parseTimeRange(targetGroup.scheduleTime);
+  if (!targetTime || !targetGroup.scheduleDays?.length) {
+    return { hasConflict: false };
+  }
+
+  for (const enrolled of studentActiveGroups) {
+    if (enrolled.id === targetGroup.id || enrolled.active === false) continue;
+    const enrolledTime = parseTimeRange(enrolled.scheduleTime);
+    if (!enrolledTime || !enrolled.scheduleDays?.length) continue;
+
+    if (areTimesOverlapping(targetTime, enrolledTime)) {
+      const commonDays = getOverlappingDays(targetGroup.scheduleDays, enrolled.scheduleDays);
+      if (commonDays.length > 0) {
+        const daysStr = commonDays.map((d) => DAY_LABELS[d] || d).join(", ");
+        return {
+          hasConflict: true,
+          conflictingGroup: enrolled,
+          reason: `Studentul este deja înscris la "${enrolled.name}" (${enrolled.courseName || "Curs"}) ${daysStr} (${enrolled.scheduleTime})`,
+        };
+      }
+    }
+  }
+
+  return { hasConflict: false };
+}
+

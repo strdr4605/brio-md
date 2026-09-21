@@ -364,12 +364,14 @@ describe("studentRouter", () => {
           name: "Student School 1",
           schoolId: 1,
           courses: [{ id: 101, name: "Matematică" }],
+          groups: [],
         },
         {
           id: 2,
           name: "Student School 2",
           schoolId: 2,
           courses: [],
+          groups: [],
         },
       ]);
     });
