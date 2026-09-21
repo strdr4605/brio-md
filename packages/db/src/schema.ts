@@ -62,11 +62,7 @@ export const students = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
-    uniqueIndex("students_school_name_phone_idx").on(
-      table.schoolId,
-      table.name,
-      table.phone,
-    ),
+    uniqueIndex("students_school_name_phone_idx").on(table.schoolId, table.name, table.phone),
   ],
 );
 
@@ -87,9 +83,7 @@ export const courses = pgTable(
     active: boolean("active").default(true),
     createdAt: timestamp("created_at").defaultNow(),
   },
-  (table) => [
-    uniqueIndex("courses_school_name_idx").on(table.schoolId, table.name),
-  ],
+  (table) => [uniqueIndex("courses_school_name_idx").on(table.schoolId, table.name)],
 );
 
 // Course Materials table
@@ -143,9 +137,7 @@ export const groups = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [
-    uniqueIndex("groups_course_name_idx").on(table.courseId, table.name),
-  ],
+  (table) => [uniqueIndex("groups_course_name_idx").on(table.courseId, table.name)],
 );
 
 // Student Group Enrollments table
@@ -164,16 +156,19 @@ export const studentGroupEnrollments = pgTable(
       length: 50,
       enum: ["active", "inactive", "archived", "completed"],
     }).default("active"),
+    billingType: varchar("billing_type", {
+      length: 50,
+      enum: ["subscription_monthly", "subscription_course", "per_lesson", "custom"],
+    }).default("subscription_monthly"),
+    customPrice: integer("custom_price"),
+    discountPercent: integer("discount_percent").default(0),
     joinedAt: timestamp("joined_at").defaultNow(),
     leftAt: timestamp("left_at"),
     notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
-    uniqueIndex("student_group_enrollments_student_group_idx").on(
-      table.studentId,
-      table.groupId,
-    ),
+    uniqueIndex("student_group_enrollments_student_group_idx").on(table.studentId, table.groupId),
   ],
 );
 
@@ -207,6 +202,80 @@ export const attendanceRecords = pgTable(
     ),
   ],
 );
+
+// Invoices table
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: serial("id").primaryKey(),
+    schoolId: integer("school_id").references(() => schools.id),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    enrollmentId: integer("enrollment_id").references(() => studentGroupEnrollments.id, {
+      onDelete: "set null",
+    }),
+    groupId: integer("group_id").references(() => groups.id, { onDelete: "set null" }),
+    invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(),
+    type: varchar("type", {
+      length: 50,
+      enum: ["subscription", "per_lesson", "situational"],
+    }).notNull(),
+    status: varchar("status", {
+      length: 50,
+      enum: ["draft", "issued", "partially_paid", "paid", "overdue", "cancelled"],
+    })
+      .notNull()
+      .default("draft"),
+    totalAmount: integer("total_amount").notNull(),
+    paidAmount: integer("paid_amount").default(0),
+    dueDate: varchar("due_date", { length: 10 }),
+    periodStart: varchar("period_start", { length: 10 }),
+    periodEnd: varchar("period_end", { length: 10 }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [uniqueIndex("invoices_invoice_number_idx").on(table.invoiceNumber)],
+);
+
+// Invoice Items table
+export const invoiceItems = pgTable("invoice_items", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  attendanceId: integer("attendance_id").references(() => attendanceRecords.id, {
+    onDelete: "set null",
+  }),
+  description: varchar("description", { length: 255 }).notNull(),
+  quantity: integer("quantity").default(1),
+  unitPrice: integer("unit_price").notNull(),
+  amount: integer("amount").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payments table
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id),
+  studentId: integer("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  schoolId: integer("school_id").references(() => schools.id),
+  amount: integer("amount").notNull(),
+  paymentDate: varchar("payment_date", { length: 10 }).notNull(),
+  method: varchar("method", {
+    length: 50,
+    enum: ["cash", "bank_transfer", "card", "other"],
+  }).notNull(),
+  receiptNumber: varchar("receipt_number", { length: 100 }),
+  notes: text("notes"),
+  recordedByUserId: integer("recorded_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // Auth.js adapter tables
 export const accounts = pgTable("accounts", {
@@ -281,6 +350,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   courses: many(courses),
   groups: many(groups),
   markedAttendances: many(attendanceRecords),
+  recordedPayments: many(payments),
   student: one(students, {
     fields: [users.studentId],
     references: [students.id],
@@ -291,6 +361,8 @@ export const studentsRelations = relations(students, ({ many }) => ({
   courseProgress: many(studentCourseProgress),
   groupEnrollments: many(studentGroupEnrollments),
   attendanceRecords: many(attendanceRecords),
+  invoices: many(invoices),
+  payments: many(payments),
 }));
 
 export const groupsRelations = relations(groups, ({ one, many }) => ({
@@ -308,11 +380,12 @@ export const groupsRelations = relations(groups, ({ one, many }) => ({
   }),
   enrollments: many(studentGroupEnrollments),
   attendanceRecords: many(attendanceRecords),
+  invoices: many(invoices),
 }));
 
 export const studentGroupEnrollmentsRelations = relations(
   studentGroupEnrollments,
-  ({ one }) => ({
+  ({ one, many }) => ({
     student: one(students, {
       fields: [studentGroupEnrollments.studentId],
       references: [students.id],
@@ -325,10 +398,11 @@ export const studentGroupEnrollmentsRelations = relations(
       fields: [studentGroupEnrollments.courseId],
       references: [courses.id],
     }),
+    invoices: many(invoices),
   }),
 );
 
-export const attendanceRecordsRelations = relations(attendanceRecords, ({ one }) => ({
+export const attendanceRecordsRelations = relations(attendanceRecords, ({ one, many }) => ({
   group: one(groups, {
     fields: [attendanceRecords.groupId],
     references: [groups.id],
@@ -343,6 +417,65 @@ export const attendanceRecordsRelations = relations(attendanceRecords, ({ one })
   }),
   markedByUser: one(users, {
     fields: [attendanceRecords.markedByUserId],
+    references: [users.id],
+  }),
+  invoiceItems: many(invoiceItems),
+}));
+
+export const schoolsRelations = relations(schools, ({ many }) => ({
+  courses: many(courses),
+  groups: many(groups),
+  invoices: many(invoices),
+  payments: many(payments),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [invoices.schoolId],
+    references: [schools.id],
+  }),
+  student: one(students, {
+    fields: [invoices.studentId],
+    references: [students.id],
+  }),
+  enrollment: one(studentGroupEnrollments, {
+    fields: [invoices.enrollmentId],
+    references: [studentGroupEnrollments.id],
+  }),
+  group: one(groups, {
+    fields: [invoices.groupId],
+    references: [groups.id],
+  }),
+  items: many(invoiceItems),
+  payments: many(payments),
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceItems.invoiceId],
+    references: [invoices.id],
+  }),
+  attendanceRecord: one(attendanceRecords, {
+    fields: [invoiceItems.attendanceId],
+    references: [attendanceRecords.id],
+  }),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
+  }),
+  student: one(students, {
+    fields: [payments.studentId],
+    references: [students.id],
+  }),
+  school: one(schools, {
+    fields: [payments.schoolId],
+    references: [schools.id],
+  }),
+  recordedByUser: one(users, {
+    fields: [payments.recordedByUserId],
     references: [users.id],
   }),
 }));
@@ -377,3 +510,12 @@ export type NewAttendanceRecord = typeof attendanceRecords.$inferInsert;
 
 export type PermissionDefinition = typeof permissionDefinitions.$inferSelect;
 export type NewPermissionDefinition = typeof permissionDefinitions.$inferInsert;
+
+export type Invoice = typeof invoices.$inferSelect;
+export type NewInvoice = typeof invoices.$inferInsert;
+
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
+
+export type Payment = typeof payments.$inferSelect;
+export type NewPayment = typeof payments.$inferInsert;
