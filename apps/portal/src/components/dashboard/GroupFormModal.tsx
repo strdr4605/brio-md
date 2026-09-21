@@ -31,12 +31,9 @@ type GroupFormModalProps = {
 };
 
 const DAYS_OF_WEEK = [
-  { key: "mon", label: "Luni", short: "Lu" },
-  { key: "tue", label: "Marți", short: "Ma" },
-  { key: "wed", label: "Miercuri", short: "Mi" },
-  { key: "thu", label: "Joi", short: "Jo" },
-  { key: "fri", label: "Vineri", short: "Vi" },
-  { key: "sat", label: "Sâmbătă", short: "Sâ" },
+  { key: "mon", label: "Luni", short: "Lu" }, { key: "tue", label: "Marți", short: "Ma" },
+  { key: "wed", label: "Miercuri", short: "Mi" }, { key: "thu", label: "Joi", short: "Jo" },
+  { key: "fri", label: "Vineri", short: "Vi" }, { key: "sat", label: "Sâmbătă", short: "Sâ" },
   { key: "sun", label: "Duminică", short: "Du" },
 ];
 
@@ -106,7 +103,11 @@ export function GroupFormModal({
   }, [isOpen, name, courseId, groupToEdit?.id, room, teacherId, scheduleDays, scheduleTime, schoolGroups]);
 
   const onMutationSuccess = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("brio_attendance_entry_checked");
+    }
     utils.group.invalidate();
+    utils.attendance.getTeacherActiveSession.invalidate();
     onSaved?.();
     onClose();
   };
