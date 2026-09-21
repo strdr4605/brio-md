@@ -407,12 +407,6 @@ export function StudentFormDrawer({
                   })}
                 </div>
               </div>
-              {courseConflicts.map((c, idx) => (
-                <div key={idx} className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
-                  <span className="text-amber-500 font-bold shrink-0">⚠️</span>
-                  <span>{c.message}</span>
-                </div>
-              ))}
 
               {/* Group allocation per selected course */}
               {selectedCourseIds.length > 0 && (
@@ -438,18 +432,6 @@ export function StudentFormDrawer({
                           ([cId, gId]) => Number(cId) !== courseId && gId === sg.id,
                         ),
                       );
-
-                      const currentSelectedConflict = selectedGroupId
-                        ? (() => {
-                            const currentGroup = schoolGroups.find((g) => g.id === selectedGroupId);
-                            return currentGroup
-                              ? findGroupConflictWithSelected({
-                                  candidateGroup: currentGroup,
-                                  selectedGroups: otherSelectedGroups,
-                                })
-                              : { hasConflict: false };
-                          })()
-                        : { hasConflict: false };
 
                       return (
                         <div
@@ -506,19 +488,11 @@ export function StudentFormDrawer({
 
                                   return (
                                     <option key={g.id} value={g.id} disabled={isConflicted}>
-                                      {isConflicted ? "⚠️ [Conflict orar] " : ""}
                                       {g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
-                                      {isConflicted && conflict.conflictingGroup ? ` (suprapunere cu ${conflict.conflictingGroup.name})` : ""}
                                     </option>
                                   );
                                 })}
                               </select>
-
-                              {currentSelectedConflict.hasConflict && (
-                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-md">
-                                  <span>⚠️ Conflict de orar: {currentSelectedConflict.reason}</span>
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>

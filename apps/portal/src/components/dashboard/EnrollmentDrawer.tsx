@@ -464,13 +464,6 @@ export function EnrollmentDrawer({
             </div>
           )}
 
-          {studentGroupConflicts.map((c, i) => (
-            <div key={i} className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-start gap-2">
-              <span className="text-amber-500 font-bold shrink-0">⚠️</span>
-              <span>{c.message}</span>
-            </div>
-          ))}
-
           {/* Mode A: Student Profile View */}
           {isStudentMode && (
             <>
@@ -572,6 +565,7 @@ export function EnrollmentDrawer({
                                 return (
                                   <div
                                     key={grp.id}
+                                    title={isConflicted ? `Conflict de orar: ${conflict.reason}` : undefined}
                                     className={`p-3 rounded-lg border transition-all ${
                                       isSelected
                                         ? "bg-white border-blue-400/80 shadow-xs"
@@ -613,11 +607,6 @@ export function EnrollmentDrawer({
                                             {grp.room && <span>📍 {grp.room}</span>}
                                             {grp.teacherName && <span>👨‍🏫 {grp.teacherName}</span>}
                                           </div>
-                                          {isConflicted && (
-                                            <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-md">
-                                              <span>⚠️ Conflict de orar: {conflict.reason}</span>
-                                            </div>
-                                          )}
                                         </div>
                                       </label>
 
@@ -709,6 +698,7 @@ export function EnrollmentDrawer({
                     return (
                       <label
                         key={s.id}
+                        title={isConflicted ? `Conflict de orar: ${conflict.reason}` : undefined}
                         onClick={(e) => {
                           if (isConflicted) e.preventDefault();
                         }}
@@ -754,12 +744,6 @@ export function EnrollmentDrawer({
                             </span>
                           )}
                         </div>
-
-                        {isConflicted && (
-                          <div className="mt-2 ml-7 flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-md">
-                            <span>⚠️ Conflict de orar: {conflict.reason}</span>
-                          </div>
-                        )}
                       </label>
                     );
                   })}
