@@ -89,6 +89,14 @@ export async function fetchStudentBalanceSummary(
     return false;
   }).length;
 
+  const planConditions = [
+    eq(studentGroupEnrollments.studentId, studentId),
+    eq(studentGroupEnrollments.status, "active"),
+  ];
+  if (!isSuper && user.schoolId) {
+    planConditions.push(eq(groups.schoolId, user.schoolId));
+  }
+
   const activeBillingPlans = await dbInstance
     .select({
       enrollmentId: studentGroupEnrollments.id,
@@ -105,12 +113,7 @@ export async function fetchStudentBalanceSummary(
     .from(studentGroupEnrollments)
     .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
     .leftJoin(courses, eq(groups.courseId, courses.id))
-    .where(
-      and(
-        eq(studentGroupEnrollments.studentId, studentId),
-        eq(studentGroupEnrollments.status, "active"),
-      ),
-    );
+    .where(and(...planConditions));
 
   return {
     studentId: student.id,

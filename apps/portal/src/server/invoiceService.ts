@@ -2,7 +2,7 @@ import { eq, and, or, ilike, desc, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
-import { invoices, invoiceItems, payments, students, groups, courses } from "@/db/schema";
+import { invoices, invoiceItems, payments, students, groups, courses, studentGroupEnrollments } from "@/db/schema";
 import { BillingUser, getBillingRoles } from "./billingService";
 
 export type GetInvoicesInput = {
@@ -111,12 +111,7 @@ export async function fetchInvoiceById(
   let group = null;
   if (invoice.groupId) {
     const [g] = await dbInstance
-      .select({
-        id: groups.id,
-        name: groups.name,
-        courseId: courses.id,
-        courseName: courses.name,
-      })
+      .select({ id: groups.id, name: groups.name, courseId: courses.id, courseName: courses.name })
       .from(groups)
       .leftJoin(courses, eq(groups.courseId, courses.id))
       .where(eq(groups.id, invoice.groupId))
@@ -145,17 +140,12 @@ export type CreateInvoiceInput = {
   enrollmentId?: number;
   invoiceNumber?: string;
   type: "subscription" | "per_lesson" | "situational";
-  status: "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled";
+  status: "draft" | "issued";
   dueDate?: string;
   periodStart?: string;
   periodEnd?: string;
   notes?: string;
-  items: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    attendanceId?: number;
-  }>;
+  items: Array<{ description: string; quantity: number; unitPrice: number; attendanceId?: number }>;
 };
 
 export async function executeCreateInvoice(
@@ -168,6 +158,13 @@ export async function executeCreateInvoice(
 
   if (!targetSchoolId) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "schoolId este obligatoriu" });
+  }
+
+  if (input.status !== "draft" && input.status !== "issued") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "O factură nouă poate fi creată doar ca ciornă (draft) sau emisă (issued).",
+    });
   }
 
   const [student] = await dbInstance
@@ -190,16 +187,39 @@ export async function executeCreateInvoice(
       .from(groups)
       .where(eq(groups.id, input.groupId))
       .limit(1);
-    if (!group || (!isSuper && group.schoolId !== targetSchoolId)) {
+    if (!group) throw new TRPCError({ code: "NOT_FOUND", message: "Grupul specificat nu a fost găsit" });
+    if (group.schoolId !== targetSchoolId) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Grupul specificat nu aparține acestei școli" });
     }
+  }
+
+  if (input.enrollmentId) {
+    const [enrollment] = await dbInstance
+      .select({ id: studentGroupEnrollments.id, studentId: studentGroupEnrollments.studentId })
+      .from(studentGroupEnrollments)
+      .where(
+        and(
+          eq(studentGroupEnrollments.id, input.enrollmentId),
+          eq(studentGroupEnrollments.studentId, input.studentId),
+        ),
+      )
+      .limit(1);
+    if (!enrollment) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Înscrierea specificată este invalidă sau aparține altui student" });
+    }
+  }
+
+  const totalAmount = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  if (totalAmount > 2_000_000_000) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Suma totală a facturii depășește limita permisă de 2,000,000,000.",
+    });
   }
 
   const invoiceNum =
     input.invoiceNumber?.trim() ||
     `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}-${randomBytes(2).toString("hex").toUpperCase()}`;
-
-  const totalAmount = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
   return await dbInstance.transaction(async (tx) => {
     const [createdInvoice] = await tx
@@ -238,59 +258,90 @@ export async function executeCreateInvoice(
 
 export async function executeUpdateInvoiceStatus(
   dbInstance: typeof db,
-  input: {
-    id: number;
-    status: "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled";
-    notes?: string;
-  },
+  input: { id: number; status: "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled"; notes?: string },
   user: BillingUser,
 ) {
   const { isSuper } = getBillingRoles(user);
 
-  const [existing] = await dbInstance
-    .select()
-    .from(invoices)
-    .where(eq(invoices.id, input.id))
-    .limit(1);
+  return await dbInstance.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, input.id))
+      .for("update")
+      .limit(1);
 
-  if (!existing) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Factura nu a fost găsită" });
-  }
+    if (!existing) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Factura nu a fost găsită" });
+    }
 
-  if (!isSuper && (!user.schoolId || existing.schoolId !== user.schoolId)) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica o factură din altă școală" });
-  }
+    if (!isSuper && (!user.schoolId || existing.schoolId !== user.schoolId)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica o factură din altă școală" });
+    }
 
-  if (input.status === "cancelled") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Folosește procedura de anulare dedicată (cancelInvoice) cu motiv obligatoriu.",
-    });
-  }
+    if (existing.status === "cancelled") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "O factură anulată nu poate fi reactivată sau modificată direct.",
+      });
+    }
 
-  if (input.status === "paid" && (existing.paidAmount || 0) < existing.totalAmount) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Factura nu poate fi marcată ca plătită deoarece suma achitată este mai mică decât totalul.",
-    });
-  }
+    if (input.status === "cancelled") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Folosește procedura de anulare dedicată (cancelInvoice) cu motiv obligatoriu.",
+      });
+    }
 
-  if (input.status === "draft" && (existing.paidAmount || 0) > 0) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "O factură cu plăți înregistrate nu poate fi trecută în ciornă (draft).",
-    });
-  }
+    if (input.status === "partially_paid" && (existing.paidAmount || 0) === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Nu poți seta statusul ca parțial plătit fără plăți înregistrate.",
+      });
+    }
 
-  const [updated] = await dbInstance
-    .update(invoices)
-    .set({
-      status: input.status,
-      notes: input.notes !== undefined ? input.notes : existing.notes,
-      updatedAt: new Date(),
-    })
-    .where(eq(invoices.id, input.id))
-    .returning();
+    if (input.status === "draft" && (existing.paidAmount || 0) > 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "O factură care are plăți înregistrate nu poate fi trecută în ciornă (draft).",
+      });
+    }
 
-  return updated;
+    if (input.status === "issued" && (existing.paidAmount || 0) > 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "O factură care are plăți înregistrate nu poate fi marcată ca emisă simplă. Statusul corect este partially_paid.",
+      });
+    }
+
+    if (input.status === "paid" && (existing.paidAmount || 0) < existing.totalAmount) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Factura nu poate fi marcată ca plătită deoarece suma achitată este mai mică decât totalul.",
+      });
+    }
+
+    if (
+      (input.status === "issued" || input.status === "draft" || input.status === "overdue") &&
+      (existing.paidAmount || 0) >= existing.totalAmount &&
+      existing.totalAmount > 0
+    ) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "O factură achitată integral nu poate fi retrogradată în ciornă, emisă sau restantă.",
+      });
+    }
+
+    const [updated] = await tx
+      .update(invoices)
+      .set({
+        status: input.status,
+        notes: input.notes !== undefined ? input.notes : existing.notes,
+        updatedAt: new Date(),
+      })
+      .where(eq(invoices.id, input.id))
+      .returning();
+
+    return updated;
+  });
 }

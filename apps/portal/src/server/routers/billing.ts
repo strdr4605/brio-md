@@ -16,7 +16,16 @@ import {
 } from "../billingService";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-const dateSchema = z.string().regex(dateRegex, "Data trebuie să fie în format YYYY-MM-DD");
+const dateSchema = z
+  .string()
+  .regex(dateRegex, "Data trebuie să fie în format YYYY-MM-DD")
+  .refine(
+    (val) => {
+      const d = new Date(val + "T00:00:00Z");
+      return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === val;
+    },
+    { message: "Data specificată este invalidă în calendar" },
+  );
 
 export const billingRouter = router({
   // 1. Get Invoices (with pagination, filters, and search)
@@ -67,31 +76,37 @@ export const billingRouter = router({
   // 4. Create Invoice
   createInvoice: adminProcedure
     .input(
-      z.object({
-        studentId: z.number().int().positive(),
-        schoolId: z.number().int().positive().optional(),
-        groupId: z.number().int().positive().optional(),
-        enrollmentId: z.number().int().positive().optional(),
-        invoiceNumber: z.string().max(50).optional(),
-        type: z.enum(["subscription", "per_lesson", "situational"]),
-        status: z
-          .enum(["draft", "issued", "partially_paid", "paid", "overdue", "cancelled"])
-          .default("draft"),
-        dueDate: dateSchema.optional(),
-        periodStart: dateSchema.optional(),
-        periodEnd: dateSchema.optional(),
-        notes: z.string().optional(),
-        items: z
-          .array(
-            z.object({
-              description: z.string().min(1).max(255),
-              quantity: z.number().int().positive().max(1000).default(1),
-              unitPrice: z.number().int().min(0).max(100_000_000),
-              attendanceId: z.number().int().positive().optional(),
-            }),
-          )
-          .min(1),
-      }),
+      z
+        .object({
+          studentId: z.number().int().positive(),
+          schoolId: z.number().int().positive().optional(),
+          groupId: z.number().int().positive().optional(),
+          enrollmentId: z.number().int().positive().optional(),
+          invoiceNumber: z.string().max(50).optional(),
+          type: z.enum(["subscription", "per_lesson", "situational"]),
+          status: z.enum(["draft", "issued"]).default("draft"),
+          dueDate: dateSchema.optional(),
+          periodStart: dateSchema.optional(),
+          periodEnd: dateSchema.optional(),
+          notes: z.string().optional(),
+          items: z
+            .array(
+              z.object({
+                description: z.string().min(1).max(255),
+                quantity: z.number().int().positive().max(1000).default(1),
+                unitPrice: z.number().int().min(0).max(100_000_000),
+                attendanceId: z.number().int().positive().optional(),
+              }),
+            )
+            .min(1),
+        })
+        .refine(
+          (data) => {
+            const total = data.items.reduce((sum, it) => sum + it.quantity * it.unitPrice, 0);
+            return total <= 2_000_000_000;
+          },
+          { message: "Suma totală a facturii depășește limita permisă de 2,000,000,000." },
+        ),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -145,11 +160,15 @@ export const billingRouter = router({
   // 8. Cancel Invoice (Atomic Transaction)
   cancelInvoice: adminProcedure
     .input(
-      z.object({
-        id: z.number().int().positive().optional(),
-        invoiceId: z.number().int().positive().optional(),
-        reason: z.string().min(1, "Motivul anulării este obligatoriu"),
-      }),
+      z
+        .object({
+          id: z.number().int().positive().optional(),
+          invoiceId: z.number().int().positive().optional(),
+          reason: z.string().min(1, "Motivul anulării este obligatoriu"),
+        })
+        .refine((data) => data.id !== undefined || data.invoiceId !== undefined, {
+          message: "Trebuie specificat id sau invoiceId pentru anularea facturii",
+        }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });

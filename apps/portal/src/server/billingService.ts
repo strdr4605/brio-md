@@ -47,6 +47,13 @@ export async function executeRecordPayment(
 ) {
   const { isSuper } = getBillingRoles(user);
 
+  if (!input.amount || input.amount <= 0 || !Number.isInteger(input.amount)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Suma plătită trebuie să fie un număr întreg pozitiv.",
+    });
+  }
+
   return await dbInstance.transaction(async (tx) => {
     const [invoice] = await tx
       .select()
@@ -151,11 +158,11 @@ export async function executeVoidPayment(
   }
 
   return await dbInstance.transaction(async (tx) => {
+    // 1. Fetch payment to determine target invoice
     const [payment] = await tx
       .select()
       .from(payments)
       .where(eq(payments.id, input.paymentId))
-      .for("update")
       .limit(1);
 
     if (!payment) {
@@ -172,6 +179,7 @@ export async function executeVoidPayment(
       });
     }
 
+    // 2. Lock invoice first (consistent lock hierarchy)
     const [invoice] = await tx
       .select()
       .from(invoices)
@@ -186,7 +194,18 @@ export async function executeVoidPayment(
       });
     }
 
-    await tx.delete(payments).where(eq(payments.id, payment.id));
+    // 3. Delete payment record atomically and verify deletion
+    const deletedRows = await tx
+      .delete(payments)
+      .where(eq(payments.id, payment.id))
+      .returning({ id: payments.id });
+
+    if (deletedRows.length === 0) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Plata a fost deja anulată sau ștearsă de o altă sesiune",
+      });
+    }
 
     const newPaidAmount = Math.max(0, (invoice.paidAmount || 0) - payment.amount);
 

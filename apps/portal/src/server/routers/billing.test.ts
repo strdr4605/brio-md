@@ -815,7 +815,9 @@ const sampleStudentSchool1 = {
 
       // 3. Mock delete
       (db.delete as any).mockReturnValueOnce({
-        where: vi.fn().mockResolvedValue(true),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 15 }]),
+        }),
       });
 
       // 4. Mock invoice update
@@ -872,7 +874,9 @@ const sampleStudentSchool1 = {
       );
 
       (db.delete as any).mockReturnValueOnce({
-        where: vi.fn().mockResolvedValue(true),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 16 }]),
+        }),
       });
 
       (db.update as any).mockReturnValueOnce({
@@ -927,7 +931,9 @@ const sampleStudentSchool1 = {
       );
 
       (db.delete as any).mockReturnValueOnce({
-        where: vi.fn().mockResolvedValue(true),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 17 }]),
+        }),
       });
 
       (db.update as any).mockReturnValueOnce({
@@ -1149,6 +1155,239 @@ const sampleStudentSchool1 = {
           status: "issued",
         }),
       ).rejects.toThrow(TRPCError);
+    });
+  });
+
+  describe("hardened validation & enterprise invariants", () => {
+    it("rejects initial status 'paid' or 'partially_paid' in createInvoice", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.createInvoice({
+          studentId: 10,
+          type: "subscription",
+          status: "paid" as any,
+          items: [{ description: "Lecție", quantity: 1, unitPrice: 100 }],
+        }),
+      ).rejects.toThrow();
+
+      await expect(
+        caller.createInvoice({
+          studentId: 10,
+          type: "subscription",
+          status: "partially_paid" as any,
+          items: [{ description: "Lecție", quantity: 1, unitPrice: 100 }],
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("rejects createInvoice when total exceeds 2,000,000,000 to prevent int32 overflow", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.createInvoice({
+          studentId: 10,
+          type: "subscription",
+          items: [{ description: "Curs VIP", quantity: 25, unitPrice: 90_000_000 }],
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("rejects invalid calendar dates in dateSchema (e.g. 2026-02-31, 2026-04-31)", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.recordPayment({
+          invoiceId: 1,
+          amount: 500,
+          paymentDate: "2026-02-31",
+          method: "cash",
+        }),
+      ).rejects.toThrow();
+
+      await expect(
+        caller.recordPayment({
+          invoiceId: 1,
+          amount: 500,
+          paymentDate: "2026-04-31",
+          method: "cash",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("rejects cancelInvoice when neither id nor invoiceId is provided", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.cancelInvoice({
+          reason: "Anulare fără ID",
+        } as any),
+      ).rejects.toThrow();
+    });
+
+    it("prevents resurrecting a cancelled invoice via updateInvoiceStatus", async () => {
+      const mockChain = createQueryChain([
+        {
+          id: 10,
+          schoolId: 1,
+          status: "cancelled",
+          paidAmount: 0,
+          totalAmount: 1000,
+        },
+      ]);
+      (db.select as any).mockReturnValue(mockChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.updateInvoiceStatus({
+          id: 10,
+          status: "issued",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("prevents setting status 'partially_paid' when paidAmount is 0", async () => {
+      const mockChain = createQueryChain([
+        {
+          id: 11,
+          schoolId: 1,
+          status: "issued",
+          paidAmount: 0,
+          totalAmount: 1000,
+        },
+      ]);
+      (db.select as any).mockReturnValue(mockChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.updateInvoiceStatus({
+          id: 11,
+          status: "partially_paid",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("prevents demoting a fully paid invoice to issued, draft, or overdue", async () => {
+      const mockChain = createQueryChain([
+        {
+          id: 12,
+          schoolId: 1,
+          status: "paid",
+          paidAmount: 1000,
+          totalAmount: 1000,
+        },
+      ]);
+      (db.select as any).mockReturnValue(mockChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.updateInvoiceStatus({
+          id: 12,
+          status: "issued",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("prevents cross-student enrollment ID hijacking during invoice creation", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([sampleStudentSchool1]))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.createInvoice({
+          studentId: sampleStudentSchool1.id,
+          enrollmentId: 999,
+          type: "subscription",
+          items: [{ description: "Abonament", quantity: 1, unitPrice: 500 }],
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("throws CONFLICT if payment was already deleted/voided concurrently", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([{ id: 80, invoiceId: 1, studentId: 10, schoolId: 1, amount: 500 }]))
+        .mockReturnValueOnce(createQueryChain([{ id: 1, schoolId: 1, totalAmount: 1000, paidAmount: 500, status: "partially_paid" }]));
+      (db.delete as any).mockReturnValueOnce({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.voidPayment({
+          paymentId: 80,
+          reason: "Anulare concurentă",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("prevents demoting an invoice with paidAmount > 0 to draft or issued", async () => {
+      const mockChain = createQueryChain([
+        {
+          id: 30,
+          schoolId: 1,
+          status: "partially_paid",
+          paidAmount: 300,
+          totalAmount: 1000,
+        },
+      ]);
+      (db.select as any).mockReturnValue(mockChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.updateInvoiceStatus({
+          id: 30,
+          status: "draft",
+        }),
+      ).rejects.toThrow(TRPCError);
+
+      await expect(
+        caller.updateInvoiceStatus({
+          id: 30,
+          status: "issued",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("rejects non-positive, floating-point, and >100M payment amounts", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 0, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow();
+      await expect(caller.recordPayment({ invoiceId: 1, amount: -50, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow();
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 100_000_001, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow();
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 49.99 as any, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow();
+    });
+
+    it("correctly differentiates leap year Feb 29 from non-leap year Feb 29", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 500, paymentDate: "2026-02-29", method: "cash" })).rejects.toThrow();
+
+      (db.select as any).mockReturnValueOnce(createQueryChain([]));
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 500, paymentDate: "2028-02-29", method: "cash" })).rejects.toThrow(TRPCError);
+    });
+
+    it("rejects createInvoice when student belongs to school 1 but groupId belongs to school 2", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([sampleStudentSchool1]))
+        .mockReturnValueOnce(createQueryChain([{ id: 88, schoolId: 2 }]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.createInvoice({
+          studentId: sampleStudentSchool1.id,
+          groupId: 88,
+          type: "subscription",
+          items: [{ description: "Cross-school group", quantity: 1, unitPrice: 500 }],
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("aborts payment recording when invoice update fails inside transaction", async () => {
+      const mockTx: any = {
+        select: vi.fn().mockReturnValue(createQueryChain([{ id: 1, totalAmount: 1000, paidAmount: 0, status: "issued", schoolId: 1 }])),
+        insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 1 }]) }) }),
+        update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ returning: vi.fn().mockRejectedValue(new Error("DB Deadlock / Disk Full")) }) }) }),
+      };
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(caller.recordPayment({ invoiceId: 1, amount: 500, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow("DB Deadlock / Disk Full");
     });
   });
 });
