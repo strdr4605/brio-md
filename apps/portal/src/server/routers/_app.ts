@@ -7,6 +7,7 @@ import { courseRouter } from "./course";
 import { attendanceRouter } from "./attendance";
 import { groupRouter } from "./group";
 import { enrollmentRouter } from "./enrollment";
+import { billingRouter } from "./billing";
 
 export const appRouter = router({
   user: userRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   attendance: attendanceRouter,
   group: groupRouter,
   enrollment: enrollmentRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;
