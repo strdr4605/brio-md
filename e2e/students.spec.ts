@@ -21,11 +21,19 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await expect(page).toHaveURL(/.*\/dashboard/);
 
     // 2. Navigate to Students page
-    await page.goto("http://localhost:3002/dashboard/students");
+    await page.goto("http://localhost:3002/dashboard/students", {
+      waitUntil: "networkidle",
+    });
     await expect(page.getByRole("heading", { name: "Studenți" })).toBeVisible();
 
     // 3. Open "Adaugă Student" drawer
-    await page.getByRole("button", { name: "Adaugă Student" }).click();
+    const addStudentButton = page.getByRole("button", {
+      name: "Adaugă Student",
+      exact: true,
+    });
+    await expect(addStudentButton).toBeVisible();
+    await expect(addStudentButton).toBeEnabled();
+    await addStudentButton.click();
     await expect(page.locator("h2")).toContainText("Adaugă Student");
 
     // 4. Fill in student details

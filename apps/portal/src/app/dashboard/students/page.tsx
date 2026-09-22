@@ -21,10 +21,7 @@ export default function StudentiPage() {
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
   const isSuperOrAdmin =
-    permissions.includes("super") ||
-    permissions.includes("admin") ||
-    role === "superadmin" ||
-    role === "admin";
+    permissions.includes("super") || permissions.includes("admin") || role === "superadmin" || role === "admin";
   const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
 
   const [showForm, setShowForm] = useState(false);
@@ -63,15 +60,9 @@ export default function StudentiPage() {
     }
   };
 
-  const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
-    enabled: canManageStudents,
-  });
-  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
-    enabled: canManageStudents,
-  });
-  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, {
-    enabled: canManageStudents,
-  });
+  const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, { enabled: canManageStudents });
+  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, { enabled: canManageStudents });
+  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, { enabled: canManageStudents });
 
   const filteredStudents = useMemo(() => {
     return students
@@ -85,19 +76,13 @@ export default function StudentiPage() {
           if (!matchesName && !matchesPhone && !matchesParent && !matchesParentPhone) return false;
         }
 
-        if (selectedSchoolId !== "all" && student.schoolId !== selectedSchoolId) {
-          return false;
-        }
-
+        if (selectedSchoolId !== "all" && student.schoolId !== selectedSchoolId) return false;
         const studentCourses = (student as any).courses || [];
         if (courseFilter === "enrolled" && studentCourses.length === 0) return false;
         if (courseFilter === "unenrolled" && studentCourses.length > 0) return false;
-
         return true;
       })
-      .sort((a, b) =>
-        (a.name || "").localeCompare(b.name || "", "ro", { sensitivity: "base" })
-      );
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ro", { sensitivity: "base" }));
   }, [students, search, selectedSchoolId, courseFilter]);
 
   if (status === "loading") {
@@ -157,6 +142,8 @@ export default function StudentiPage() {
         </div>
 
         <button
+          type="button"
+          data-testid="add-student-button"
           onClick={handleCreate}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
