@@ -19,6 +19,7 @@ test.describe("Portal - Student Management Lifecycle", () => {
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(/.*\/dashboard/);
+    await page.waitForLoadState("networkidle");
 
     // 2. Navigate to Students page
     await page.goto("http://localhost:3002/dashboard/students", {
