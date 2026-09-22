@@ -50,13 +50,13 @@ export function EnrollmentDrawer({
   const isGroupMode = Boolean(groupId);
 
   const studentCourses = useMemo(() => coursesProp || [], [coursesProp]);
-  const { data: availableCourses = [], isLoading: isLoadingCourses } = trpc.course.list.useQuery(
+  const { data: availableCourses = [], isLoading: isLoadingCourses } = trpc.user.listCourses.useQuery(
     { schoolId: schoolId || undefined },
     { enabled: isOpen && isStudentMode },
   );
 
   const { data: allGroups = [], isLoading: isLoadingGroups } = trpc.group.list.useQuery(
-    { schoolId: schoolId || undefined },
+    { schoolId: schoolId || undefined, allSchoolGroups: true },
     { enabled: isOpen },
   );
 

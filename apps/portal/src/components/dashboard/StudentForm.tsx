@@ -72,7 +72,7 @@ export function StudentFormDrawer({
 
   // Query groups available for the current school
   const { data: schoolGroups = [] } = trpc.group.list.useQuery(
-    { schoolId: currentSchoolId || undefined },
+    { schoolId: currentSchoolId || undefined, allSchoolGroups: true },
     { enabled: mounted },
   );
 
