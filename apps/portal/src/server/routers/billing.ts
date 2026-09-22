@@ -1,31 +1,35 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure } from "../trpc";
-import { eq, and, or, ilike, desc, gte, lte, ne } from "drizzle-orm";
+import { router, adminProcedure } from "../trpc";
 import { db } from "@/lib/db";
 import {
-  invoices,
-  invoiceItems,
-  payments,
-  students,
-  groups,
-  courses,
-  studentGroupEnrollments,
-} from "@/db/schema";
+  fetchInvoices,
+  fetchInvoiceById,
+  executeCreateInvoice,
+  executeUpdateInvoiceStatus,
+} from "../invoiceService";
+import { fetchStudentBalanceSummary } from "../studentBalanceService";
+import {
+  executeRecordPayment,
+  executeVoidPayment,
+  executeCancelInvoice,
+} from "../billingService";
 
-function getBillingRoles(user?: { permissions?: string[]; role?: string; schoolId?: number | null }) {
-  const permissions = user?.permissions || [];
-  const role = user?.role;
-  return {
-    isSuper: permissions.includes("super") || role === "superadmin",
-    isAdmin: permissions.includes("admin") || role === "admin",
-    isTeacher: permissions.includes("teach") || role === "teacher",
-  };
-}
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const dateSchema = z
+  .string()
+  .regex(dateRegex, "Data trebuie să fie în format YYYY-MM-DD")
+  .refine(
+    (val) => {
+      const d = new Date(val + "T00:00:00Z");
+      return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === val;
+    },
+    { message: "Data specificată este invalidă în calendar" },
+  );
 
 export const billingRouter = router({
   // 1. Get Invoices (with pagination, filters, and search)
-  getInvoices: protectedProcedure
+  getInvoices: adminProcedure
     .input(
       z
         .object({
@@ -41,393 +45,76 @@ export const billingRouter = router({
           schoolId: z.number().int().positive().optional(),
           dateRange: z
             .object({
-              from: z.string().optional(),
-              to: z.string().optional(),
+              from: dateSchema.optional(),
+              to: dateSchema.optional(),
             })
             .optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
-
-      const conditions = [];
-
-      // Multi-tenant isolation: non-super users can only access their school's invoices
-      if (!isSuper) {
-        if (!user.schoolId) return [];
-        conditions.push(eq(invoices.schoolId, user.schoolId));
-      } else if (input?.schoolId) {
-        conditions.push(eq(invoices.schoolId, input.schoolId));
-      }
-
-      if (input?.status) {
-        conditions.push(eq(invoices.status, input.status));
-      }
-      if (input?.type) {
-        conditions.push(eq(invoices.type, input.type));
-      }
-      if (input?.groupId) {
-        conditions.push(eq(invoices.groupId, input.groupId));
-      }
-      if (input?.studentId) {
-        conditions.push(eq(invoices.studentId, input.studentId));
-      }
-      if (input?.search?.trim()) {
-        const q = `%${input.search.trim()}%`;
-        conditions.push(
-          or(ilike(invoices.invoiceNumber, q), ilike(students.name, q)),
-        );
-      }
-      if (input?.dateRange?.from) {
-        conditions.push(gte(invoices.dueDate, input.dateRange.from));
-      }
-      if (input?.dateRange?.to) {
-        conditions.push(lte(invoices.dueDate, input.dateRange.to));
-      }
-
-      const rows = await db
-        .select({
-          id: invoices.id,
-          invoiceNumber: invoices.invoiceNumber,
-          schoolId: invoices.schoolId,
-          studentId: invoices.studentId,
-          studentName: students.name,
-          studentPhone: students.phone,
-          enrollmentId: invoices.enrollmentId,
-          groupId: invoices.groupId,
-          groupName: groups.name,
-          type: invoices.type,
-          status: invoices.status,
-          totalAmount: invoices.totalAmount,
-          paidAmount: invoices.paidAmount,
-          dueDate: invoices.dueDate,
-          periodStart: invoices.periodStart,
-          periodEnd: invoices.periodEnd,
-          notes: invoices.notes,
-          createdAt: invoices.createdAt,
-          updatedAt: invoices.updatedAt,
-        })
-        .from(invoices)
-        .innerJoin(students, eq(invoices.studentId, students.id))
-        .leftJoin(groups, eq(invoices.groupId, groups.id))
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(invoices.createdAt))
-        .limit(input?.limit ?? 50)
-        .offset(input?.offset ?? 0);
-
-      return rows;
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchInvoices(db, input, ctx.user);
     }),
 
   // 2. Get Student Balance Summary
-  getStudentBalanceSummary: protectedProcedure
+  getStudentBalanceSummary: adminProcedure
     .input(z.object({ studentId: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
-
-      // Verify student existence and school isolation
-      const [student] = await db
-        .select({
-          id: students.id,
-          name: students.name,
-          schoolId: students.schoolId,
-        })
-        .from(students)
-        .where(eq(students.id, input.studentId))
-        .limit(1);
-
-      if (!student) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Studentul nu a fost găsit",
-        });
-      }
-
-      if (!isSuper && student.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți accesa datele unui student din altă școală",
-        });
-      }
-
-      // Query non-cancelled invoices for this student
-      const studentInvoices = await db
-        .select({
-          id: invoices.id,
-          status: invoices.status,
-          totalAmount: invoices.totalAmount,
-          paidAmount: invoices.paidAmount,
-          dueDate: invoices.dueDate,
-        })
-        .from(invoices)
-        .where(
-          and(
-            eq(invoices.studentId, input.studentId),
-            ne(invoices.status, "cancelled"),
-          ),
-        );
-
-      // Query payments recorded for this student
-      const studentPayments = await db
-        .select({
-          amount: payments.amount,
-        })
-        .from(payments)
-        .where(eq(payments.studentId, input.studentId));
-
-      const totalPaid = studentPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
-
-      // Active / issued invoices: exclude draft and cancelled
-      const activeInvoices = studentInvoices.filter((inv) => inv.status !== "draft");
-      const totalInvoiced = activeInvoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0);
-
-      const currentDebt = Math.max(0, totalInvoiced - totalPaid);
-
-      // Overdue invoices: marked as 'overdue' or unpaid past dueDate
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const overdueCount = activeInvoices.filter((inv) => {
-        if (inv.status === "paid") return false;
-        if (inv.status === "overdue") return true;
-        if (inv.dueDate && inv.dueDate < todayStr) return true;
-        return false;
-      }).length;
-
-      // Active billing plans from studentGroupEnrollments
-      const activeBillingPlans = await db
-        .select({
-          enrollmentId: studentGroupEnrollments.id,
-          groupId: groups.id,
-          groupName: groups.name,
-          courseId: courses.id,
-          courseName: courses.name,
-          billingType: studentGroupEnrollments.billingType,
-          customPrice: studentGroupEnrollments.customPrice,
-          discountPercent: studentGroupEnrollments.discountPercent,
-          status: studentGroupEnrollments.status,
-          joinedAt: studentGroupEnrollments.joinedAt,
-        })
-        .from(studentGroupEnrollments)
-        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
-        .leftJoin(courses, eq(groups.courseId, courses.id))
-        .where(
-          and(
-            eq(studentGroupEnrollments.studentId, input.studentId),
-            eq(studentGroupEnrollments.status, "active"),
-          ),
-        );
-
-      return {
-        studentId: student.id,
-        studentName: student.name,
-        totalInvoiced,
-        totalPaid,
-        currentDebt,
-        overdueCount,
-        activeBillingPlans,
-      };
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchStudentBalanceSummary(db, input.studentId, ctx.user);
     }),
 
   // 3. Get Invoice by ID (with items, student, group, and payment history)
-  getInvoiceById: protectedProcedure
+  getInvoiceById: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
-
-      const [invoice] = await db
-        .select()
-        .from(invoices)
-        .where(eq(invoices.id, input.id))
-        .limit(1);
-
-      if (!invoice) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Factura nu a fost găsită",
-        });
-      }
-
-      if (!isSuper && invoice.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți accesa o factură din altă școală",
-        });
-      }
-
-      // Fetch student details
-      const [student] = await db
-        .select({
-          id: students.id,
-          name: students.name,
-          phone: students.phone,
-          parentName: students.parentName,
-          parentPhone: students.parentPhone,
-          age: students.age,
-        })
-        .from(students)
-        .where(eq(students.id, invoice.studentId))
-        .limit(1);
-
-      // Fetch group and course if groupId is present
-      let group = null;
-      if (invoice.groupId) {
-        const [g] = await db
-          .select({
-            id: groups.id,
-            name: groups.name,
-            courseId: courses.id,
-            courseName: courses.name,
-          })
-          .from(groups)
-          .leftJoin(courses, eq(groups.courseId, courses.id))
-          .where(eq(groups.id, invoice.groupId))
-          .limit(1);
-        group = g || null;
-      }
-
-      // Fetch invoice line items
-      const items = await db
-        .select()
-        .from(invoiceItems)
-        .where(eq(invoiceItems.invoiceId, invoice.id));
-
-      // Fetch payments for this invoice
-      const invoicePayments = await db
-        .select()
-        .from(payments)
-        .where(eq(payments.invoiceId, invoice.id))
-        .orderBy(desc(payments.createdAt));
-
-      return {
-        ...invoice,
-        student,
-        group,
-        items,
-        payments: invoicePayments,
-      };
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchInvoiceById(db, input.id, ctx.user);
     }),
 
   // 4. Create Invoice
-  createInvoice: protectedProcedure
+  createInvoice: adminProcedure
     .input(
-      z.object({
-        studentId: z.number().int().positive(),
-        schoolId: z.number().int().positive().optional(),
-        groupId: z.number().int().positive().optional(),
-        enrollmentId: z.number().int().positive().optional(),
-        invoiceNumber: z.string().optional(),
-        type: z.enum(["subscription", "per_lesson", "situational"]),
-        status: z
-          .enum(["draft", "issued", "partially_paid", "paid", "overdue", "cancelled"])
-          .default("draft"),
-        dueDate: z.string().optional(),
-        periodStart: z.string().optional(),
-        periodEnd: z.string().optional(),
-        notes: z.string().optional(),
-        items: z
-          .array(
-            z.object({
-              description: z.string().min(1),
-              quantity: z.number().int().positive().default(1),
-              unitPrice: z.number().int().min(0),
-              attendanceId: z.number().int().positive().optional(),
-            }),
-          )
-          .min(1),
-      }),
+      z
+        .object({
+          studentId: z.number().int().positive(),
+          schoolId: z.number().int().positive().optional(),
+          groupId: z.number().int().positive().optional(),
+          enrollmentId: z.number().int().positive().optional(),
+          invoiceNumber: z.string().max(50).optional(),
+          type: z.enum(["subscription", "per_lesson", "situational"]),
+          status: z.enum(["draft", "issued"]).default("draft"),
+          dueDate: dateSchema.optional(),
+          periodStart: dateSchema.optional(),
+          periodEnd: dateSchema.optional(),
+          notes: z.string().optional(),
+          items: z
+            .array(
+              z.object({
+                description: z.string().min(1).max(255),
+                quantity: z.number().int().positive().max(1000).default(1),
+                unitPrice: z.number().int().min(0).max(100_000_000),
+                attendanceId: z.number().int().positive().optional(),
+              }),
+            )
+            .min(1),
+        })
+        .refine(
+          (data) => {
+            const total = data.items.reduce((sum, it) => sum + it.quantity * it.unitPrice, 0);
+            return total <= 2_000_000_000;
+          },
+          { message: "Suma totală a facturii depășește limita permisă de 2,000,000,000." },
+        ),
     )
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
-
-      const targetSchoolId = isSuper ? input.schoolId || user.schoolId : user.schoolId;
-      if (!targetSchoolId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "schoolId este obligatoriu",
-        });
-      }
-
-      // Verify student exists and belongs to target school
-      const [student] = await db
-        .select()
-        .from(students)
-        .where(eq(students.id, input.studentId))
-        .limit(1);
-
-      if (!student) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Studentul nu a fost găsit",
-        });
-      }
-
-      if (!isSuper && student.schoolId !== targetSchoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți crea o factură pentru un student din altă școală",
-        });
-      }
-
-      // Generate invoiceNumber if not provided
-      const invoiceNum =
-        input.invoiceNumber?.trim() ||
-        `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-
-      // Calculate total amount from items
-      const totalAmount = input.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
-        0,
-      );
-
-      const [createdInvoice] = await db
-        .insert(invoices)
-        .values({
-          schoolId: targetSchoolId,
-          studentId: input.studentId,
-          groupId: input.groupId,
-          enrollmentId: input.enrollmentId,
-          invoiceNumber: invoiceNum,
-          type: input.type,
-          status: input.status,
-          totalAmount,
-          paidAmount: 0,
-          dueDate: input.dueDate,
-          periodStart: input.periodStart,
-          periodEnd: input.periodEnd,
-          notes: input.notes,
-        })
-        .returning();
-
-      // Insert line items
-      const itemsToInsert = input.items.map((it) => ({
-        invoiceId: createdInvoice.id,
-        description: it.description,
-        quantity: it.quantity,
-        unitPrice: it.unitPrice,
-        amount: it.quantity * it.unitPrice,
-        attendanceId: it.attendanceId,
-      }));
-
-      const createdItems = await db
-        .insert(invoiceItems)
-        .values(itemsToInsert)
-        .returning();
-
-      return {
-        ...createdInvoice,
-        items: createdItems,
-      };
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeCreateInvoice(db, input, ctx.user);
     }),
 
   // 5. Update Invoice Status
-  updateInvoiceStatus: protectedProcedure
+  updateInvoiceStatus: adminProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -436,120 +123,55 @@ export const billingRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
-
-      const [existing] = await db
-        .select()
-        .from(invoices)
-        .where(eq(invoices.id, input.id))
-        .limit(1);
-
-      if (!existing) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Factura nu a fost găsită",
-        });
-      }
-
-      if (!isSuper && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți modifica o factură din altă școală",
-        });
-      }
-
-      const updateData: {
-        status: "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled";
-        notes?: string;
-        updatedAt: Date;
-      } = {
-        status: input.status,
-        updatedAt: new Date(),
-      };
-      if (input.notes !== undefined) {
-        updateData.notes = input.notes;
-      }
-
-      const [updated] = await db
-        .update(invoices)
-        .set(updateData)
-        .where(eq(invoices.id, input.id))
-        .returning();
-
-      return updated;
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeUpdateInvoiceStatus(db, input, ctx.user);
     }),
 
-  // 6. Record Payment
-  recordPayment: protectedProcedure
+  // 6. Record Payment (Atomic Transaction)
+  recordPayment: adminProcedure
     .input(
       z.object({
         invoiceId: z.number().int().positive(),
-        amount: z.number().int().positive(),
-        paymentDate: z.string().min(10).max(10), // YYYY-MM-DD
+        amount: z.number().int().positive().max(100_000_000),
+        paymentDate: dateSchema,
         method: z.enum(["cash", "bank_transfer", "card", "other"]),
-        receiptNumber: z.string().optional(),
+        receiptNumber: z.string().max(100).optional(),
         notes: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.user;
-      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      const { isSuper } = getBillingRoles(user);
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeRecordPayment(db, input, ctx.user);
+    }),
 
-      const [invoice] = await db
-        .select()
-        .from(invoices)
-        .where(eq(invoices.id, input.invoiceId))
-        .limit(1);
+  // 7. Void Payment (Atomic Transaction)
+  voidPayment: adminProcedure
+    .input(
+      z.object({
+        paymentId: z.number().int().positive(),
+        reason: z.string().min(1, "Motivul anulării plății este obligatoriu"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeVoidPayment(db, input, ctx.user);
+    }),
 
-      if (!invoice) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Factura nu a fost găsită",
-        });
-      }
-
-      if (!isSuper && invoice.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți înregistra o plată pentru o factură din altă școală",
-        });
-      }
-
-      const [newPayment] = await db
-        .insert(payments)
-        .values({
-          invoiceId: invoice.id,
-          studentId: invoice.studentId,
-          schoolId: invoice.schoolId,
-          amount: input.amount,
-          paymentDate: input.paymentDate,
-          method: input.method,
-          receiptNumber: input.receiptNumber,
-          notes: input.notes,
-          recordedByUserId: user.id ? parseInt(user.id, 10) || null : null,
+  // 8. Cancel Invoice (Atomic Transaction)
+  cancelInvoice: adminProcedure
+    .input(
+      z
+        .object({
+          id: z.number().int().positive().optional(),
+          invoiceId: z.number().int().positive().optional(),
+          reason: z.string().min(1, "Motivul anulării este obligatoriu"),
         })
-        .returning();
-
-      const newPaidAmount = (invoice.paidAmount || 0) + input.amount;
-      const newStatus =
-        newPaidAmount >= invoice.totalAmount ? "paid" : "partially_paid";
-
-      const [updatedInvoice] = await db
-        .update(invoices)
-        .set({
-          paidAmount: newPaidAmount,
-          status: newStatus,
-          updatedAt: new Date(),
-        })
-        .where(eq(invoices.id, invoice.id))
-        .returning();
-
-      return {
-        payment: newPayment,
-        invoice: updatedInvoice,
-      };
+        .refine((data) => data.id !== undefined || data.invoiceId !== undefined, {
+          message: "Trebuie specificat id sau invoiceId pentru anularea facturii",
+        }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeCancelInvoice(db, input, ctx.user);
     }),
 });
