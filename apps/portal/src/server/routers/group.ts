@@ -55,14 +55,13 @@ export const groupRouter = router({
   // List groups (filtered by course, school, teacher, or active status)
   list: protectedProcedure
     .input(
-      z
-        .object({
-          courseId: z.number().int().positive().optional(),
-          schoolId: z.number().int().positive().optional(),
-          teacherId: z.number().int().positive().optional(),
-          active: z.boolean().optional(),
-        })
-        .optional(),
+      z.object({
+        courseId: z.number().int().positive().optional(),
+        schoolId: z.number().int().positive().optional(),
+        teacherId: z.number().int().positive().optional(),
+        active: z.boolean().optional(),
+        allSchoolGroups: z.boolean().optional(),
+      }).optional(),
     )
     .query(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -80,8 +79,8 @@ export const groupRouter = router({
         conditions.push(eq(groups.schoolId, input.schoolId));
       }
 
-      // Automatically scope teachers to their assigned groups, or allow admin to filter by teacherId
-      if (isTeacher && !isAdmin && !isSuper) {
+      // Automatically scope teachers to their assigned groups unless allSchoolGroups is requested
+      if (isTeacher && !isAdmin && !isSuper && !input?.allSchoolGroups) {
         conditions.push(eq(groups.teacherId, Number(user.id)));
       } else if (input?.teacherId) {
         conditions.push(eq(groups.teacherId, input.teacherId));
@@ -232,11 +231,7 @@ export const groupRouter = router({
       const user = ctx.user;
       if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const [existing] = await db
-        .select()
-        .from(groups)
-        .where(eq(groups.id, input.id))
-        .limit(1);
+      const [existing] = await db.select().from(groups).where(eq(groups.id, input.id)).limit(1);
 
       if (!existing) {
         throw new TRPCError({
@@ -321,11 +316,7 @@ export const groupRouter = router({
         });
       }
 
-      const [existing] = await db
-        .select()
-        .from(groups)
-        .where(eq(groups.id, input.id))
-        .limit(1);
+      const [existing] = await db.select().from(groups).where(eq(groups.id, input.id)).limit(1);
 
       if (!existing) {
         throw new TRPCError({

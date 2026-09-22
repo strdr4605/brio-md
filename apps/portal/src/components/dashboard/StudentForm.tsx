@@ -4,7 +4,10 @@ import { trpc } from "@/lib/trpc";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { detectStudentScheduleConflicts } from "@/lib/scheduleConflicts";
+import {
+  detectStudentScheduleConflicts,
+  findGroupConflictWithSelected,
+} from "@/lib/scheduleConflicts";
 
 export type StudentFormStudent = {
   id?: number;
@@ -69,7 +72,7 @@ export function StudentFormDrawer({
 
   // Query groups available for the current school
   const { data: schoolGroups = [] } = trpc.group.list.useQuery(
-    { schoolId: currentSchoolId || undefined },
+    { schoolId: currentSchoolId || undefined, allSchoolGroups: true },
     { enabled: mounted },
   );
 
@@ -404,12 +407,6 @@ export function StudentFormDrawer({
                   })}
                 </div>
               </div>
-              {courseConflicts.map((c, idx) => (
-                <div key={idx} className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
-                  <span className="text-amber-500 font-bold shrink-0">⚠️</span>
-                  <span>{c.message}</span>
-                </div>
-              ))}
 
               {/* Group allocation per selected course */}
               {selectedCourseIds.length > 0 && (
@@ -428,6 +425,13 @@ export function StudentFormDrawer({
                       if (!course) return null;
                       const availableForCourse = schoolGroups.filter((g) => g.courseId === courseId);
                       const selectedGroupId = courseGroups[courseId] ?? null;
+
+                      // Other groups selected in different courses
+                      const otherSelectedGroups = schoolGroups.filter((sg) =>
+                        Object.entries(courseGroups).some(
+                          ([cId, gId]) => Number(cId) !== courseId && gId === sg.id,
+                        ),
+                      );
 
                       return (
                         <div
@@ -448,29 +452,48 @@ export function StudentFormDrawer({
                               Nu există grupe active pentru acest curs. (Elevul va fi înscris doar la nivel de curs).
                             </p>
                           ) : (
-                            <select
-                              value={selectedGroupId || ""}
-                              onChange={(e) => {
-                                const val = e.target.value ? Number(e.target.value) : null;
-                                setCourseGroups((prev) => ({
-                                  ...prev,
-                                  [courseId]: val,
-                                }));
-                              }}
-                              className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
-                            >
-                              <option value="">Fără grupă (doar înscriere la curs)</option>
-                              {availableForCourse.map((g) => {
-                                const days = Array.isArray(g.scheduleDays) ? g.scheduleDays.join(", ") : "";
-                                const time = g.scheduleTime || "";
-                                const scheduleStr = [days, time].filter(Boolean).join(" • ");
-                                return (
-                                  <option key={g.id} value={g.id}>
-                                    {g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
-                                  </option>
-                                );
-                              })}
-                            </select>
+                            <div className="space-y-1.5">
+                              <select
+                                value={selectedGroupId || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value ? Number(e.target.value) : null;
+                                  if (val) {
+                                    const candidate = schoolGroups.find((g) => g.id === val);
+                                    if (candidate) {
+                                      const check = findGroupConflictWithSelected({
+                                        candidateGroup: candidate,
+                                        selectedGroups: otherSelectedGroups,
+                                      });
+                                      if (check.hasConflict) return;
+                                    }
+                                  }
+                                  setCourseGroups((prev) => ({
+                                    ...prev,
+                                    [courseId]: val,
+                                  }));
+                                }}
+                                className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
+                              >
+                                <option value="">Fără grupă (doar înscriere la curs)</option>
+                                {availableForCourse.map((g) => {
+                                  const days = Array.isArray(g.scheduleDays) ? g.scheduleDays.join(", ") : "";
+                                  const time = g.scheduleTime || "";
+                                  const scheduleStr = [days, time].filter(Boolean).join(" • ");
+                                  const isCurrentChoice = selectedGroupId === g.id;
+                                  const conflict = findGroupConflictWithSelected({
+                                    candidateGroup: g,
+                                    selectedGroups: otherSelectedGroups,
+                                  });
+                                  const isConflicted = conflict.hasConflict && !isCurrentChoice;
+
+                                  return (
+                                    <option key={g.id} value={g.id} disabled={isConflicted}>
+                                      {isConflicted ? "[Suprapunere de orar] " : ""}{g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
                           )}
                         </div>
                       );

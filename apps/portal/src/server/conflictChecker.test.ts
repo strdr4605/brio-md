@@ -8,6 +8,8 @@ import {
   detectCourseScheduleConflicts,
   detectStudentGroupScheduleConflicts,
   detectStudentScheduleConflicts,
+  findGroupConflictWithSelected,
+  findStudentConflictWithTargetGroup,
 } from "@/lib/scheduleConflicts";
 import {
   checkGroupConflicts,
@@ -585,4 +587,109 @@ describe("checkStudentGroupConflicts server function", () => {
       checkStudentGroupConflicts(mockDb as any, { studentId: 1, groupIds: [10] }),
     ).rejects.toThrow(TRPCError);
   });
+
+  describe("findGroupConflictWithSelected", () => {
+    const groupA = {
+      id: 1,
+      name: "Grupa A",
+      courseName: "English",
+      scheduleDays: ["tue", "thu"],
+      scheduleTime: "17:30 - 19:00",
+    };
+    const groupB = {
+      id: 2,
+      name: "Grupa B",
+      courseName: "Web",
+      scheduleDays: ["tue"],
+      scheduleTime: "18:00 - 19:30",
+    };
+    const groupC = {
+      id: 3,
+      name: "Grupa C",
+      courseName: "Math",
+      scheduleDays: ["sat"],
+      scheduleTime: "10:00 - 12:00",
+    };
+
+    it("detects conflict when days and times overlap", () => {
+      const result = findGroupConflictWithSelected({
+        candidateGroup: groupB,
+        selectedGroups: [groupA],
+      });
+      expect(result.hasConflict).toBe(true);
+      expect(result.conflictingGroup?.id).toBe(1);
+      expect(result.reason).toContain('Se suprapune cu "Grupa A"');
+    });
+
+    it("returns no conflict when days do not overlap", () => {
+      const result = findGroupConflictWithSelected({
+        candidateGroup: groupC,
+        selectedGroups: [groupA],
+      });
+      expect(result.hasConflict).toBe(false);
+    });
+
+    it("does not conflict with itself if candidate is already in selectedGroups", () => {
+      const result = findGroupConflictWithSelected({
+        candidateGroup: groupA,
+        selectedGroups: [groupA, groupC],
+      });
+      expect(result.hasConflict).toBe(false);
+    });
+  });
+
+  describe("findStudentConflictWithTargetGroup", () => {
+    it("detects conflict with student's active group", () => {
+      const targetGroup = {
+        id: 10,
+        name: "Grupa Weekend",
+        courseName: "Coding",
+        scheduleDays: ["sat"],
+        scheduleTime: "10:00 - 12:00",
+      };
+      const studentGroups = [
+        {
+          id: 5,
+          name: "Grupa Robotică",
+          courseName: "Robotics",
+          scheduleDays: ["sat"],
+          scheduleTime: "11:00 - 12:30",
+          active: true,
+        },
+      ];
+      const result = findStudentConflictWithTargetGroup({
+        targetGroup,
+        studentActiveGroups: studentGroups,
+      });
+      expect(result.hasConflict).toBe(true);
+      expect(result.conflictingGroup?.id).toBe(5);
+      expect(result.reason).toContain("Studentul este deja înscris la");
+    });
+
+    it("ignores inactive groups of the student", () => {
+      const targetGroup = {
+        id: 10,
+        name: "Grupa Weekend",
+        courseName: "Coding",
+        scheduleDays: ["sat"],
+        scheduleTime: "10:00 - 12:00",
+      };
+      const studentGroups = [
+        {
+          id: 5,
+          name: "Grupa Robotică",
+          courseName: "Robotics",
+          scheduleDays: ["sat"],
+          scheduleTime: "11:00 - 12:30",
+          active: false,
+        },
+      ];
+      const result = findStudentConflictWithTargetGroup({
+        targetGroup,
+        studentActiveGroups: studentGroups,
+      });
+      expect(result.hasConflict).toBe(false);
+    });
+  });
 });
+

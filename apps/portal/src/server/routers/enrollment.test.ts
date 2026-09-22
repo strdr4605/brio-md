@@ -187,7 +187,7 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
       );
     });
 
-    it("throws BAD_REQUEST if student is not enrolled in the course for a group", async () => {
+    it("automatically enrolls student into course if not yet enrolled when adding to a group", async () => {
       (db.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
@@ -202,6 +202,7 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
         }),
       });
 
+      // Course progress lookup returns empty (not enrolled yet)
       (db.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
@@ -210,15 +211,41 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
         }),
       });
 
-      const caller = enrollmentRouter.createCaller({ user: adminUser });
-      await expect(
-        caller.enrollStudent({
-          studentId: 10,
-          groupIds: [101],
+      // Mock auto-insert into studentCourseProgress
+      const insertCourseProgressValues = vi.fn().mockResolvedValue([]);
+      (db.insert as any).mockReturnValueOnce({
+        values: insertCourseProgressValues,
+      });
+
+      // Mock upsert into studentGroupEnrollments
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: 1,
+                studentId: 10,
+                groupId: 101,
+                courseId: 1,
+                status: "active",
+              },
+            ]),
+          }),
         }),
-      ).rejects.toThrow(
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      const result = await caller.enrollStudent({
+        studentId: 10,
+        groupIds: [101],
+      });
+
+      expect(result.success).toBe(true);
+      expect(insertCourseProgressValues).toHaveBeenCalledWith(
         expect.objectContaining({
-          code: "BAD_REQUEST",
+          studentId: 10,
+          courseId: 1,
+          status: "in_progress",
         }),
       );
     });

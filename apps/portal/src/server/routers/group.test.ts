@@ -147,6 +147,38 @@ describe("groupRouter", () => {
       expect(mockQuery.where).toHaveBeenCalled();
     });
 
+    it("allows teacher to list all school groups when allSchoolGroups is true", async () => {
+      const mockGroups = [
+        {
+          id: 1,
+          courseId: 10,
+          schoolId: 1,
+          name: "Grupa Other Teacher",
+          teacherId: 99,
+          active: true,
+        },
+      ];
+
+      const mockQuery = {
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockResolvedValue(mockGroups),
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue(mockQuery),
+          }),
+        }),
+      });
+
+      const caller = groupRouter.createCaller({ user: regularUser });
+      const result = await caller.list({ allSchoolGroups: true });
+
+      expect(result).toHaveLength(1);
+      expect(mockQuery.where).toHaveBeenCalled();
+    });
+
     it("throws UNAUTHORIZED when user is not authenticated", async () => {
       const caller = groupRouter.createCaller({ user: null });
       await expect(caller.list({})).rejects.toThrow(TRPCError);
