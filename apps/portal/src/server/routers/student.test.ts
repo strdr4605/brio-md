@@ -462,18 +462,14 @@ describe("studentRouter", () => {
         })
         .mockReturnValueOnce({
           from: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue([]),
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
           }),
         });
 
       (db.delete as any).mockReturnValue({
         where: vi.fn().mockResolvedValue({}),
-      });
-
-      (db.update as any).mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue({}),
-        }),
       });
 
       const insertValuesMock = vi.fn().mockResolvedValue({});
@@ -498,13 +494,12 @@ describe("studentRouter", () => {
 
       expect(result).toEqual({ success: true });
       expect(db.delete).toHaveBeenCalled();
-      expect(db.update).toHaveBeenCalled();
       expect(insertValuesMock).toHaveBeenCalledWith([
         { studentId: 10, courseId: 2, status: "in_progress" },
       ]);
     });
 
-    it("deactivates active group enrollments when a course is removed", async () => {
+    it("deactivates active group enrollments when a course is removed (even with nullable courseId)", async () => {
       const mockStudent = { id: 10, name: "Student", schoolId: 1 };
       const existingEnrollments = [
         { studentId: 10, courseId: 1 },
@@ -526,7 +521,9 @@ describe("studentRouter", () => {
         })
         .mockReturnValueOnce({
           from: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue([{ id: 101, courseId: 1 }]),
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([{ id: 101, groupId: 5, courseId: 1 }]),
+            }),
           }),
         });
 

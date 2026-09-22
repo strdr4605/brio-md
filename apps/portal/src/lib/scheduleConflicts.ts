@@ -37,10 +37,7 @@ export function parseTimeRange(timeStr?: string | null): [number, number] | null
   const min2 = parseInt(m2, 10);
 
   if (hour1 > 23 || min1 > 59 || hour2 > 23 || min2 > 59) return null;
-
-  const startMinutes = hour1 * 60 + min1;
-  const endMinutes = hour2 * 60 + min2;
-  return [startMinutes, endMinutes];
+  return [hour1 * 60 + min1, hour2 * 60 + min2];
 }
 
 export function areTimesOverlapping(t1: [number, number], t2: [number, number]): boolean {
@@ -72,7 +69,7 @@ export type DetectGroupConflictParams = {
     scheduleTime?: string | null;
     active?: boolean | null;
   }>;
-}
+};
 
 export function detectGroupConflicts(params: DetectGroupConflictParams): ConflictWarning[] {
   const warnings: ConflictWarning[] = [];
@@ -100,7 +97,6 @@ export function detectGroupConflicts(params: DetectGroupConflictParams): Conflic
     if (excludeGroupId && group.id === excludeGroupId) continue;
     if (group.active === false) continue;
 
-    // Check duplicate name within school
     if (cleanName !== "" && group.name.trim().toLowerCase() === cleanName) {
       warnings.push({
         type: "name",
@@ -108,23 +104,18 @@ export function detectGroupConflicts(params: DetectGroupConflictParams): Conflic
       });
     }
 
-    // Check room and teacher overlaps if days and time exist
     if (parsedTime && parsedTime[0] < parsedTime[1] && scheduleDays && scheduleDays.length > 0) {
       const otherTime = parseTimeRange(group.scheduleTime);
       if (otherTime && areTimesOverlapping(parsedTime, otherTime)) {
         const commonDays = getOverlappingDays(scheduleDays, group.scheduleDays);
         if (commonDays.length > 0) {
           const daysStr = commonDays.map((d) => DAY_LABELS[d] || d).join(", ");
-
-          // Room collision
           if (cleanRoom && group.room && group.room.trim().toLowerCase() === cleanRoom) {
             warnings.push({
               type: "room",
               message: `Conflict de sală: Sala "${group.room}" este deja ocupată de grupa "${group.name}" (${group.courseName || "Curs"}) ${daysStr} între ${group.scheduleTime}.`,
             });
           }
-
-          // Teacher collision
           if (teacherId && group.teacherId && group.teacherId === teacherId) {
             warnings.push({
               type: "teacher",
@@ -135,7 +126,6 @@ export function detectGroupConflicts(params: DetectGroupConflictParams): Conflic
       }
     }
   }
-
   return warnings;
 }
 
@@ -189,7 +179,6 @@ export function detectStudentGroupScheduleConflicts(params: {
   const warnings: ConflictWarning[] = [];
   const { targetGroups, existingGroups = [] } = params;
 
-  // 1. Check conflicts among target groups themselves
   for (let i = 0; i < targetGroups.length; i++) {
     const g1 = targetGroups[i];
     const t1 = parseTimeRange(g1.scheduleTime);
@@ -213,7 +202,6 @@ export function detectStudentGroupScheduleConflicts(params: {
     }
   }
 
-  // 2. Check conflicts between target groups and existing groups
   for (const tg of targetGroups) {
     const tTarget = parseTimeRange(tg.scheduleTime);
     if (!tTarget || !tg.scheduleDays?.length) continue;
@@ -235,7 +223,6 @@ export function detectStudentGroupScheduleConflicts(params: {
       }
     }
   }
-
   return warnings;
 }
 
@@ -271,11 +258,9 @@ export function detectStudentScheduleConflicts(items: StudentScheduleItem[]): Co
         const commonDays = getOverlappingDays(s1.scheduleDays, s2.scheduleDays);
         if (commonDays.length > 0) {
           const daysStr = commonDays.map((d) => DAY_LABELS[d] || d).join(", ");
-          const title1 = formatScheduleItemTitle(s1, true);
-          const title2 = formatScheduleItemTitle(s2, false);
           warnings.push({
             type: "time",
-            message: `Conflict de orar: ${title1} (${s1.scheduleTime}) și ${title2} (${s2.scheduleTime}) au loc în același timp (${daysStr}).`,
+            message: `Conflict de orar: ${formatScheduleItemTitle(s1, true)} (${s1.scheduleTime}) și ${formatScheduleItemTitle(s2, false)} (${s2.scheduleTime}) au loc în același timp (${daysStr}).`,
           });
         }
       }
@@ -290,10 +275,6 @@ export type GroupConflictResult = {
   reason?: string;
 };
 
-/**
- * Checks if a candidate group has a schedule time conflict with any already selected group.
- * If candidateGroup is already part of selectedGroups, it does NOT conflict with itself.
- */
 export function findGroupConflictWithSelected({
   candidateGroup,
   selectedGroups,
@@ -327,13 +308,9 @@ export function findGroupConflictWithSelected({
       }
     }
   }
-
   return { hasConflict: false };
 }
 
-/**
- * Checks if a student (who has a list of active group enrollments) has a schedule conflict with a target group.
- */
 export function findStudentConflictWithTargetGroup({
   targetGroup,
   studentActiveGroups,
@@ -363,7 +340,5 @@ export function findStudentConflictWithTargetGroup({
       }
     }
   }
-
   return { hasConflict: false };
 }
-

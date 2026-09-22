@@ -703,8 +703,13 @@ export const studentRouter = router({
         .where(eq(studentCourseProgress.studentId, input.studentId));
 
       const activeGroupEnrollments = await db
-        .select({ id: studentGroupEnrollments.id, courseId: studentGroupEnrollments.courseId })
+        .select({
+          id: studentGroupEnrollments.id,
+          groupId: studentGroupEnrollments.groupId,
+          courseId: groups.courseId,
+        })
         .from(studentGroupEnrollments)
+        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
         .where(
           and(
             eq(studentGroupEnrollments.studentId, input.studentId),
@@ -721,7 +726,7 @@ export const studentRouter = router({
 
       const allExistingCourseIds = new Set([
         ...existingProgressList.map((e) => e.courseId),
-        ...activeGroupList.map((g) => g.courseId).filter((cid): cid is number => cid !== null),
+        ...activeGroupList.map((g) => g.courseId),
       ]);
 
       const toRemoveCourseIds = Array.from(allExistingCourseIds).filter((cid) => !targetIds.has(cid));
@@ -736,16 +741,16 @@ export const studentRouter = router({
           );
 
         // Deactivate active group enrollments for the removed courses
-        await db
-          .update(studentGroupEnrollments)
-          .set({ status: "inactive", leftAt: new Date() })
-          .where(
-            and(
-              eq(studentGroupEnrollments.studentId, input.studentId),
-              inArray(studentGroupEnrollments.courseId, toRemoveCourseIds),
-              eq(studentGroupEnrollments.status, "active"),
-            ),
-          );
+        const groupEnrollmentIdsToDeactivate = activeGroupList
+          .filter((g) => toRemoveCourseIds.includes(g.courseId))
+          .map((g) => g.id);
+
+        if (groupEnrollmentIdsToDeactivate.length > 0) {
+          await db
+            .update(studentGroupEnrollments)
+            .set({ status: "inactive", leftAt: new Date() })
+            .where(inArray(studentGroupEnrollments.id, groupEnrollmentIdsToDeactivate));
+        }
       }
 
       const toInsert = uniqueCourseIds.filter((cid) => !existingIds.has(cid));

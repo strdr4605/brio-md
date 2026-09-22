@@ -488,7 +488,7 @@ export function StudentFormDrawer({
 
                                   return (
                                     <option key={g.id} value={g.id} disabled={isConflicted}>
-                                      {g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
+                                      {isConflicted ? "[Suprapunere de orar] " : ""}{g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
                                     </option>
                                   );
                                 })}
