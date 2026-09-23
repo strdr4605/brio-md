@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import {
   fetchInvoices,
   fetchInvoiceById,
+  fetchPayments,
   executeCreateInvoice,
   executeCreateSituationalInvoice,
   executeUpdateInvoiceStatus,
@@ -77,6 +78,24 @@ export const billingRouter = router({
     .query(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await fetchInvoiceById(db, input.id, ctx.user);
+    }),
+
+  // 3.1 Get Payments (with school scoping, studentId/invoiceId filtering)
+  getPayments: adminProcedure
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50),
+          offset: z.number().min(0).default(0),
+          studentId: z.number().int().positive().optional(),
+          invoiceId: z.number().int().positive().optional(),
+          schoolId: z.number().int().positive().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchPayments(db, input, ctx.user);
     }),
 
   // 4. Create Invoice
