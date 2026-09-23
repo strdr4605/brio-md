@@ -1509,6 +1509,34 @@ const sampleStudentSchool1 = {
       expect(preview.totalProjectedRevenue).toBe(1200 + 1200);
     });
 
+    it("scopes duplicate check specifically to subscription invoice type", async () => {
+      let capturedWhereCondition: any;
+      const invoiceQueryChain: any = Promise.resolve([]);
+      Object.assign(invoiceQueryChain, {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockImplementation((condition) => {
+          capturedWhereCondition = condition;
+          return invoiceQueryChain;
+        }),
+      });
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockEnrollments))
+        .mockReturnValueOnce(invoiceQueryChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(invoiceQueryChain.where).toHaveBeenCalled();
+      expect(capturedWhereCondition).toBeDefined();
+      expect(preview.createdCount).toBe(3);
+      expect(preview.skippedCount).toBe(0);
+    });
+
     it("generates recurring invoices in batch and creates invoice items atomically", async () => {
       const mockTx: any = {
         select: vi.fn()

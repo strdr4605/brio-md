@@ -162,6 +162,7 @@ async function getEligibleEnrollmentsAndDuplicates(
     .where(
       and(
         eq(invoices.schoolId, targetSchoolId),
+        eq(invoices.type, "subscription"),
         ne(invoices.status, "cancelled"),
         or(eq(invoices.periodStart, periodStart), ilike(invoices.periodStart, `${input.targetMonth}%`)),
       ),
