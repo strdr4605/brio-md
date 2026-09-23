@@ -74,6 +74,57 @@ export async function fetchInvoices(
     .offset(input?.offset ?? 0);
 }
 
+export type GetPaymentsInput = {
+  limit?: number;
+  offset?: number;
+  studentId?: number;
+  invoiceId?: number;
+  schoolId?: number;
+};
+
+export async function fetchPayments(
+  dbInstance: typeof db,
+  input: GetPaymentsInput | undefined,
+  user: BillingUser,
+) {
+  const { isSuper } = getBillingRoles(user);
+  const conditions = [];
+
+  if (!isSuper) {
+    if (!user.schoolId) return [];
+    conditions.push(eq(payments.schoolId, user.schoolId));
+  } else if (input?.schoolId) {
+    conditions.push(eq(payments.schoolId, input.schoolId));
+  }
+
+  if (input?.studentId) conditions.push(eq(payments.studentId, input.studentId));
+  if (input?.invoiceId) conditions.push(eq(payments.invoiceId, input.invoiceId));
+
+  return await dbInstance
+    .select({
+      id: payments.id,
+      invoiceId: payments.invoiceId,
+      invoiceNumber: invoices.invoiceNumber,
+      studentId: payments.studentId,
+      studentName: students.name,
+      schoolId: payments.schoolId,
+      amount: payments.amount,
+      paymentDate: payments.paymentDate,
+      method: payments.method,
+      receiptNumber: payments.receiptNumber,
+      notes: payments.notes,
+      recordedByUserId: payments.recordedByUserId,
+      createdAt: payments.createdAt,
+    })
+    .from(payments)
+    .innerJoin(invoices, eq(payments.invoiceId, invoices.id))
+    .innerJoin(students, eq(payments.studentId, students.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(payments.createdAt))
+    .limit(input?.limit ?? 50)
+    .offset(input?.offset ?? 0);
+}
+
 export async function fetchInvoiceById(
   dbInstance: typeof db,
   invoiceId: number,

@@ -60,7 +60,7 @@ function createQueryChain(resolvedValue: any) {
     where: vi.fn().mockReturnThis(),
     for: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue(resolvedValue),
+    limit: vi.fn().mockReturnThis(),
     offset: vi.fn().mockResolvedValue(resolvedValue),
   });
   return chain;
@@ -2407,6 +2407,89 @@ const sampleStudentSchool1 = {
       expect(result.count).toBe(0);
       expect(result.invoices).toHaveLength(0);
       expect(result.totalLessonsBilled).toBe(0);
+    });
+  });
+
+  describe("billingRouter.getPayments", () => {
+    it("fetches payment records filtered by school for school admin", async () => {
+      const mockPayments = [
+        {
+          id: 1,
+          invoiceId: 10,
+          invoiceNumber: "INV-2026-0001",
+          studentId: 100,
+          studentName: "Alex Popescu",
+          schoolId: 1,
+          amount: 500,
+          paymentDate: "2026-09-20",
+          method: "cash",
+          receiptNumber: "REC-001",
+          notes: "Initial payment",
+          createdAt: new Date(),
+        },
+      ];
+
+      (db.select as any).mockReturnValueOnce(createQueryChain(mockPayments));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.getPayments({ studentId: 100 });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].invoiceNumber).toBe("INV-2026-0001");
+      expect(result[0].amount).toBe(500);
+      expect(result[0].method).toBe("cash");
+    });
+
+    it("allows superadmin to retrieve payments across schools", async () => {
+      const mockPayments = [
+        {
+          id: 1,
+          invoiceId: 10,
+          invoiceNumber: "INV-2026-0001",
+          studentId: 100,
+          studentName: "Alex Popescu",
+          schoolId: 1,
+          amount: 500,
+          paymentDate: "2026-09-20",
+          method: "card",
+        },
+        {
+          id: 2,
+          invoiceId: 20,
+          invoiceNumber: "INV-2026-0002",
+          studentId: 200,
+          studentName: "Elena Rusu",
+          schoolId: 2,
+          amount: 800,
+          paymentDate: "2026-09-21",
+          method: "bank_transfer",
+        },
+      ];
+
+      (db.select as any).mockReturnValueOnce(createQueryChain(mockPayments));
+
+      const caller = billingRouter.createCaller({ user: superUser });
+      const result = await caller.getPayments();
+
+      expect(result).toHaveLength(2);
+      expect(result[1].schoolId).toBe(2);
+    });
+
+    it("returns empty array for school admin without a valid schoolId", async () => {
+      const adminWithoutSchool = {
+        id: "99",
+        email: "noschool@example.com",
+        name: "No School Admin",
+        role: "admin",
+        permissions: ["admin"],
+        courseIds: [],
+        schoolId: null,
+      };
+
+      const caller = billingRouter.createCaller({ user: adminWithoutSchool });
+      const result = await caller.getPayments();
+
+      expect(result).toEqual([]);
     });
   });
 });
