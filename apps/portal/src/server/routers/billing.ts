@@ -6,6 +6,7 @@ import {
   fetchInvoices,
   fetchInvoiceById,
   executeCreateInvoice,
+  executeCreateSituationalInvoice,
   executeUpdateInvoiceStatus,
 } from "../invoiceService";
 import { fetchStudentBalanceSummary } from "../studentBalanceService";
@@ -13,6 +14,7 @@ import {
   executeRecordPayment,
   executeVoidPayment,
   executeCancelInvoice,
+  executeGenerateBatchLessonInvoices,
 } from "../billingService";
 import {
   previewRecurringInvoices,
@@ -117,6 +119,39 @@ export const billingRouter = router({
       return await executeCreateInvoice(db, input, ctx.user);
     }),
 
+  // 4b. Create Situational (Ad-hoc) Invoice (Materials, Exams, Private Lessons, Adjustments)
+  createSituationalInvoice: adminProcedure
+    .input(
+      z
+        .object({
+          studentId: z.number().int().positive(),
+          schoolId: z.number().int().positive().optional(),
+          title: z.string().min(1).max(255),
+          category: z.enum(["materials", "exam", "private_session", "adjustment"]).or(z.string().min(1).max(50)),
+          amount: z.number().int().min(0).max(2_000_000_000).optional(),
+          dueDate: dateSchema.optional(),
+          notes: z.string().optional(),
+          status: z.enum(["draft", "issued"]).optional(),
+          items: z
+            .array(
+              z.object({
+                description: z.string().min(1).max(255),
+                quantity: z.number().int().positive().max(1000).default(1),
+                unitPrice: z.number().int().min(0).max(100_000_000),
+              }),
+            )
+            .optional(),
+        })
+        .refine(
+          (data) => (data.items && data.items.length > 0) || data.amount !== undefined,
+          { message: "Factura situațională trebuie să conțină o sumă sau cel puțin un articol." },
+        ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeCreateSituationalInvoice(db, input, ctx.user);
+    }),
+
   // 5. Update Invoice Status
   updateInvoiceStatus: adminProcedure
     .input(
@@ -215,5 +250,23 @@ export const billingRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await generateRecurringInvoices(db, input, ctx.user);
+    }),
+
+  // 11. Batch Lesson Invoicing (Consolidate unbilled attended lessons into invoices)
+  generateBatchLessonInvoices: adminProcedure
+    .input(
+      z.object({
+        startDate: dateSchema,
+        endDate: dateSchema,
+        schoolId: z.number().int().positive().optional(),
+        groupId: z.number().int().positive().optional(),
+        studentId: z.number().int().positive().optional(),
+        dueDate: dateSchema.optional(),
+        status: z.enum(["draft", "issued"]).default("issued"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await executeGenerateBatchLessonInvoices(db, input, ctx.user);
     }),
 });

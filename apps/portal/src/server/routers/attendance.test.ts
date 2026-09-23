@@ -2,14 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { attendanceRouter } from "./attendance";
 
-vi.mock("@/lib/db", () => ({
-  db: {
+vi.mock("@/lib/db", () => {
+  const mockDb: any = {
     select: vi.fn(),
     insert: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-  },
-}));
+  };
+  mockDb.transaction = vi.fn(async (cb: any) => cb(mockDb));
+  return { db: mockDb };
+});
 
 import { db } from "@/lib/db";
 
