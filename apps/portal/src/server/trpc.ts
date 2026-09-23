@@ -60,9 +60,10 @@ const hasAdmin = t.middleware(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+  const permissions = ctx.user.permissions ?? [];
   const isSuperOrAdmin =
-    ctx.user.permissions.includes("admin") ||
-    ctx.user.permissions.includes("super") ||
+    permissions.includes("admin") ||
+    permissions.includes("super") ||
     ctx.user.role === "admin" ||
     ctx.user.role === "superadmin";
   if (!isSuperOrAdmin) {
@@ -72,3 +73,26 @@ const hasAdmin = t.middleware(({ ctx, next }) => {
 });
 
 export const adminProcedure = protectedProcedure.use(hasAdmin);
+
+// Billing PBAC permission middleware
+const hasBillingAccess = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  const permissions = ctx.user.permissions ?? [];
+  const isBillingAllowed =
+    permissions.includes("manage_billing") ||
+    permissions.includes("admin") ||
+    permissions.includes("super") ||
+    ctx.user.role === "admin" ||
+    ctx.user.role === "superadmin";
+  if (!isBillingAllowed) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Nu aveți permisiunea de a accesa modulul de facturare.",
+    });
+  }
+  return next({ ctx: { ...ctx, user: ctx.user } });
+});
+
+export const billingProcedure = protectedProcedure.use(hasBillingAccess);

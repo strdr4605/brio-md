@@ -158,3 +158,31 @@ export function parseScheduleTimeRange(scheduleTime: string | null | undefined):
 
   return { startMinutes, endMinutes };
 }
+
+export function getSchoolCurrentTime() {
+  const timeZone = process.env.APP_TIMEZONE || "Europe/Chisinau";
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    minute: "numeric",
+    hourCycle: "h23",
+    weekday: "short",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value || "";
+  const hour = parseInt(getPart("hour"), 10) || 0;
+  const minute = parseInt(getPart("minute"), 10) || 0;
+  const year = getPart("year");
+  const month = getPart("month");
+  const day = getPart("day");
+  const weekdayStr = getPart("weekday").toLowerCase();
+  const dayKey = weekdayStr.slice(0, 3);
+  const currentMinutes = hour * 60 + minute;
+  const todayStr = `${year}-${month}-${day}`;
+
+  return { currentMinutes, currentDayKey: dayKey, todayStr };
+}

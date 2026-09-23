@@ -16,6 +16,8 @@ import {
   executeQuickMark,
   findTeacherActiveSession,
 } from "../attendanceService";
+import { processAttendanceBilling } from "../lessonBillingService";
+import { logger } from "@/lib/logger";
 
 export {
   assertTeacherGroupAccess,
@@ -126,6 +128,24 @@ export const attendanceRouter = router({
           .returning();
 
         results.push(saved);
+
+        try {
+          await processAttendanceBilling(
+            {
+              attendanceRecordId: saved.id,
+              studentId: rec.studentId,
+              groupId: input.groupId,
+              date: input.date,
+              status: rec.status,
+            },
+            db,
+          );
+        } catch (err) {
+          logger.error(
+            "[submitAttendance] processAttendanceBilling error:",
+            err instanceof Error ? err : { error: String(err) },
+          );
+        }
       }
 
       return {

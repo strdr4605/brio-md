@@ -13,10 +13,12 @@ export type BillingUser = {
 export function getBillingRoles(user?: BillingUser) {
   const permissions = user?.permissions || [];
   const role = user?.role;
+  const hasManageBilling = permissions.includes("manage_billing");
   return {
     isSuper: permissions.includes("super") || role === "superadmin",
-    isAdmin: permissions.includes("admin") || role === "admin",
+    isAdmin: permissions.includes("admin") || role === "admin" || hasManageBilling,
     isTeacher: permissions.includes("teach") || role === "teacher",
+    hasManageBilling,
   };
 }
 

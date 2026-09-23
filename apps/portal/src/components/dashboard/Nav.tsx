@@ -19,6 +19,7 @@ import {
   LogOutIcon,
   XIcon,
   UserCheckIcon,
+  ReceiptIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 
@@ -45,6 +46,7 @@ export function Nav({
   const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
   const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
   const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
+  const canManageBilling = isSuperOrAdmin || permissions?.includes("manage_billing");
   const canAccessDoor = permissions?.includes("open-front-door") || isSuperOrAdmin;
 
   // Smart Accordions
@@ -197,6 +199,7 @@ export function Nav({
                 {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon)}
                 {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
+                {canManageBilling && renderNavLink("/dashboard/invoices", "Facturare", ReceiptIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
               </div>

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { billingRouter } from "./billing";
+import { processAttendanceBilling } from "../lessonBillingService";
 
 vi.mock("@/lib/db", () => {
   const mockDb: any = {
@@ -59,7 +60,11 @@ function createQueryChain(resolvedValue: any) {
     where: vi.fn().mockReturnThis(),
     for: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue(resolvedValue),
+    limit: vi.fn().mockImplementation(() =>
+      Object.assign(Promise.resolve(resolvedValue), {
+        offset: vi.fn().mockResolvedValue(resolvedValue),
+      }),
+    ),
     offset: vi.fn().mockResolvedValue(resolvedValue),
   });
   return chain;
@@ -71,6 +76,16 @@ const teacherUser = {
   name: "Teacher User",
   role: "teacher",
   permissions: ["teach"],
+  courseIds: [1],
+  schoolId: 1,
+};
+
+const teacherWithBillingUser = {
+  id: "5",
+  email: "teacher-billing@example.com",
+  name: "Teacher With Billing",
+  role: "teacher",
+  permissions: ["teach", "manage_billing"],
   courseIds: [1],
   schoolId: 1,
 };
@@ -1155,6 +1170,36 @@ const sampleStudentSchool1 = {
           status: "issued",
         }),
       ).rejects.toThrow(TRPCError);
+
+      await expect(
+        caller.getInvoices(),
+      ).rejects.toThrow(TRPCError);
+
+      await expect(
+        caller.getStudentBalanceSummary({ studentId: 10 }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("rejects unauthenticated callers with UNAUTHORIZED", async () => {
+      const caller = billingRouter.createCaller({ user: null as any });
+
+      await expect(caller.getInvoices()).rejects.toThrow(TRPCError);
+      await expect(
+        caller.recordPayment({
+          invoiceId: 1,
+          amount: 500,
+          paymentDate: "2026-09-21",
+          method: "cash",
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("allows users with manage_billing permission (PBAC) to access billing endpoints", async () => {
+      const caller = billingRouter.createCaller({ user: teacherWithBillingUser });
+
+      (db.select as any).mockReturnValue(createQueryChain([]));
+      const res = await caller.getInvoices();
+      expect(res).toBeDefined();
     });
   });
 
@@ -1845,4 +1890,270 @@ const sampleStudentSchool1 = {
       expect(preview.skipped[0].reason).toContain("Factură activă deja existentă");
     });
   });
+
+  describe("situational billing & lesson attendance integration", () => {
+    it("creates a situational invoice with custom line items and calculates total", async () => {
+      (db.select as any).mockReturnValueOnce(createQueryChain([sampleStudentSchool1]));
+      (db.insert as any)
+        .mockReturnValueOnce({
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: 88,
+                invoiceNumber: "INV-2026-SIT01",
+                studentId: 10,
+                schoolId: 1,
+                type: "situational",
+                status: "issued",
+                totalAmount: 600,
+                paidAmount: 0,
+              },
+            ]),
+          }),
+        })
+        .mockReturnValueOnce({
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              { id: 1, invoiceId: 88, description: "Manual Robotică", quantity: 1, unitPrice: 350, amount: 350 },
+              { id: 2, invoiceId: 88, description: "Kit Componente", quantity: 1, unitPrice: 250, amount: 250 },
+            ]),
+          }),
+        });
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const invoice = await caller.createSituationalInvoice({
+        studentId: 10,
+        title: "Kit și Manual Robotică",
+        category: "materials",
+        status: "issued",
+        items: [
+          { description: "Manual Robotică", quantity: 1, unitPrice: 350 },
+          { description: "Kit Componente", quantity: 1, unitPrice: 250 },
+        ],
+      });
+
+      expect(invoice.id).toBe(88);
+      expect(invoice.type).toBe("situational");
+      expect(invoice.totalAmount).toBe(600);
+      expect(invoice.items).toHaveLength(2);
+    });
+
+    it("rejects situational invoice for student from different school with FORBIDDEN", async () => {
+      (db.select as any).mockReturnValueOnce(createQueryChain([sampleStudentSchool2]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(
+        caller.createSituationalInvoice({
+          studentId: 20,
+          title: "Tentativă cross-school",
+          category: "materials",
+          amount: 500,
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+  });
+
+  describe("lessonBillingService - processAttendanceBilling", () => {
+    it("returns not_per_lesson when enrollment is not per_lesson", async () => {
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([{ id: 1, studentId: 10, groupId: 5, billingType: "subscription_monthly" }]),
+      );
+
+      const result = await processAttendanceBilling(
+        {
+          attendanceRecordId: 101,
+          studentId: 10,
+          groupId: 5,
+          date: "2026-11-04",
+          status: "present",
+        },
+        db,
+      );
+
+      expect(result.processed).toBe(false);
+      expect(result.reason).toBe("not_per_lesson");
+    });
+
+    it("creates a new draft invoice and invoice item when status is present and no draft exists", async () => {
+      // 1. Enrollment query
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          {
+            id: 1,
+            studentId: 10,
+            groupId: 5,
+            billingType: "per_lesson",
+            customPrice: 200,
+            discountPercent: 10,
+          },
+        ]),
+      );
+      // 2. Existing item query (none)
+      (db.select as any).mockReturnValueOnce(createQueryChain([]));
+      // 3. Draft invoice query (none)
+      (db.select as any).mockReturnValueOnce(createQueryChain([]));
+      // 4. Student school query
+      (db.select as any).mockReturnValueOnce(createQueryChain([{ schoolId: 1 }]));
+
+      // 5. Insert invoice
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([
+            { id: 99, studentId: 10, groupId: 5, totalAmount: 180, status: "draft" },
+          ]),
+        }),
+      });
+      // 6. Insert invoice item
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([
+            { id: 501, invoiceId: 99, attendanceId: 101, amount: 180 },
+          ]),
+        }),
+      });
+
+      const result = await processAttendanceBilling(
+        {
+          attendanceRecordId: 101,
+          studentId: 10,
+          groupId: 5,
+          date: "2026-11-04",
+          status: "present",
+        },
+        db,
+      );
+
+      expect(result.processed).toBe(true);
+      expect(result.created).toBe(true);
+      expect(result.invoiceId).toBe(99);
+      expect(result.itemId).toBe(501);
+    });
+
+    it("appends item and increments total when draft invoice already exists and status is late", async () => {
+      // 1. Enrollment query
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          {
+            id: 1,
+            studentId: 10,
+            groupId: 5,
+            billingType: "per_lesson",
+            customPrice: 150,
+            discountPercent: 0,
+          },
+        ]),
+      );
+      // 2. Existing item query (none)
+      (db.select as any).mockReturnValueOnce(createQueryChain([]));
+      // 3. Draft invoice query (found with total 150)
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([{ id: 80, studentId: 10, groupId: 5, totalAmount: 150, status: "draft" }]),
+      );
+
+      // 4. Insert item
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([
+            { id: 502, invoiceId: 80, attendanceId: 102, amount: 150 },
+          ]),
+        }),
+      });
+      // 5. Update invoice total
+      (db.update as any).mockReturnValueOnce({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const result = await processAttendanceBilling(
+        {
+          attendanceRecordId: 102,
+          studentId: 10,
+          groupId: 5,
+          date: "2026-11-05",
+          status: "late",
+        },
+        db,
+      );
+
+      expect(result.processed).toBe(true);
+      expect(result.created).toBe(true);
+      expect(result.invoiceId).toBe(80);
+      expect(result.itemId).toBe(502);
+      expect(db.update).toHaveBeenCalled();
+    });
+
+    it("idempotently skips creating item if line item already exists for attendance record", async () => {
+      // 1. Enrollment query
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          { id: 1, studentId: 10, groupId: 5, billingType: "per_lesson", customPrice: 150 },
+        ]),
+      );
+      // 2. Existing item query (already exists)
+      (db.select as any).mockReturnValueOnce(createQueryChain([{ id: 501, attendanceId: 101 }]));
+
+      const result = await processAttendanceBilling(
+        {
+          attendanceRecordId: 101,
+          studentId: 10,
+          groupId: 5,
+          date: "2026-11-04",
+          status: "present",
+        },
+        db,
+      );
+
+      expect(result.processed).toBe(true);
+      expect(result.alreadyExists).toBe(true);
+      expect(result.itemId).toBe(501);
+    });
+
+    it("removes line item and decrements draft invoice when toggled to absent", async () => {
+      // 1. Enrollment query
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          { id: 1, studentId: 10, groupId: 5, billingType: "per_lesson", customPrice: 150 },
+        ]),
+      );
+      // 2. Existing item query (found)
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([{ id: 501, invoiceId: 99, attendanceId: 101, amount: 150 }]),
+      );
+      // 3. Draft invoice query (found)
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([{ id: 99, totalAmount: 300, status: "draft" }]),
+      );
+      // 4. Delete item
+      (db.delete as any).mockReturnValueOnce({
+        where: vi.fn().mockResolvedValue([]),
+      });
+      // 5. Update invoice total
+      (db.update as any).mockReturnValueOnce({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const result = await processAttendanceBilling(
+        {
+          attendanceRecordId: 101,
+          studentId: 10,
+          groupId: 5,
+          date: "2026-11-04",
+          status: "absent",
+        },
+        db,
+      );
+
+      expect(result.processed).toBe(true);
+      expect(result.removed).toBe(true);
+      expect(result.itemId).toBe(501);
+      expect(db.delete).toHaveBeenCalled();
+      expect(db.update).toHaveBeenCalled();
+    });
+  });
 });
+

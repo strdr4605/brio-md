@@ -39,6 +39,9 @@ export const enrollmentRouter = router({
       z.object({
         studentId: z.number().int().positive("ID student invalid"),
         groupIds: z.array(z.number().int().positive()).min(1, "Selectați cel puțin o grupă"),
+        billingType: z.enum(["subscription_monthly", "subscription_course", "per_lesson", "custom"]).optional(),
+        customPrice: z.number().int().min(0).max(100_000_000).nullable().optional(),
+        discountPercent: z.number().int().min(0).max(100).nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -120,6 +123,9 @@ export const enrollmentRouter = router({
             groupId: grp.id,
             courseId: grp.courseId,
             status: "active",
+            billingType: input.billingType || "subscription_monthly",
+            customPrice: input.customPrice !== undefined ? input.customPrice : null,
+            discountPercent: input.discountPercent !== undefined ? input.discountPercent : 0,
             joinedAt: new Date(),
             leftAt: null,
           })
@@ -129,6 +135,9 @@ export const enrollmentRouter = router({
               status: "active",
               leftAt: null,
               courseId: grp.courseId,
+              ...(input.billingType ? { billingType: input.billingType } : {}),
+              ...(input.customPrice !== undefined ? { customPrice: input.customPrice } : {}),
+              ...(input.discountPercent !== undefined ? { discountPercent: input.discountPercent } : {}),
             },
           })
           .returning();
