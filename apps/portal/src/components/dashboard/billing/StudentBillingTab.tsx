@@ -1,18 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import {
   PlusIcon,
   CheckCircleIcon,
   AlertTriangleIcon,
 } from "@/components/ui/icons";
+import { RecordPaymentModal } from "./RecordPaymentModal";
+import { CreateSituationalInvoiceModal } from "./CreateSituationalInvoiceModal";
+import { EditPricingModal } from "./EditPricingModal";
 
 export type StudentBillingTabProps = {
   studentId: number;
   studentName: string;
-  onOpenRecordPayment?: (invoiceId?: number) => void;
-  onOpenCreateInvoice?: () => void;
-  onEditPricing?: (enrollmentId: number) => void;
 };
 
 function formatBillingType(type: string | null | undefined) {
@@ -123,13 +124,24 @@ function formatPaymentMethod(method: string) {
   }
 }
 
-export function StudentBillingTab({
-  studentId,
-  studentName: _studentName,
-  onOpenRecordPayment,
-  onOpenCreateInvoice,
-  onEditPricing,
-}: StudentBillingTabProps) {
+export function StudentBillingTab({ studentId, studentName }: StudentBillingTabProps) {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoiceIdForPayment, setSelectedInvoiceIdForPayment] = useState<number | null>(
+    null,
+  );
+
+  const [editingPricing, setEditingPricing] = useState<{
+    enrollmentId: number;
+    groupName: string;
+    courseName?: string | null;
+    billingType?: string | null;
+    customPrice?: number | null;
+    discountPercent?: number | null;
+  } | null>(null);
+
+  const utils = trpc.useUtils();
+
   const { data: balanceSummary, isLoading: isLoadingBalance } =
     trpc.billing.getStudentBalanceSummary.useQuery(
       { studentId },
@@ -142,8 +154,14 @@ export function StudentBillingTab({
   const { data: payments = [], isLoading: isLoadingPayments } =
     trpc.billing.getPayments.useQuery({ studentId, limit: 100 }, { enabled: Boolean(studentId) });
 
+  const handleRefresh = () => {
+    utils.billing.invalidate();
+    utils.enrollment.invalidate();
+  };
+
   const handleQuickPay = (invoiceId: number) => {
-    onOpenRecordPayment?.(invoiceId);
+    setSelectedInvoiceIdForPayment(invoiceId);
+    setShowPaymentModal(true);
   };
 
   const currentDebt = balanceSummary?.currentDebt ?? 0;
@@ -220,7 +238,7 @@ export function StudentBillingTab({
             <div className="flex items-center gap-2.5 w-full md:w-auto">
               <button
                 type="button"
-                onClick={() => onOpenCreateInvoice?.()}
+                onClick={() => setShowInvoiceModal(true)}
                 className="flex-1 md:flex-initial px-4 py-2.5 text-xs font-bold bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5"
               >
                 <PlusIcon className="w-4 h-4 text-slate-500" />
@@ -229,7 +247,10 @@ export function StudentBillingTab({
 
               <button
                 type="button"
-                onClick={() => onOpenRecordPayment?.()}
+                onClick={() => {
+                  setSelectedInvoiceIdForPayment(null);
+                  setShowPaymentModal(true);
+                }}
                 className="flex-1 md:flex-initial px-4 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl shadow-sm transition flex items-center justify-center gap-1.5"
               >
                 <CheckCircleIcon className="w-4 h-4" />
@@ -338,7 +359,16 @@ export function StudentBillingTab({
 
                     <button
                       type="button"
-                      onClick={() => onEditPricing?.(plan.enrollmentId)}
+                      onClick={() =>
+                        setEditingPricing({
+                          enrollmentId: plan.enrollmentId,
+                          groupName: plan.groupName,
+                          courseName: plan.courseName,
+                          billingType: plan.billingType,
+                          customPrice: plan.customPrice,
+                          discountPercent: plan.discountPercent,
+                        })
+                      }
                       className="px-3 py-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
                     >
                       Editează tarif
@@ -507,6 +537,47 @@ export function StudentBillingTab({
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      <RecordPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setSelectedInvoiceIdForPayment(null);
+        }}
+        studentId={studentId}
+        studentName={studentName}
+        invoices={invoices}
+        initialInvoiceId={selectedInvoiceIdForPayment}
+        onSuccess={handleRefresh}
+      />
+
+      <CreateSituationalInvoiceModal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        studentId={studentId}
+        studentName={studentName}
+        groups={activeBillingPlans.map((p) => ({
+          id: p.groupId,
+          name: p.groupName,
+          courseName: p.courseName,
+        }))}
+        onSuccess={handleRefresh}
+      />
+
+      {editingPricing && (
+        <EditPricingModal
+          isOpen={Boolean(editingPricing)}
+          onClose={() => setEditingPricing(null)}
+          enrollmentId={editingPricing.enrollmentId}
+          groupName={editingPricing.groupName}
+          courseName={editingPricing.courseName}
+          initialBillingType={editingPricing.billingType}
+          initialCustomPrice={editingPricing.customPrice}
+          initialDiscountPercent={editingPricing.discountPercent}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }
