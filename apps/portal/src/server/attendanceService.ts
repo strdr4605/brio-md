@@ -7,6 +7,8 @@ import {
   generateJournalDates,
   parseScheduleTimeRange,
 } from "./attendanceUtils";
+import { processAttendanceBilling } from "./billingService";
+import { logger } from "@/lib/logger";
 
 export async function fetchJournalData(
   groupId: number,
@@ -119,6 +121,18 @@ export async function executeQuickMark(
   assertTeacherGroupAccess(group, user);
 
   if (input.status === null) {
+    const [existingRecord] = await db
+      .select({ id: attendanceRecords.id })
+      .from(attendanceRecords)
+      .where(
+        and(
+          eq(attendanceRecords.groupId, input.groupId),
+          eq(attendanceRecords.studentId, input.studentId),
+          eq(attendanceRecords.date, input.date),
+        ),
+      )
+      .limit(1);
+
     // Delete record if cleared
     await db
       .delete(attendanceRecords)
@@ -129,6 +143,24 @@ export async function executeQuickMark(
           eq(attendanceRecords.date, input.date),
         ),
       );
+
+    if (existingRecord) {
+      try {
+        await processAttendanceBilling(
+          {
+            attendanceRecordId: existingRecord.id,
+            studentId: input.studentId,
+            groupId: input.groupId,
+            date: input.date,
+            status: null,
+          },
+          db,
+        );
+      } catch (error) {
+        logger.error("Attendance billing trigger error on clear:", error instanceof Error ? error : { error });
+      }
+    }
+
     return { success: true, cleared: true };
   }
 
@@ -159,6 +191,21 @@ export async function executeQuickMark(
       },
     })
     .returning();
+
+  try {
+    await processAttendanceBilling(
+      {
+        attendanceRecordId: saved.id,
+        studentId: input.studentId,
+        groupId: input.groupId,
+        date: input.date,
+        status: input.status,
+      },
+      db,
+    );
+  } catch (error) {
+    logger.error("Attendance billing trigger error on mark:", error instanceof Error ? error : { error });
+  }
 
   return { success: true, record: saved };
 }
