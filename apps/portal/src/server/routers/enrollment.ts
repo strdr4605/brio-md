@@ -39,6 +39,11 @@ export const enrollmentRouter = router({
       z.object({
         studentId: z.number().int().positive("ID student invalid"),
         groupIds: z.array(z.number().int().positive()).min(1, "Selectați cel puțin o grupă"),
+        billingType: z
+          .enum(["subscription_monthly", "subscription_course", "per_lesson", "custom"])
+          .optional(),
+        customPrice: z.number().int().min(0).max(100_000_000).nullable().optional(),
+        discountPercent: z.number().int().min(0).max(100).default(0).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -122,6 +127,9 @@ export const enrollmentRouter = router({
             status: "active",
             joinedAt: new Date(),
             leftAt: null,
+            billingType: input.billingType ?? "subscription_monthly",
+            customPrice: input.customPrice !== undefined ? input.customPrice : null,
+            discountPercent: input.discountPercent ?? 0,
           })
           .onConflictDoUpdate({
             target: [studentGroupEnrollments.studentId, studentGroupEnrollments.groupId],
@@ -129,6 +137,9 @@ export const enrollmentRouter = router({
               status: "active",
               leftAt: null,
               courseId: grp.courseId,
+              ...(input.billingType ? { billingType: input.billingType } : {}),
+              ...(input.customPrice !== undefined ? { customPrice: input.customPrice } : {}),
+              ...(input.discountPercent !== undefined ? { discountPercent: input.discountPercent } : {}),
             },
           })
           .returning();
@@ -232,6 +243,95 @@ export const enrollmentRouter = router({
       return updated;
     }),
 
+  // Update enrollment pricing configuration (billingType, customPrice, discountPercent)
+  updatePricing: protectedProcedure
+    .input(
+      z
+        .object({
+          enrollmentId: z.number().int().positive().optional(),
+          studentId: z.number().int().positive().optional(),
+          groupId: z.number().int().positive().optional(),
+          billingType: z
+            .enum(["subscription_monthly", "subscription_course", "per_lesson", "custom"])
+            .optional(),
+          customPrice: z.number().int().min(0).max(100_000_000).nullable().optional(),
+          discountPercent: z.number().int().min(0).max(100).optional(),
+        })
+        .refine(
+          (d) =>
+            d.enrollmentId !== undefined || (d.studentId !== undefined && d.groupId !== undefined),
+          {
+            message: "Trebuie specificat enrollmentId sau perechea (studentId, groupId)",
+          },
+        ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+      let enrollment = null;
+
+      if (input.enrollmentId) {
+        const [found] = await db
+          .select()
+          .from(studentGroupEnrollments)
+          .where(eq(studentGroupEnrollments.id, input.enrollmentId))
+          .limit(1);
+        enrollment = found;
+      } else if (input.studentId && input.groupId) {
+        const [found] = await db
+          .select()
+          .from(studentGroupEnrollments)
+          .where(
+            and(
+              eq(studentGroupEnrollments.studentId, input.studentId),
+              eq(studentGroupEnrollments.groupId, input.groupId),
+            ),
+          )
+          .limit(1);
+        enrollment = found;
+      }
+
+      if (!enrollment) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Înscrierea nu a fost găsită.",
+        });
+      }
+
+      const [student] = await db
+        .select()
+        .from(students)
+        .where(eq(students.id, enrollment.studentId))
+        .limit(1);
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Studentul asociat înscrierii nu a fost găsit.",
+        });
+      }
+
+      assertAdminAccess(user, student.schoolId);
+
+      const updatePayload: Record<string, any> = {};
+      if (input.billingType !== undefined) updatePayload.billingType = input.billingType;
+      if (input.customPrice !== undefined) updatePayload.customPrice = input.customPrice;
+      if (input.discountPercent !== undefined) updatePayload.discountPercent = input.discountPercent;
+
+      if (Object.keys(updatePayload).length === 0) {
+        return enrollment;
+      }
+
+      const [updated] = await db
+        .update(studentGroupEnrollments)
+        .set(updatePayload)
+        .where(eq(studentGroupEnrollments.id, enrollment.id))
+        .returning();
+
+      return updated;
+    }),
+
   // Get all group enrollments for a specific student
   getByStudent: protectedProcedure
     .input(z.object({ studentId: z.number().int().positive() }))
@@ -269,6 +369,9 @@ export const enrollmentRouter = router({
           teacherId: groups.teacherId,
           teacherName: users.name,
           status: studentGroupEnrollments.status,
+          billingType: studentGroupEnrollments.billingType,
+          customPrice: studentGroupEnrollments.customPrice,
+          discountPercent: studentGroupEnrollments.discountPercent,
           joinedAt: studentGroupEnrollments.joinedAt,
           leftAt: studentGroupEnrollments.leftAt,
           notes: studentGroupEnrollments.notes,
