@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
@@ -10,6 +10,7 @@ import { StudentFormDrawer } from "@/components/dashboard/StudentForm";
 import { EnrollmentDrawer } from "@/components/dashboard/EnrollmentDrawer";
 import { ParentCallWidget } from "@/components/dashboard/ParentCallWidget";
 import { ABSENCE_PRESET_CHIPS } from "@/components/dashboard/AbsenceCommentWidget";
+import { StudentBillingTab } from "@/components/dashboard/billing/StudentBillingTab";
 import {
   ChevronLeftIcon,
   PhoneIcon,
@@ -185,6 +186,12 @@ export default function StudentProfilePage() {
   const [newStatus, setNewStatus] = useState<"active" | "inactive" | "archived" | "completed">("completed");
   const [statusNote, setStatusNote] = useState("");
 
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"academic" | "billing">(
+    urlTab === "billing" ? "billing" : "academic",
+  );
+
   // Tabs for courses
   const [courseTab, setCourseTab] = useState<"active" | "history">("active");
 
@@ -222,6 +229,11 @@ export default function StudentProfilePage() {
   const { data: courses = [] } = trpc.user.listCourses.useQuery(
     { schoolId: student?.schoolId ?? undefined },
     { enabled: canAccess },
+  );
+
+  const { data: balanceSummary } = trpc.billing.getStudentBalanceSummary.useQuery(
+    { studentId },
+    { enabled: canAccess && Boolean(studentId) },
   );
 
   // Mutations
@@ -400,6 +412,36 @@ export default function StudentProfilePage() {
                   >
                     {student.active ? "Student Activ" : "Student Inactiv"}
                   </span>
+
+                  {balanceSummary && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("billing")}
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold border transition cursor-pointer flex items-center gap-1.5 ${
+                        balanceSummary.currentDebt > 0
+                          ? balanceSummary.overdueCount > 0
+                            ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                            : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                      }`}
+                      title="Vezi detalii financiare & facturi"
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          balanceSummary.currentDebt > 0
+                            ? balanceSummary.overdueCount > 0
+                              ? "bg-rose-500 animate-pulse"
+                              : "bg-amber-500"
+                            : "bg-emerald-500"
+                        }`}
+                      />
+                      <span>
+                        {balanceSummary.currentDebt > 0
+                          ? `Datorie: ${balanceSummary.currentDebt} MDL`
+                          : "Fără restanțe"}
+                      </span>
+                    </button>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                   <span className="font-semibold text-slate-700">
@@ -470,8 +512,57 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* 2. Attendance Summary Widget */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+      {/* Primary Navigation Tabs */}
+      <div className="flex items-center gap-4 border-b border-slate-200/80">
+        <button
+          type="button"
+          onClick={() => setActiveTab("academic")}
+          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === "academic"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-900"
+          }`}
+        >
+          <BookOpenIcon className="w-4 h-4" />
+          <span>Parcurs Academic & Prezență</span>
+          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+            {activeEnrollments.length} grupe
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("billing")}
+          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === "billing"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-900"
+          }`}
+        >
+          <TrendingUpIcon className="w-4 h-4" />
+          <span>Finanțe & Facturi</span>
+          {balanceSummary && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                balanceSummary.currentDebt > 0
+                  ? balanceSummary.overdueCount > 0
+                    ? "bg-rose-100 text-rose-700"
+                    : "bg-amber-100 text-amber-800"
+                  : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {balanceSummary.currentDebt > 0
+                ? `${balanceSummary.currentDebt} MDL restanță`
+                : "La zi"}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === "academic" ? (
+        <>
+          {/* 2. Attendance Summary Widget */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -899,6 +990,10 @@ export default function StudentProfilePage() {
           )}
         </div>
       </div>
+    </>
+  ) : (
+    <StudentBillingTab studentId={studentId} studentName={student.name} />
+  )}
 
       {/* Status Toggle Modal */}
       {statusModalEnrollment && (
