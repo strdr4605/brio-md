@@ -5,10 +5,11 @@ import { TRPCError } from "@trpc/server";
 import {
   assertTeacherGroupAccess,
   generateJournalDates,
-  parseScheduleTimeRange,
 } from "./attendanceUtils";
-import { processAttendanceBilling } from "./billingService";
+import { processAttendanceBilling } from "./lessonBillingService";
 import { logger } from "@/lib/logger";
+
+export { findTeacherActiveSession } from "./activeSessionService";
 
 export async function fetchJournalData(
   groupId: number,
@@ -133,16 +134,6 @@ export async function executeQuickMark(
       )
       .limit(1);
 
-    // Delete record if cleared
-    await db
-      .delete(attendanceRecords)
-      .where(
-        and(
-          eq(attendanceRecords.groupId, input.groupId),
-          eq(attendanceRecords.studentId, input.studentId),
-          eq(attendanceRecords.date, input.date),
-        ),
-      );
 
     if (existingRecord) {
       try {
@@ -156,10 +147,24 @@ export async function executeQuickMark(
           },
           db,
         );
-      } catch (error) {
-        logger.error("Attendance billing trigger error on clear:", error instanceof Error ? error : { error });
+      } catch (err) {
+        logger.error(
+          "[attendanceService] processAttendanceBilling removal error:",
+          err instanceof Error ? err : { error: String(err) },
+        );
       }
     }
+
+    // Delete record if cleared after billing item has been processed
+    await db
+      .delete(attendanceRecords)
+      .where(
+        and(
+          eq(attendanceRecords.groupId, input.groupId),
+          eq(attendanceRecords.studentId, input.studentId),
+          eq(attendanceRecords.date, input.date),
+        ),
+      );
 
     return { success: true, cleared: true };
   }
@@ -203,171 +208,12 @@ export async function executeQuickMark(
       },
       db,
     );
-  } catch (error) {
-    logger.error("Attendance billing trigger error on mark:", error instanceof Error ? error : { error });
+  } catch (err) {
+    logger.error(
+      "[attendanceService] processAttendanceBilling error:",
+      err instanceof Error ? err : { error: String(err) },
+    );
   }
 
   return { success: true, record: saved };
-}
-
-function getSchoolCurrentTime() {
-  const timeZone = process.env.APP_TIMEZONE || "Europe/Chisinau";
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hour: "numeric",
-    minute: "numeric",
-    hourCycle: "h23",
-    weekday: "short",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const getPart = (type: string) => parts.find((p) => p.type === type)?.value || "";
-  const hour = parseInt(getPart("hour"), 10) || 0;
-  const minute = parseInt(getPart("minute"), 10) || 0;
-  const year = getPart("year");
-  const month = getPart("month");
-  const day = getPart("day");
-  const weekdayStr = getPart("weekday").toLowerCase();
-  const dayKey = weekdayStr.slice(0, 3);
-  const currentMinutes = hour * 60 + minute;
-  const todayStr = `${year}-${month}-${day}`;
-
-  return { currentMinutes, currentDayKey: dayKey, todayStr };
-}
-
-export async function findTeacherActiveSession(
-  user: { id: string; role: string; permissions: string[] },
-) {
-  const userIdNumber = Number(user.id);
-  if (!userIdNumber) return { activeSession: null };
-
-  const { currentMinutes, currentDayKey, todayStr } = getSchoolCurrentTime();
-
-  const isSuper = user.permissions?.includes("super") || user.role === "superadmin";
-  const isAdmin = user.permissions?.includes("admin") || user.role === "admin";
-
-  // Check if user has personal assigned groups
-  let targetGroups = await db
-    .select({
-      id: groups.id,
-      name: groups.name,
-      courseName: courses.name,
-      scheduleDays: groups.scheduleDays,
-      scheduleTime: groups.scheduleTime,
-      room: groups.room,
-    })
-    .from(groups)
-    .leftJoin(courses, eq(groups.courseId, courses.id))
-    .where(and(eq(groups.teacherId, userIdNumber), eq(groups.active, true)));
-
-  // If admin/superadmin with no assigned groups, inspect all active groups for school
-  if (targetGroups.length === 0 && (isSuper || isAdmin)) {
-    targetGroups = await db
-      .select({
-        id: groups.id,
-        name: groups.name,
-        courseName: courses.name,
-        scheduleDays: groups.scheduleDays,
-        scheduleTime: groups.scheduleTime,
-        room: groups.room,
-      })
-      .from(groups)
-      .leftJoin(courses, eq(groups.courseId, courses.id))
-      .where(eq(groups.active, true));
-  }
-
-  // Filter groups scheduled today
-  const todaysGroups = targetGroups.filter((g) =>
-    (g.scheduleDays || []).some((d) => d.toLowerCase() === currentDayKey),
-  );
-
-  if (todaysGroups.length === 0) {
-    return { activeSession: null };
-  }
-
-  let uncompletedPastSession: {
-    groupId: number;
-    groupName: string;
-    courseName: string;
-    scheduleTime: string;
-    date: string;
-    type: "uncompleted_past";
-    endMinutes?: number;
-  } | null = null;
-
-  for (const group of todaysGroups) {
-    const range = parseScheduleTimeRange(group.scheduleTime);
-    if (!range) continue;
-
-    // Check if lesson is ongoing now (+- 15 min window)
-    const isInProgress =
-      currentMinutes >= range.startMinutes - 15 && currentMinutes <= range.endMinutes + 15;
-
-    if (isInProgress) {
-      // Only prompt/redirect if attendance records do not already exist for today
-      const existing = await db
-        .select({ id: attendanceRecords.id })
-        .from(attendanceRecords)
-        .where(
-          and(
-            eq(attendanceRecords.groupId, group.id),
-            eq(attendanceRecords.date, todayStr),
-          ),
-        )
-        .limit(1);
-
-      if (existing.length === 0) {
-        return {
-          activeSession: {
-            groupId: group.id,
-            groupName: group.name,
-            courseName: group.courseName || "Curs",
-            scheduleTime: group.scheduleTime || "",
-            date: todayStr,
-            type: "in_progress",
-          },
-        };
-      }
-    }
-
-    // Check if lesson has ended today
-    const isPast = currentMinutes > range.endMinutes + 15;
-    if (isPast) {
-      // Check if attendance records exist for today
-      const existing = await db
-        .select({ id: attendanceRecords.id })
-        .from(attendanceRecords)
-        .where(
-          and(
-            eq(attendanceRecords.groupId, group.id),
-            eq(attendanceRecords.date, todayStr),
-          ),
-        )
-        .limit(1);
-
-      if (existing.length === 0) {
-        if (!uncompletedPastSession || range.endMinutes > (uncompletedPastSession.endMinutes ?? 0)) {
-          uncompletedPastSession = {
-            groupId: group.id,
-            groupName: group.name,
-            courseName: group.courseName || "Curs",
-            scheduleTime: group.scheduleTime || "",
-            date: todayStr,
-            type: "uncompleted_past",
-            endMinutes: range.endMinutes,
-          };
-        }
-      }
-    }
-  }
-
-  if (uncompletedPastSession) {
-    const { endMinutes: _endMinutes, ...cleanSession } = uncompletedPastSession;
-    return { activeSession: cleanSession };
-  }
-
-  return { activeSession: null };
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, adminProcedure, billingProcedure } from "../trpc";
+import { router, billingProcedure } from "../trpc";
 import { db } from "@/lib/db";
 import {
   fetchOverdueInvoicesCount,
@@ -86,7 +86,7 @@ export const billingRouter = router({
     }),
 
   // 2. Get Student Balance Summary
-  getStudentBalanceSummary: adminProcedure
+  getStudentBalanceSummary: billingProcedure
     .input(z.object({ studentId: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -94,7 +94,7 @@ export const billingRouter = router({
     }),
 
   // 3. Get Invoice by ID (with items, student, group, and payment history)
-  getInvoiceById: adminProcedure
+  getInvoiceById: billingProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -102,7 +102,7 @@ export const billingRouter = router({
     }),
 
   // 3.1 Get Payments (with school scoping, studentId/invoiceId filtering)
-  getPayments: adminProcedure
+  getPayments: billingProcedure
     .input(
       z
         .object({
@@ -120,7 +120,7 @@ export const billingRouter = router({
     }),
 
   // 4. Create Invoice
-  createInvoice: adminProcedure
+  createInvoice: billingProcedure
     .input(
       z
         .object({
@@ -160,7 +160,7 @@ export const billingRouter = router({
     }),
 
   // 4b. Create Situational (Ad-hoc) Invoice (Materials, Exams, Private Lessons, Adjustments)
-  createSituationalInvoice: adminProcedure
+  createSituationalInvoice: billingProcedure
     .input(
       z
         .object({
@@ -193,7 +193,7 @@ export const billingRouter = router({
     }),
 
   // 5. Update Invoice Status
-  updateInvoiceStatus: adminProcedure
+  updateInvoiceStatus: billingProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -207,7 +207,7 @@ export const billingRouter = router({
     }),
 
   // 6. Record Payment (Atomic Transaction)
-  recordPayment: adminProcedure
+  recordPayment: billingProcedure
     .input(
       z.object({
         invoiceId: z.number().int().positive(),
@@ -224,7 +224,7 @@ export const billingRouter = router({
     }),
 
   // 7. Void Payment (Atomic Transaction)
-  voidPayment: adminProcedure
+  voidPayment: billingProcedure
     .input(
       z.object({
         paymentId: z.number().int().positive(),
@@ -255,7 +255,7 @@ export const billingRouter = router({
     }),
 
   // 9. Preview Recurring Invoices (Dry-Run Query)
-  previewRecurringInvoices: adminProcedure
+  previewRecurringInvoices: billingProcedure
     .input(
       z.object({
         targetMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "targetMonth trebuie să fie în format YYYY-MM (ex: 2026-10)"),
@@ -273,7 +273,7 @@ export const billingRouter = router({
     }),
 
   // 10. Generate Recurring Invoices (Atomic Batch Mutation)
-  generateRecurringInvoices: adminProcedure
+  generateRecurringInvoices: billingProcedure
     .input(
       z.object({
         targetMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "targetMonth trebuie să fie în format YYYY-MM (ex: 2026-10)"),
@@ -293,7 +293,7 @@ export const billingRouter = router({
     }),
 
   // 11. Batch Lesson Invoicing (Consolidate unbilled attended lessons into invoices)
-  generateBatchLessonInvoices: adminProcedure
+  generateBatchLessonInvoices: billingProcedure
     .input(
       z.object({
         startDate: dateSchema,
@@ -311,7 +311,7 @@ export const billingRouter = router({
     }),
 
   // 12. Get Statistics (Financial Analytics & Debtors)
-  getStatistics: adminProcedure
+  getStatistics: billingProcedure
     .input(
       z
         .object({
