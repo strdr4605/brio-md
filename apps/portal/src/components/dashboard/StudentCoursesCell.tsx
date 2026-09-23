@@ -17,7 +17,7 @@ type Props = {
 };
 
 // Distinct badge colors for courses inspired by Discord roles
-const COURSE_COLORS = [
+export const COURSE_COLORS = [
   { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500" },
   {
     bg: "bg-purple-50",
@@ -42,8 +42,9 @@ const COURSE_COLORS = [
   { bg: "bg-cyan-50", text: "text-cyan-700", border: "border-cyan-200", dot: "bg-cyan-500" },
 ];
 
-function getCourseColor(courseId: number) {
-  return COURSE_COLORS[courseId % COURSE_COLORS.length];
+export function getCourseColor(courseId?: number | null) {
+  if (!courseId) return COURSE_COLORS[0];
+  return COURSE_COLORS[Math.abs(courseId) % COURSE_COLORS.length];
 }
 
 export function StudentCoursesCell({
@@ -59,11 +60,56 @@ export function StudentCoursesCell({
 
   const utils = trpc.useUtils();
   const updateCoursesMutation = trpc.student.updateCourses.useMutation({
-    onSuccess: () => {
-      utils.student.list.invalidate();
+    onMutate: async ({ studentId: sId, courseIds }) => {
+      await utils.student.list.cancel();
+      await utils.enrollment.getByStudent.cancel({ studentId: sId });
+
+      const previousStudents = utils.student.list.getData();
+      const previousEnrollments = utils.enrollment.getByStudent.getData({ studentId: sId });
+
+      const targetCourseIdsSet = new Set(courseIds);
+
+      // Optimistically update student.list cache
+      utils.student.list.setData(undefined, (old) => {
+        if (!old) return old;
+        return old.map((s) => {
+          if (s.id !== sId) return s;
+          const kept = (s.courses || []).filter((c) => targetCourseIdsSet.has(c.id));
+          const keptIds = new Set(kept.map((c) => c.id));
+          const added = availableCourses.filter(
+            (c) => targetCourseIdsSet.has(c.id) && !keptIds.has(c.id),
+          );
+          return {
+            ...s,
+            courses: [...kept, ...added],
+          };
+        });
+      });
+
+      // Optimistically update enrollment.getByStudent cache (remove groups of removed courses)
+      utils.enrollment.getByStudent.setData({ studentId: sId }, (old) => {
+        if (!old) return old;
+        return old.filter((enr) => targetCourseIdsSet.has(enr.courseId));
+      });
+
+      return { previousStudents, previousEnrollments };
     },
-    onError: (err) => {
+    onError: (err, variables, context) => {
+      if (context?.previousStudents) {
+        utils.student.list.setData(undefined, context.previousStudents);
+      }
+      if (context?.previousEnrollments) {
+        utils.enrollment.getByStudent.setData(
+          { studentId: variables.studentId },
+          context.previousEnrollments,
+        );
+      }
       alert(err.message || "Eroare la actualizarea cursurilor");
+    },
+    onSettled: () => {
+      utils.student.list.invalidate();
+      utils.enrollment.getByStudent.invalidate({ studentId });
+      utils.student.getById.invalidate({ id: studentId });
     },
   });
 

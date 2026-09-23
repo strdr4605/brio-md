@@ -83,7 +83,7 @@ export const enrollmentRouter = router({
         assertAdminAccess(user, grp.schoolId);
       }
 
-      // Verify student is already enrolled in the course for each group
+      // Ensure student is enrolled in the course for each group
       for (const grp of targetGroups) {
         const [existingProgress] = await db
           .select()
@@ -97,10 +97,10 @@ export const enrollmentRouter = router({
           .limit(1);
 
         if (!existingProgress) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              "Studentul trebuie să fie mai întâi înscris în cursul respectiv înainte de a fi adăugat într-o grupă.",
+          await db.insert(studentCourseProgress).values({
+            studentId: input.studentId,
+            courseId: grp.courseId,
+            status: "in_progress",
           });
         }
       }
