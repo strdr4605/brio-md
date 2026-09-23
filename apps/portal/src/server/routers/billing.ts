@@ -14,6 +14,10 @@ import {
   executeVoidPayment,
   executeCancelInvoice,
 } from "../billingService";
+import {
+  previewRecurringInvoices,
+  generateRecurringInvoices,
+} from "../recurringBillingService";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const dateSchema = z
@@ -173,5 +177,43 @@ export const billingRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await executeCancelInvoice(db, input, ctx.user);
+    }),
+
+  // 9. Preview Recurring Invoices (Dry-Run Query)
+  previewRecurringInvoices: adminProcedure
+    .input(
+      z.object({
+        targetMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "targetMonth trebuie să fie în format YYYY-MM (ex: 2026-10)"),
+        groupId: z.number().int().positive().optional(),
+        defaultPrice: z.number().int().min(0).max(100_000_000).optional(),
+        basePrice: z.number().int().min(0).max(100_000_000).optional(),
+        dueDate: dateSchema.optional(),
+        schoolId: z.number().int().positive().optional(),
+        monthName: z.string().max(50).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await previewRecurringInvoices(db, input, ctx.user);
+    }),
+
+  // 10. Generate Recurring Invoices (Atomic Batch Mutation)
+  generateRecurringInvoices: adminProcedure
+    .input(
+      z.object({
+        targetMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "targetMonth trebuie să fie în format YYYY-MM (ex: 2026-10)"),
+        groupId: z.number().int().positive().optional(),
+        defaultPrice: z.number().int().min(0).max(100_000_000).optional(),
+        basePrice: z.number().int().min(0).max(100_000_000).optional(),
+        dueDate: dateSchema.optional(),
+        schoolId: z.number().int().positive().optional(),
+        monthName: z.string().max(50).optional(),
+        status: z.enum(["draft", "issued"]).default("draft").optional(),
+        notes: z.string().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await generateRecurringInvoices(db, input, ctx.user);
     }),
 });

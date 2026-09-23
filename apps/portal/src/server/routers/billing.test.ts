@@ -1390,4 +1390,459 @@ const sampleStudentSchool1 = {
       await expect(caller.recordPayment({ invoiceId: 1, amount: 500, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow("DB Deadlock / Disk Full");
     });
   });
+
+  describe("billing.previewRecurringInvoices & billing.generateRecurringInvoices", () => {
+    const mockEnrollments = [
+      {
+        enrollmentId: 101,
+        studentId: 10,
+        studentName: "Alex Popescu",
+        groupId: 1,
+        groupName: "Grupa A - Luni",
+        courseId: 5,
+        courseName: "Robotică",
+        billingType: "subscription_monthly",
+        customPrice: null,
+        discountPercent: 0,
+      },
+      {
+        enrollmentId: 102,
+        studentId: 11,
+        studentName: "Mihai Enache",
+        groupId: 1,
+        groupName: "Grupa A - Luni",
+        courseId: 5,
+        courseName: "Robotică",
+        billingType: "subscription_monthly",
+        customPrice: 1200,
+        discountPercent: 0,
+      },
+      {
+        enrollmentId: 103,
+        studentId: 12,
+        studentName: "Elena Rusu",
+        groupId: 1,
+        groupName: "Grupa A - Luni",
+        courseId: 5,
+        courseName: "Robotică",
+        billingType: "subscription_monthly",
+        customPrice: 1500,
+        discountPercent: 20,
+      },
+    ];
+
+    it("previews recurring invoices and calculates custom pricing and discounts accurately", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockEnrollments))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(preview.targetMonth).toBe("2026-10");
+      expect(preview.periodStart).toBe("2026-10-01");
+      expect(preview.periodEnd).toBe("2026-10-31");
+      expect(preview.dueDate).toBe("2026-10-10");
+      expect(preview.invoices).toHaveLength(3);
+      expect(preview.skippedCount).toBe(0);
+
+      // 1. Alex: default price 1000, 0% discount
+      expect(preview.invoices[0].studentId).toBe(10);
+      expect(preview.invoices[0].finalPrice).toBe(1000);
+      expect(preview.invoices[0].lineItemDescription).toBe("Abonament curs Robotică - Octombrie");
+
+      // 2. Mihai: customPrice 1200 override, 0% discount
+      expect(preview.invoices[1].studentId).toBe(11);
+      expect(preview.invoices[1].finalPrice).toBe(1200);
+
+      // 3. Elena: customPrice 1500, 20% discount -> 1200
+      expect(preview.invoices[2].studentId).toBe(12);
+      expect(preview.invoices[2].finalPrice).toBe(1200);
+
+      expect(preview.totalProjectedRevenue).toBe(1000 + 1200 + 1200);
+    });
+
+    it("previews recurring invoices with optional custom monthName", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([mockEnrollments[0]]))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+        monthName: "Octombrie 2026",
+      });
+
+      expect(preview.invoices[0].lineItemDescription).toBe("Abonament curs Robotică - Octombrie 2026");
+    });
+
+    it("detects existing active invoices and marks them as skipped duplicates in preview", async () => {
+      const existingActiveInvoice = {
+        id: 777,
+        studentId: 10,
+        groupId: 1,
+        enrollmentId: 101,
+        periodStart: "2026-10-01",
+        status: "issued",
+        groupCourseId: 5,
+      };
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockEnrollments))
+        .mockReturnValueOnce(createQueryChain([existingActiveInvoice]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(preview.createdCount).toBe(2);
+      expect(preview.skippedCount).toBe(1);
+      expect(preview.skippedDuplicates).toBe(1);
+      expect(preview.skipped[0].studentId).toBe(10);
+      expect(preview.skipped[0].existingInvoiceId).toBe(777);
+      expect(preview.totalProjectedRevenue).toBe(1200 + 1200);
+    });
+
+    it("scopes duplicate check specifically to subscription invoice type", async () => {
+      let capturedWhereCondition: any;
+      const invoiceQueryChain: any = Promise.resolve([]);
+      Object.assign(invoiceQueryChain, {
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockImplementation((condition) => {
+          capturedWhereCondition = condition;
+          return invoiceQueryChain;
+        }),
+      });
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockEnrollments))
+        .mockReturnValueOnce(invoiceQueryChain);
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(invoiceQueryChain.where).toHaveBeenCalled();
+      expect(capturedWhereCondition).toBeDefined();
+      expect(preview.createdCount).toBe(3);
+      expect(preview.skippedCount).toBe(0);
+    });
+
+    it("generates recurring invoices in batch and creates invoice items atomically", async () => {
+      const mockTx: any = {
+        select: vi.fn()
+          .mockReturnValueOnce(createQueryChain(mockEnrollments))
+          .mockReturnValueOnce(createQueryChain([])),
+        insert: vi.fn()
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{
+                id: 501,
+                invoiceNumber: "INV-2026-001",
+                studentId: 10,
+                totalAmount: 1000,
+                status: "draft",
+              }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 1, invoiceId: 501, amount: 1000 }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{
+                id: 502,
+                invoiceNumber: "INV-2026-002",
+                studentId: 11,
+                totalAmount: 1200,
+                status: "draft",
+              }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 2, invoiceId: 502, amount: 1200 }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{
+                id: 503,
+                invoiceNumber: "INV-2026-003",
+                studentId: 12,
+                totalAmount: 1200,
+                status: "draft",
+              }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 3, invoiceId: 503, amount: 1200 }]),
+            }),
+          }),
+      };
+
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.generateRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(result.createdCount).toBe(3);
+      expect(result.created).toBe(3);
+      expect(result.skippedCount).toBe(0);
+      expect(result.totalAmount).toBe(3400);
+      expect(result.invoices).toHaveLength(3);
+    });
+
+    it("guarantees idempotency: skips batch generation when invoices already exist", async () => {
+      const existingInvoices = [
+        { id: 1, studentId: 10, groupId: 1, enrollmentId: 101, periodStart: "2026-10-01", groupCourseId: 5 },
+        { id: 2, studentId: 11, groupId: 1, enrollmentId: 102, periodStart: "2026-10-01", groupCourseId: 5 },
+        { id: 3, studentId: 12, groupId: 1, enrollmentId: 103, periodStart: "2026-10-01", groupCourseId: 5 },
+      ];
+
+      const mockTx: any = {
+        select: vi.fn()
+          .mockReturnValueOnce(createQueryChain(mockEnrollments))
+          .mockReturnValueOnce(createQueryChain(existingInvoices)),
+        insert: vi.fn(),
+      };
+
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.generateRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(result.createdCount).toBe(0);
+      expect(result.created).toBe(0);
+      expect(result.skippedCount).toBe(3);
+      expect(result.skippedDuplicates).toBe(3);
+      expect(result.totalAmount).toBe(0);
+      expect(result.invoices).toHaveLength(0);
+      expect(mockTx.insert).not.toHaveBeenCalled();
+    });
+
+    it("does not skip generation when existing invoice is cancelled", async () => {
+      // In recurring billing, cancelled invoices are filtered out of existingInvoices by ne(status, 'cancelled')
+      const mockTx: any = {
+        select: vi.fn()
+          .mockReturnValueOnce(createQueryChain([mockEnrollments[0]]))
+          .mockReturnValueOnce(createQueryChain([])), // cancelled invoice is not returned as active
+        insert: vi.fn()
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 601, totalAmount: 1000, status: "draft" }]),
+            }),
+          })
+          .mockReturnValueOnce({
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 10, invoiceId: 601, amount: 1000 }]),
+            }),
+          }),
+      };
+
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.generateRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+      });
+
+      expect(result.createdCount).toBe(1);
+      expect(result.skippedCount).toBe(0);
+    });
+
+    it("rejects invalid targetMonth formats with 400 Bad Request", async () => {
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      await expect(caller.previewRecurringInvoices({ targetMonth: "invalid" })).rejects.toThrow();
+      await expect(caller.previewRecurringInvoices({ targetMonth: "2026-13" })).rejects.toThrow();
+      await expect(caller.previewRecurringInvoices({ targetMonth: "2026-00" })).rejects.toThrow();
+      await expect(caller.generateRecurringInvoices({ targetMonth: "2026-10-01" as any })).rejects.toThrow();
+    });
+
+    it("rejects group preview when group does not belong to school", async () => {
+      (db.select as any).mockReturnValueOnce(createQueryChain([{ id: 99, schoolId: 2 }])); // Group in school 2
+
+      const caller = billingRouter.createCaller({ user: school1Admin }); // Admin in school 1
+      await expect(
+        caller.previewRecurringInvoices({
+          targetMonth: "2026-10",
+          groupId: 99,
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("handles partial batch generation with mixed skipped duplicates and created invoices", async () => {
+      const mockTx: any = {
+        select: vi.fn()
+          .mockReturnValueOnce(createQueryChain(mockEnrollments)) // 3 candidates
+          .mockReturnValueOnce(createQueryChain([{ id: 77, studentId: 10, groupId: 1, enrollmentId: 101, periodStart: "2026-10-01", groupCourseId: 5 }])), // Alex is duplicate
+        insert: vi.fn()
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 201, totalAmount: 1200, status: "draft" }]) }) })
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 1, amount: 1200 }]) }) })
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 202, totalAmount: 1200, status: "draft" }]) }) })
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 2, amount: 1200 }]) }) }),
+      };
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.generateRecurringInvoices({ targetMonth: "2026-10", defaultPrice: 1000 });
+
+      expect(result.createdCount).toBe(2);
+      expect(result.skippedCount).toBe(1);
+      expect(result.totalAmount).toBe(2400);
+      expect(result.invoices).toHaveLength(2);
+    });
+
+    it("applies discount accurately to pure base price when customPrice is omitted", async () => {
+      const enr = [{
+        enrollmentId: 201,
+        studentId: 55,
+        studentName: "Diana Moraru",
+        groupId: 1,
+        groupName: "Robotică 1",
+        courseId: 5,
+        courseName: "Robotică",
+        billingType: "subscription_monthly",
+        customPrice: null,
+        discountPercent: 15,
+      }];
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(enr))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({ targetMonth: "2026-10", defaultPrice: 1000 });
+
+      // 1000 * 0.85 = 850
+      expect(preview.invoices[0].finalPrice).toBe(850);
+    });
+
+    it("handles 100% scholarship and customPrice: 0 boundary cleanly", async () => {
+      const enr = [
+        {
+          enrollmentId: 301,
+          studentId: 61,
+          studentName: "Free Tier Student",
+          groupId: 1,
+          groupName: "Robotică 1",
+          courseId: 5,
+          courseName: "Robotică",
+          billingType: "subscription_monthly",
+          customPrice: 0,
+          discountPercent: 0,
+        },
+        {
+          enrollmentId: 302,
+          studentId: 62,
+          studentName: "Full Scholarship Student",
+          groupId: 1,
+          groupName: "Robotică 1",
+          courseId: 5,
+          courseName: "Robotică",
+          billingType: "subscription_monthly",
+          customPrice: null,
+          discountPercent: 100,
+        },
+      ];
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(enr))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({ targetMonth: "2026-10", defaultPrice: 1500 });
+
+      expect(preview.invoices[0].finalPrice).toBe(0);
+      expect(preview.invoices[1].finalPrice).toBe(0);
+      expect(preview.totalProjectedRevenue).toBe(0);
+    });
+
+    it("applies custom explicit dueDate when supplied in input", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([mockEnrollments[0]]))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+        dueDate: "2026-10-25",
+      });
+
+      expect(preview.dueDate).toBe("2026-10-25");
+      expect(preview.invoices[0].dueDate).toBe("2026-10-25");
+    });
+
+    it("allows direct invoice status specification (status: issued)", async () => {
+      const mockTx: any = {
+        select: vi.fn()
+          .mockReturnValueOnce(createQueryChain([mockEnrollments[0]]))
+          .mockReturnValueOnce(createQueryChain([])),
+        insert: vi.fn()
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 801, status: "issued", totalAmount: 1000 }]) }) })
+          .mockReturnValueOnce({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 1, amount: 1000 }]) }) }),
+      };
+      (db.transaction as any).mockImplementationOnce(async (cb: any) => cb(mockTx));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const result = await caller.generateRecurringInvoices({
+        targetMonth: "2026-10",
+        defaultPrice: 1000,
+        status: "issued",
+      });
+
+      expect(result.createdCount).toBe(1);
+      expect(result.invoices[0].status).toBe("issued");
+    });
+
+    it("requires schoolId for SuperAdmin caller when previewing recurring invoices", async () => {
+      const caller = billingRouter.createCaller({ user: superUser });
+      await expect(caller.previewRecurringInvoices({ targetMonth: "2026-10" })).rejects.toThrow(TRPCError);
+    });
+
+    it("prevents duplicate invoices across cohorts for the same course in the same month", async () => {
+      // Student 10 enrolled in Group A and Group B for the same Course 5
+      const multiGroupEnrollments = [
+        { ...mockEnrollments[0], groupId: 1, groupName: "Group A", courseId: 5 },
+      ];
+      const existingCourseInvoice = {
+        id: 999,
+        studentId: 10,
+        groupId: 2, // different group!
+        enrollmentId: 9999, // different enrollment!
+        periodStart: "2026-10-01",
+        status: "issued",
+        groupCourseId: 5, // same course!
+      };
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(multiGroupEnrollments))
+        .mockReturnValueOnce(createQueryChain([existingCourseInvoice]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const preview = await caller.previewRecurringInvoices({ targetMonth: "2026-10", defaultPrice: 1000 });
+
+      expect(preview.createdCount).toBe(0);
+      expect(preview.skippedCount).toBe(1);
+      expect(preview.skipped[0].reason).toContain("Factură activă deja existentă");
+    });
+  });
 });
