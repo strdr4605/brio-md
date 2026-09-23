@@ -1390,4 +1390,165 @@ const sampleStudentSchool1 = {
       await expect(caller.recordPayment({ invoiceId: 1, amount: 500, paymentDate: "2026-09-21", method: "cash" })).rejects.toThrow("DB Deadlock / Disk Full");
     });
   });
+
+  describe("billing.getStatistics", () => {
+    it("returns empty statistics when non-superadmin has no schoolId", async () => {
+      const caller = billingRouter.createCaller({
+        user: { ...school1Admin, schoolId: null },
+      });
+      const res = await caller.getStatistics();
+      expect(res.kpis.totalRevenueCollected).toBe(0);
+      expect(res.kpis.collectionRate).toBe(0);
+      expect(res.debtors).toEqual([]);
+      expect(db.select).not.toHaveBeenCalled();
+    });
+
+    it("calculates KPIs, trends, model distribution, course breakdown, and debtors list correctly", async () => {
+      const mockInvoices = [
+        {
+          id: 1,
+          schoolId: 1,
+          studentId: 10,
+          studentName: "Alex Popescu",
+          studentPhone: "+37369000001",
+          parentName: "Maria Popescu",
+          parentPhone: "+37360000000",
+          groupId: 101,
+          groupName: "Grupa A",
+          courseId: 201,
+          courseName: "Robotica 1",
+          invoiceNumber: "INV-2026-001",
+          type: "subscription",
+          status: "partially_paid",
+          totalAmount: 1000,
+          paidAmount: 600,
+          dueDate: "2026-09-10",
+          createdAt: new Date("2026-09-01T10:00:00Z"),
+        },
+        {
+          id: 2,
+          schoolId: 1,
+          studentId: 11,
+          studentName: "Ion Creangă",
+          studentPhone: "+37369000002",
+          parentName: "Stefan Creangă",
+          parentPhone: "+37360000003",
+          groupId: 102,
+          groupName: "Grupa B",
+          courseId: 202,
+          courseName: "Programare Python",
+          invoiceNumber: "INV-2026-002",
+          type: "per_lesson",
+          status: "paid",
+          totalAmount: 500,
+          paidAmount: 500,
+          dueDate: "2026-09-15",
+          createdAt: new Date("2026-09-05T10:00:00Z"),
+        },
+        {
+          id: 3,
+          schoolId: 1,
+          studentId: 10,
+          studentName: "Alex Popescu",
+          studentPhone: "+37369000001",
+          parentName: "Maria Popescu",
+          parentPhone: "+37360000000",
+          groupId: 101,
+          groupName: "Grupa A",
+          courseId: 201,
+          courseName: "Robotica 1",
+          invoiceNumber: "INV-2026-003",
+          type: "subscription",
+          status: "overdue",
+          totalAmount: 800,
+          paidAmount: 0,
+          dueDate: "2026-08-20",
+          createdAt: new Date("2026-08-10T10:00:00Z"),
+        },
+      ];
+
+      const mockPayments = [
+        {
+          id: 1,
+          invoiceId: 1,
+          studentId: 10,
+          schoolId: 1,
+          amount: 600,
+          paymentDate: "2026-09-12",
+          createdAt: new Date("2026-09-12T10:00:00Z"),
+        },
+        {
+          id: 2,
+          invoiceId: 2,
+          studentId: 11,
+          schoolId: 1,
+          amount: 500,
+          paymentDate: "2026-09-16",
+          createdAt: new Date("2026-09-16T10:00:00Z"),
+        },
+      ];
+
+      const mockEnrollments = [
+        { id: 1, billingType: "subscription_monthly", customPrice: 1200 },
+        { id: 2, billingType: "subscription_monthly", customPrice: 1000 },
+        { id: 3, billingType: "per_lesson", customPrice: 200 },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockInvoices))
+        .mockReturnValueOnce(createQueryChain(mockPayments))
+        .mockReturnValueOnce(createQueryChain(mockEnrollments));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const stats = await caller.getStatistics({
+        dateRange: { from: "2026-09-01", to: "2026-09-30" },
+      });
+
+      // Verification:
+      // Filtered invoices in Sep: id 1 (1000) and id 2 (500) => totalInvoiced = 1500
+      // Payments in Sep: 600 + 500 = 1100 => totalRevenueCollected = 1100
+      // collectionRate = round(1100 / 1500 * 100) = 73%
+      expect(stats.kpis.totalInvoiced).toBe(1500);
+      expect(stats.kpis.totalRevenueCollected).toBe(1100);
+      expect(stats.kpis.collectionRate).toBe(73);
+
+      // Active debt: across all active unpaid invoices (id 1: 400, id 3: 800) => 1200
+      expect(stats.kpis.totalActiveDebt).toBe(1200);
+
+      // MRR: 1200 + 1000 = 2200
+      expect(stats.kpis.projectedRecurringRevenue).toBe(2200);
+
+      // Top debtors: Alex Popescu owes 400 + 800 = 1200, 2 unpaid invoices
+      expect(stats.debtors).toHaveLength(1);
+      expect(stats.debtors[0].studentName).toBe("Alex Popescu");
+      expect(stats.debtors[0].totalDebt).toBe(1200);
+      expect(stats.debtors[0].unpaidInvoicesCount).toBe(2);
+      expect(stats.debtors[0].parentPhone).toBe("+37360000000");
+      expect(stats.debtors[0].earliestDueDate).toBe("2026-08-20");
+      expect(stats.debtors[0].overdueDays).toBeGreaterThan(0);
+
+      // Model distribution
+      const subModel = stats.billingModelDistribution.find((m) => m.type === "subscription");
+      expect(subModel?.billed).toBe(1000); // only id 1 in Sep
+      const perLessonModel = stats.billingModelDistribution.find((m) => m.type === "per_lesson");
+      expect(perLessonModel?.billed).toBe(500);
+
+      // Course breakdown
+      expect(stats.courseBreakdown.length).toBeGreaterThan(0);
+      const robotica = stats.courseBreakdown.find((c) => c.courseName === "Robotica 1");
+      expect(robotica?.billed).toBe(1000);
+    });
+
+    it("allows superadmin to query statistics across all schools or for specific school", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([]))
+        .mockReturnValueOnce(createQueryChain([]))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: superUser });
+      const stats = await caller.getStatistics({ schoolId: 2 });
+      expect(stats.kpis.totalActiveDebt).toBe(0);
+      expect(db.select).toHaveBeenCalledTimes(3);
+    });
+  });
 });

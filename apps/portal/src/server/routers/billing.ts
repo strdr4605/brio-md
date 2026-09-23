@@ -14,6 +14,7 @@ import {
   executeVoidPayment,
   executeCancelInvoice,
 } from "../billingService";
+import { fetchBillingStatistics } from "../billingStatisticsService";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const dateSchema = z
@@ -173,5 +174,25 @@ export const billingRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await executeCancelInvoice(db, input, ctx.user);
+    }),
+
+  // 9. Get Statistics (Financial Analytics & Debtors)
+  getStatistics: adminProcedure
+    .input(
+      z
+        .object({
+          schoolId: z.number().int().positive().optional(),
+          dateRange: z
+            .object({
+              from: dateSchema.optional(),
+              to: dateSchema.optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchBillingStatistics(db, input, ctx.user);
     }),
 });
