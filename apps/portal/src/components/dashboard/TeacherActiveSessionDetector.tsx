@@ -26,17 +26,8 @@ export function TeacherActiveSessionDetector() {
 
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
-  const canAccessAttendance =
-    role === "teacher" ||
-    role === "admin" ||
-    role === "superadmin" ||
-    permissions.includes("teach") ||
-    permissions.includes("admin") ||
-    permissions.includes("super");
-
-  // If user is already on attendance (/dashboard/attendance), do not auto-redirect
-  // (allows manual group choosing from the catalog without unexpected bounces)
-  const isAlreadyInAttendance = pathname.startsWith("/dashboard/attendance");
+  const isTeacher = role === "teacher" || permissions.includes("teach");
+  const isDashboardRoot = pathname === "/dashboard";
 
   // Clean any stale session locks from previous test runs
   useEffect(() => {
@@ -47,25 +38,21 @@ export function TeacherActiveSessionDetector() {
   }, []);
 
   const { data } = trpc.attendance.getTeacherActiveSession.useQuery(undefined, {
-    enabled: canAccessAttendance && !isAlreadyInAttendance && !hasAutoRedirectedInSession,
+    enabled: isTeacher && isDashboardRoot && !hasAutoRedirectedInSession,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
 
   useEffect(() => {
-    // If the user is on attendance, mark as handled so leaving it doesn't immediately pull them back
-    if (isAlreadyInAttendance) {
-      hasAutoRedirectedInSession = true;
-      return;
-    }
-
+    // Only auto-redirect if we are on the dashboard root and the user is a teacher
+    if (!isDashboardRoot || !isTeacher) return;
     if (hasAutoRedirectedInSession || !data?.activeSession) return;
 
     hasAutoRedirectedInSession = true;
     const { groupId, type } = data.activeSession;
     router.push(`/dashboard/attendance?groupId=${groupId}&fullscreen=true&prompt=${type}`);
-  }, [data, isAlreadyInAttendance, router]);
+  }, [data, isDashboardRoot, isTeacher, router]);
 
   return null;
 }
