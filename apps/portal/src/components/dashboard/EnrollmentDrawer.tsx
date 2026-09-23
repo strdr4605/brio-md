@@ -42,6 +42,9 @@ export function EnrollmentDrawer({
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [billingType, setBillingType] = useState<"subscription_monthly" | "subscription_course" | "per_lesson" | "custom">("subscription_monthly");
+  const [customPrice, setCustomPrice] = useState<string>("");
+  const [discountPercent, setDiscountPercent] = useState<string>("0");
 
   const utils = trpc.useUtils();
   useEffect(() => setMounted(true), []);
@@ -161,11 +164,23 @@ export function EnrollmentDrawer({
     const toAdd = selectedGroupIds.filter((id) => !initialActive.includes(id));
     const toRemove = initialActive.filter((id) => !selectedGroupIds.includes(id));
 
+    const parsedCustomPrice = customPrice.trim() ? Math.max(0, parseInt(customPrice, 10)) : null;
+    const parsedDiscount = discountPercent.trim() ? Math.min(100, Math.max(0, parseInt(discountPercent, 10))) : 0;
+
     try {
       const removePromises = toRemove.map((gId) =>
         updateStatusMutation.mutateAsync({ studentId, groupId: gId, status: "inactive" })
       );
-      const addPromise = toAdd.length > 0 ? enrollMutation.mutateAsync({ studentId, groupIds: toAdd }) : Promise.resolve();
+      const addPromise =
+        toAdd.length > 0
+          ? enrollMutation.mutateAsync({
+              studentId,
+              groupIds: toAdd,
+              billingType,
+              customPrice: parsedCustomPrice,
+              discountPercent: parsedDiscount,
+            })
+          : Promise.resolve();
       await Promise.all([...removePromises, addPromise]);
       await invalidateAll();
       onCloseAction();
@@ -248,18 +263,76 @@ export function EnrollmentDrawer({
           {error && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">{error}</div>}
 
           {isStudentMode && (
-            <StudentEnrollmentView
-              isLoading={isLoadingCourses || isLoadingGroups || isLoadingEnrollments}
-              search={search}
-              studentCourses={studentCourses}
-              availableCourses={availableCourses}
-              allGroups={allGroups}
-              selectedGroupIds={selectedGroupIds}
-              currentEnrollments={currentEnrollments}
-              onToggleGroup={handleToggleGroup}
-              onUpdateStatus={(enrollmentId, status) => updateStatusMutation.mutate({ enrollmentId, status })}
-              isUpdatingStatus={updateStatusMutation.isPending}
-            />
+            <>
+              <StudentEnrollmentView
+                isLoading={isLoadingCourses || isLoadingGroups || isLoadingEnrollments}
+                search={search}
+                studentCourses={studentCourses}
+                availableCourses={availableCourses}
+                allGroups={allGroups}
+                selectedGroupIds={selectedGroupIds}
+                currentEnrollments={currentEnrollments}
+                onToggleGroup={handleToggleGroup}
+                onUpdateStatus={(enrollmentId, status) => updateStatusMutation.mutate({ enrollmentId, status })}
+                isUpdatingStatus={updateStatusMutation.isPending}
+              />
+
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Configurare Facturare & Tarif</span>
+                  </h3>
+                  <span className="text-[11px] text-slate-500 font-medium">pentru noile înrolări</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Model facturare
+                    </label>
+                    <select
+                      value={billingType}
+                      onChange={(e) => setBillingType(e.target.value as any)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                    >
+                      <option value="subscription_monthly">Abonament lunar</option>
+                      <option value="per_lesson">Plată per lecție</option>
+                      <option value="subscription_course">Abonament curs complet</option>
+                      <option value="custom">Personalizat</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Preț personalizat (MDL)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Preț implicit curs"
+                      value={customPrice}
+                      onChange={(e) => setCustomPrice(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Reducere (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0%"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           {isGroupMode && (

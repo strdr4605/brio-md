@@ -458,4 +458,234 @@ describe("enrollmentRouter - Multi-Group Enrollment & Per-Course Status", () => 
       expect(enrollments[1].status).toBe("active");
     });
   });
+
+  describe("Billing & Pricing Configuration", () => {
+    it("enrolls student with custom billing configuration (billingType, customPrice, discountPercent)", async () => {
+      // 1. Student check
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([student1]),
+          }),
+        }),
+      });
+
+      // 2. Groups check
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([groupA_Course1]),
+        }),
+      });
+
+      // 3. Existing progress check
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 99 }]),
+          }),
+        }),
+      });
+
+      // 4. Upsert with pricing
+      const mockSaved = {
+        id: 501,
+        studentId: 10,
+        groupId: 101,
+        courseId: 1,
+        status: "active",
+        billingType: "per_lesson",
+        customPrice: 250,
+        discountPercent: 10,
+      };
+
+      (db.insert as any).mockReturnValueOnce({
+        values: vi.fn().mockReturnValue({
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([mockSaved]),
+          }),
+        }),
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      const result = await caller.enrollStudent({
+        studentId: 10,
+        groupIds: [101],
+        billingType: "per_lesson",
+        customPrice: 250,
+        discountPercent: 10,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+      expect(result.enrollments[0].billingType).toBe("per_lesson");
+      expect(result.enrollments[0].customPrice).toBe(250);
+      expect(result.enrollments[0].discountPercent).toBe(10);
+    });
+
+    it("updates pricing configuration for an existing enrollment via updatePricing", async () => {
+      // 1. Find enrollment
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              {
+                id: 501,
+                studentId: 10,
+                groupId: 101,
+                billingType: "subscription_monthly",
+                customPrice: null,
+                discountPercent: 0,
+              },
+            ]),
+          }),
+        }),
+      });
+
+      // 2. Student check
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([student1]),
+          }),
+        }),
+      });
+
+      // 3. Update query
+      const updatedRow = {
+        id: 501,
+        studentId: 10,
+        groupId: 101,
+        billingType: "custom",
+        customPrice: 400,
+        discountPercent: 15,
+      };
+
+      (db.update as any).mockReturnValueOnce({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([updatedRow]),
+          }),
+        }),
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      const result = await caller.updatePricing({
+        enrollmentId: 501,
+        billingType: "custom",
+        customPrice: 400,
+        discountPercent: 15,
+      });
+
+      expect(result.billingType).toBe("custom");
+      expect(result.customPrice).toBe(400);
+      expect(result.discountPercent).toBe(15);
+    });
+
+    it("prevents admin from another school from updating student pricing", async () => {
+      // 1. Find enrollment
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              {
+                id: 501,
+                studentId: 10,
+                groupId: 101,
+              },
+            ]),
+          }),
+        }),
+      });
+
+      // 2. Student check (schoolId = 1, but caller is from school 2)
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([student1]),
+          }),
+        }),
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: otherSchoolAdmin });
+      await expect(
+        caller.updatePricing({
+          enrollmentId: 501,
+          billingType: "per_lesson",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("throws NOT_FOUND when associated student record is not found in updatePricing", async () => {
+      // 1. Find enrollment
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              {
+                id: 501,
+                studentId: 9999,
+                groupId: 101,
+              },
+            ]),
+          }),
+        }),
+      });
+
+      // 2. Student check returns null/empty
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      await expect(
+        caller.updatePricing({
+          enrollmentId: 501,
+          billingType: "per_lesson",
+        }),
+      ).rejects.toThrow("Studentul asociat înscrierii nu a fost găsit.");
+    });
+
+    it("returns unmodified enrollment without executing db.update when updatePayload is empty", async () => {
+      const existingEnrollment = {
+        id: 501,
+        studentId: 10,
+        groupId: 101,
+        billingType: "subscription_monthly",
+        customPrice: 500,
+        discountPercent: 10,
+      };
+
+      // 1. Find enrollment
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([existingEnrollment]),
+          }),
+        }),
+      });
+
+      // 2. Student check
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([student1]),
+          }),
+        }),
+      });
+
+      const updateSpy = vi.spyOn(db, "update");
+
+      const caller = enrollmentRouter.createCaller({ user: adminUser });
+      const result = await caller.updatePricing({
+        enrollmentId: 501,
+      });
+
+      expect(result).toEqual(existingEnrollment);
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+  });
 });
