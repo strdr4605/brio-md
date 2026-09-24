@@ -9,7 +9,13 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // If JWT decryption fails or DB is temporarily down, treat as unauthenticated
+  }
+
   if (session?.user) {
     redirect("/dashboard");
   }
