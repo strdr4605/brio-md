@@ -19,6 +19,7 @@ import {
   LogOutIcon,
   XIcon,
   UserCheckIcon,
+  BarChartIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 
@@ -53,6 +54,7 @@ export function Nav({
 
   const isRouteActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/dashboard/invoices") return pathname === "/dashboard/invoices";
     return pathname.startsWith(href);
   };
 
@@ -198,6 +200,7 @@ export function Nav({
                 {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
               </div>
             )}
