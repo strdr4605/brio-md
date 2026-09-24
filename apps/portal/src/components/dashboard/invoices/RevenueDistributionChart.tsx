@@ -87,8 +87,10 @@ export function RevenueDistributionChart({
           ) : (
             <div className="flex items-end justify-between gap-2 sm:gap-4 h-56 pt-6 pb-2 border-b border-slate-100 overflow-x-auto">
               {trends.map((t) => {
-                const billedHeight = Math.max(4, Math.round((t.billed / maxMonthlyVal) * 100));
-                const collectedHeight = Math.max(4, Math.round((t.collected / maxMonthlyVal) * 100));
+                const billedHeight =
+                  t.billed > 0 ? Math.max(6, Math.round((t.billed / maxMonthlyVal) * 100)) : 0;
+                const collectedHeight =
+                  t.collected > 0 ? Math.max(6, Math.round((t.collected / maxMonthlyVal) * 100)) : 0;
 
                 return (
                   <div key={t.month} className="flex-1 flex flex-col items-center min-w-[50px] group">
@@ -102,14 +104,22 @@ export function RevenueDistributionChart({
                     <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-44">
                       {/* Billed bar */}
                       <div
-                        className="w-1/2 max-w-[20px] bg-gradient-to-t from-blue-700 to-blue-500 rounded-t-md transition-all duration-300 hover:brightness-110"
-                        style={{ height: `${billedHeight}%` }}
+                        className={`w-1/2 max-w-[20px] rounded-t-md transition-all duration-300 ${
+                          t.billed > 0
+                            ? "bg-gradient-to-t from-blue-700 to-blue-500 hover:brightness-110"
+                            : "bg-slate-200/60 h-1 rounded-full"
+                        }`}
+                        style={{ height: t.billed > 0 ? `${billedHeight}%` : undefined }}
                         title={`Facturat: ${formatMdl(t.billed)} MDL`}
                       />
                       {/* Collected bar */}
                       <div
-                        className="w-1/2 max-w-[20px] bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-md transition-all duration-300 hover:brightness-110"
-                        style={{ height: `${collectedHeight}%` }}
+                        className={`w-1/2 max-w-[20px] rounded-t-md transition-all duration-300 ${
+                          t.collected > 0
+                            ? "bg-gradient-to-t from-emerald-600 to-emerald-400 hover:brightness-110"
+                            : "bg-slate-200/60 h-1 rounded-full"
+                        }`}
+                        style={{ height: t.collected > 0 ? `${collectedHeight}%` : undefined }}
                         title={`Încasat: ${formatMdl(t.collected)} MDL`}
                       />
                     </div>

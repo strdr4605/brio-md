@@ -1499,9 +1499,9 @@ const sampleStudentSchool1 = {
       ];
 
       const mockEnrollments = [
-        { id: 1, billingType: "subscription_monthly", customPrice: 1200 },
-        { id: 2, billingType: "subscription_monthly", customPrice: 1000 },
-        { id: 3, billingType: "per_lesson", customPrice: 200 },
+        { id: 1, studentId: 10, groupId: 101, billingType: "subscription_monthly", customPrice: 1200 },
+        { id: 2, studentId: 11, groupId: 102, billingType: "subscription_monthly", customPrice: 1000 },
+        { id: 3, studentId: 12, groupId: 103, billingType: "per_lesson", customPrice: 200 },
       ];
 
       (db.select as any)
@@ -1553,6 +1553,40 @@ const sampleStudentSchool1 = {
       expect(stats.courseBreakdown.length).toBeGreaterThan(0);
       const robotica = stats.courseBreakdown.find((c) => c.courseName === "Robotica 1");
       expect(robotica?.billed).toBe(1000);
+    });
+
+    it("falls back to subscription invoice amounts for MRR when customPrice is null", async () => {
+      const mockInvoices = [
+        {
+          id: 1,
+          schoolId: 1,
+          studentId: 10,
+          groupId: 101,
+          type: "subscription",
+          status: "issued",
+          totalAmount: 1400,
+          paidAmount: 0,
+          dueDate: "2026-09-10",
+          createdAt: new Date("2026-09-01T10:00:00Z"),
+        },
+      ];
+      const mockPayments: any[] = [];
+      const mockEnrollments = [
+        // customPrice is null: should fall back to student 10's subscription invoice (1400 MDL)
+        { id: 1, studentId: 10, groupId: 101, billingType: "subscription_monthly", customPrice: null },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockInvoices))
+        .mockReturnValueOnce(createQueryChain(mockPayments))
+        .mockReturnValueOnce(createQueryChain(mockEnrollments));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const stats = await caller.getStatistics({
+        dateRange: { from: "2026-09-01", to: "2026-09-30" },
+      });
+
+      expect(stats.kpis.projectedRecurringRevenue).toBe(1400);
     });
 
     it("allows superadmin to query statistics across all schools or for specific school", async () => {

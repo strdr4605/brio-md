@@ -220,16 +220,14 @@ export async function fetchBillingStatistics(
   const activeEnrollments = await dbInstance
     .select({
       id: studentGroupEnrollments.id,
+      studentId: studentGroupEnrollments.studentId,
+      groupId: studentGroupEnrollments.groupId,
       billingType: studentGroupEnrollments.billingType,
       customPrice: studentGroupEnrollments.customPrice,
     })
     .from(studentGroupEnrollments)
     .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
     .where(and(...enrollmentConditions));
-
-  const projectedRecurringRevenue = activeEnrollments
-    .filter((e) => e.billingType === "subscription_monthly")
-    .reduce((sum, e) => sum + (e.customPrice || 0), 0);
 
   // Date Range filtering helpers
   const fromDate = input?.dateRange?.from;
@@ -248,6 +246,42 @@ export async function fetchBillingStatistics(
     const refDate = inv.dueDate || toDateString(inv.createdAt);
     return isInDateRange(refDate);
   });
+
+  // Calculate Projected Recurring Revenue (MRR) with resilient fallback
+  // 1. Map latest subscription prices per student & group from historical invoices
+  const latestSubscriptionPriceByStudentGroup = new Map<string, number>();
+  const latestSubscriptionPriceByStudent = new Map<number, number>();
+
+  for (const inv of allInvoices) {
+    if (inv.type === "subscription" && inv.totalAmount && inv.totalAmount > 0) {
+      if (inv.groupId) {
+        latestSubscriptionPriceByStudentGroup.set(`${inv.studentId}_${inv.groupId}`, inv.totalAmount);
+      }
+      latestSubscriptionPriceByStudent.set(inv.studentId, inv.totalAmount);
+    }
+  }
+
+  let projectedRecurringRevenue = 0;
+  for (const enr of activeEnrollments) {
+    if (enr.billingType === "subscription_monthly" || !enr.billingType) {
+      if (enr.customPrice && enr.customPrice > 0) {
+        projectedRecurringRevenue += enr.customPrice;
+      } else {
+        const fallbackPrice =
+          (enr.groupId ? latestSubscriptionPriceByStudentGroup.get(`${enr.studentId}_${enr.groupId}`) : undefined) ??
+          latestSubscriptionPriceByStudent.get(enr.studentId) ??
+          0;
+        projectedRecurringRevenue += fallbackPrice;
+      }
+    }
+  }
+
+  // Fallback Tier 3: If enrollments lack individual pricing, use total active subscriptions invoiced
+  if (projectedRecurringRevenue === 0) {
+    projectedRecurringRevenue = filteredInvoices
+      .filter((inv) => inv.type === "subscription")
+      .reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+  }
 
   // Filter payments for the selected period (by paymentDate)
   const filteredPayments = allPayments.filter((p) => {

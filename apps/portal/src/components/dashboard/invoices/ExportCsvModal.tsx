@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { DownloadIcon, XIcon, InvoiceIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/icons";
 import type { DebtorsListItem, PaymentExportItem } from "@/server/billingStatisticsService";
 
@@ -29,6 +30,20 @@ export function ExportCsvModal({
   debtorsData = [],
 }: ExportCsvModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   function escapeCsvCell(val: unknown): string {
     if (val === null || val === undefined) return '""';
@@ -150,8 +165,122 @@ export function ExportCsvModal({
     setIsOpen(false);
   };
 
+  const modalContent = isOpen ? (
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsOpen(false);
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+    >
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl max-w-md w-full space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <DownloadIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Exportă Rapoarte Financiare CSV
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Format compatibil Excel & Numbers (cu caractere diacritice)
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Export Options */}
+        <div className="space-y-2.5 pt-2">
+          {/* 1. Facturi */}
+          <button
+            type="button"
+            onClick={exportInvoicesCsv}
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 text-left transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition">
+                <InvoiceIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">
+                  Raport Registru Facturi
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  {invoicesData.length} facturi înregistrate
+                </p>
+              </div>
+            </div>
+            <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+          </button>
+
+          {/* 2. Încasări */}
+          <button
+            type="button"
+            onClick={exportPaymentsCsv}
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-left transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition">
+                <CheckCircleIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">
+                  Raport Încasări & Plăți
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  {paymentsData.length} plăți înregistrate
+                </p>
+              </div>
+            </div>
+            <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
+          </button>
+
+          {/* 3. Restanțieri */}
+          <button
+            type="button"
+            onClick={exportDebtorsCsv}
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50/50 text-left transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition">
+                <AlertTriangleIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">
+                  Raport Restanțieri (Top Restanțe)
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  {debtorsData.length} elevi cu solduri neachitate
+                </p>
+              </div>
+            </div>
+            <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition" />
+          </button>
+        </div>
+
+        <div className="pt-2 text-right">
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+          >
+            Închide
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
         onClick={() => setIsOpen(true)}
@@ -161,115 +290,7 @@ export function ExportCsvModal({
         <span>Exportă CSV</span>
       </button>
 
-      {/* Modal Dialog */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xl max-w-md w-full space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <DownloadIcon className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Exportă Rapoarte Financiare CSV
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Format compatibil Excel & Numbers (cu caractere diacritice)
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
-              >
-                <XIcon className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Export Options */}
-            <div className="space-y-2.5 pt-2">
-              {/* 1. Facturi */}
-              <button
-                type="button"
-                onClick={exportInvoicesCsv}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 text-left transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition">
-                    <InvoiceIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Raport Registru Facturi
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      {invoicesData.length} facturi înregistrate
-                    </p>
-                  </div>
-                </div>
-                <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
-              </button>
-
-              {/* 2. Încasări */}
-              <button
-                type="button"
-                onClick={exportPaymentsCsv}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-left transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition">
-                    <CheckCircleIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Raport Încasări & Plăți
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      {paymentsData.length} plăți înregistrate
-                    </p>
-                  </div>
-                </div>
-                <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
-              </button>
-
-              {/* 3. Restanțieri */}
-              <button
-                type="button"
-                onClick={exportDebtorsCsv}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50/50 text-left transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition">
-                    <AlertTriangleIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Raport Restanțieri (Top Restanțe)
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      {debtorsData.length} elevi cu solduri neachitate
-                    </p>
-                  </div>
-                </div>
-                <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition" />
-              </button>
-            </div>
-
-            <div className="pt-2 text-right">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
-              >
-                Închide
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {mounted && modalContent && createPortal(modalContent, document.body)}
+    </>
   );
 }
