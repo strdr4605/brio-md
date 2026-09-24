@@ -51,6 +51,8 @@ export async function fetchInvoices(
       studentId: invoices.studentId,
       studentName: students.name,
       studentPhone: students.phone,
+      parentName: students.parentName,
+      parentPhone: students.parentPhone,
       enrollmentId: invoices.enrollmentId,
       groupId: invoices.groupId,
       groupName: groups.name,
