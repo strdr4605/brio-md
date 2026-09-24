@@ -25,6 +25,7 @@ import {
   previewRecurringInvoices,
   generateRecurringInvoices,
 } from "../recurringBillingService";
+import { fetchBillingStatistics } from "../billingStatisticsService";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const dateSchema = z
@@ -44,7 +45,7 @@ export const billingRouter = router({
     .input(
       z
         .object({
-          limit: z.number().min(1).max(100).default(50),
+          limit: z.number().min(1).max(1000).default(50),
           offset: z.number().min(0).default(0),
           search: z.string().optional(),
           status: z
@@ -307,5 +308,25 @@ export const billingRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await executeGenerateBatchLessonInvoices(db, input, ctx.user);
+    }),
+
+  // 12. Get Statistics (Financial Analytics & Debtors)
+  getStatistics: adminProcedure
+    .input(
+      z
+        .object({
+          schoolId: z.number().int().positive().optional(),
+          dateRange: z
+            .object({
+              from: dateSchema.optional(),
+              to: dateSchema.optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchBillingStatistics(db, input, ctx.user);
     }),
 });

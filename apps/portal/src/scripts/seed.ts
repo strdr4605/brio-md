@@ -414,6 +414,8 @@ async function seed() {
       groupId: groupEnglishA.id,
       courseId: courseEnglish.id,
       status: "active" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1400,
       joinedAt: new Date(Date.now() - 14 * 86400000),
     },
     {
@@ -421,6 +423,8 @@ async function seed() {
       groupId: groupRobotics1.id,
       courseId: courseRobotics.id,
       status: "active" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1400,
       joinedAt: new Date(Date.now() - 7 * 86400000),
     },
     {
@@ -428,6 +432,8 @@ async function seed() {
       groupId: groupEnglishA.id,
       courseId: courseEnglish.id,
       status: "inactive" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1200,
       joinedAt: new Date(Date.now() - 30 * 86400000),
       leftAt: new Date(Date.now() - 2 * 86400000),
     },
@@ -436,6 +442,8 @@ async function seed() {
       groupId: groupRobotics1.id,
       courseId: courseRobotics.id,
       status: "active" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1200,
       joinedAt: new Date(Date.now() - 10 * 86400000),
     },
     {
@@ -443,6 +451,8 @@ async function seed() {
       groupId: groupEnglishA.id,
       courseId: courseEnglish.id,
       status: "archived" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1000,
       joinedAt: new Date(Date.now() - 60 * 86400000),
       leftAt: new Date(Date.now() - 15 * 86400000),
     },
@@ -451,6 +461,8 @@ async function seed() {
       groupId: groupEnglishB.id,
       courseId: courseEnglish.id,
       status: "active" as const,
+      billingType: "subscription_monthly" as const,
+      customPrice: 1400,
       joinedAt: new Date(Date.now() - 5 * 86400000),
     },
   ];
@@ -468,6 +480,11 @@ async function seed() {
       .limit(1);
     if (!existing) {
       await db.insert(studentGroupEnrollments).values(enr);
+    } else if (existing.customPrice === null && enr.customPrice) {
+      await db
+        .update(studentGroupEnrollments)
+        .set({ customPrice: enr.customPrice, billingType: enr.billingType })
+        .where(eq(studentGroupEnrollments.id, existing.id));
     }
   }
   console.log("✅ Configured sample student group enrollments (active, inactive, archived)");
