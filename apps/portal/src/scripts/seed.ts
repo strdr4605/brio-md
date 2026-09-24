@@ -13,6 +13,9 @@ import {
   studentCourseProgress,
   groups,
   studentGroupEnrollments,
+  invoices,
+  invoiceItems,
+  payments,
 } from "@brio-md/db";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -354,13 +357,18 @@ async function seed() {
     let [g] = await db
       .select()
       .from(groups)
-      .where(and(eq(groups.courseId, data.courseId), eq(groups.name, data.name)))
+      .where(and(eq(groups.schoolId, data.schoolId), eq(groups.name, data.name)))
       .limit(1);
     if (!g) {
       [g] = await db.insert(groups).values(data).returning();
       console.log("✅ Created group:", g.name);
     } else {
-      console.log("ℹ️ Using existing group:", g.name, `(id: ${g.id})`);
+      [g] = await db
+        .update(groups)
+        .set(data)
+        .where(eq(groups.id, g.id))
+        .returning();
+      console.log("ℹ️ Updated existing group:", g.name, `(id: ${g.id})`);
     }
     return g;
   }
@@ -480,6 +488,317 @@ async function seed() {
     }
   }
   console.log("✅ Configured sample student group enrollments (active, inactive, archived)");
+
+  // ----------------------------------------------------
+  // Seed Invoices, Line Items, and Payments (idempotent)
+  // ----------------------------------------------------
+  const [adminUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "admin@vibe.md"))
+    .limit(1);
+
+  const sampleInvoices = [
+    {
+      invoiceNumber: "INV-2026-001",
+      schoolId: school.id,
+      studentId: student1.id,
+      groupId: groupEnglishA.id,
+      type: "subscription" as const,
+      status: "paid" as const,
+      totalAmount: 1200,
+      paidAmount: 1200,
+      dueDate: "2026-09-10",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Abonament lunar septembrie achitat integral online.",
+      items: [
+        {
+          description: "Abonament Septembrie 2026 - Grupa A (Engleză)",
+          quantity: 1,
+          unitPrice: 1200,
+          amount: 1200,
+        },
+      ],
+      payments: [
+        {
+          amount: 1200,
+          paymentDate: "2026-09-08",
+          method: "card" as const,
+          receiptNumber: "RCP-2026-001A",
+          notes: "Plată online cu cardul prin portal",
+        },
+      ],
+    },
+    {
+      invoiceNumber: "INV-2026-002",
+      schoolId: school.id,
+      studentId: student2.id,
+      groupId: groupRobotics1.id,
+      type: "subscription" as const,
+      status: "paid" as const,
+      totalAmount: 1400,
+      paidAmount: 1400,
+      dueDate: "2026-09-12",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Achitat prin transfer bancar.",
+      items: [
+        {
+          description: "Abonament Lunar Robotică & STEM - Septembrie",
+          quantity: 1,
+          unitPrice: 1400,
+          amount: 1400,
+        },
+      ],
+      payments: [
+        {
+          amount: 1400,
+          paymentDate: "2026-09-11",
+          method: "bank_transfer" as const,
+          receiptNumber: "BT-98213",
+          notes: "Transfer MAIB",
+        },
+      ],
+    },
+    {
+      invoiceNumber: "INV-2026-003",
+      schoolId: school.id,
+      studentId: student3.id,
+      groupId: groupEnglishA.id,
+      type: "subscription" as const,
+      status: "partially_paid" as const,
+      totalAmount: 1200,
+      paidAmount: 600,
+      dueDate: "2026-09-30",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Prima tranșă achitată cash la recepție. A doua tranșă până la sfârșitul lunii.",
+      items: [
+        {
+          description: "Abonament Septembrie 2026 (Plată în 2 tranșe)",
+          quantity: 1,
+          unitPrice: 1200,
+          amount: 1200,
+        },
+      ],
+      payments: [
+        {
+          amount: 600,
+          paymentDate: "2026-09-15",
+          method: "cash" as const,
+          receiptNumber: "CASH-2026-044",
+          notes: "Avans 50% achitat la recepție",
+        },
+      ],
+    },
+    {
+      invoiceNumber: "INV-2026-004",
+      schoolId: school.id,
+      studentId: student4.id,
+      groupId: groupEnglishB.id,
+      type: "per_lesson" as const,
+      status: "partially_paid" as const,
+      totalAmount: 800,
+      paidAmount: 400,
+      dueDate: "2026-09-28",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Pachet 4 lecții individuale (achitat 2 lecții)",
+      items: [
+        {
+          description: "Pachet lecții individuale Engleză B",
+          quantity: 4,
+          unitPrice: 200,
+          amount: 800,
+        },
+      ],
+      payments: [
+        {
+          amount: 400,
+          paymentDate: "2026-09-18",
+          method: "card" as const,
+          receiptNumber: "RCP-2026-009B",
+          notes: "Plată POS la școală",
+        },
+      ],
+    },
+    {
+      invoiceNumber: "INV-2026-005",
+      schoolId: school.id,
+      studentId: student1.id,
+      groupId: groupRobotics1.id,
+      type: "subscription" as const,
+      status: "overdue" as const,
+      totalAmount: 1400,
+      paidAmount: 0,
+      dueDate: "2026-09-10",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Scadență depășită cu 14 zile. Notificare trimisă părintelui pe WhatsApp.",
+      items: [
+        {
+          description: "Abonament Robotică Cohort 1 - Restanță Septembrie",
+          quantity: 1,
+          unitPrice: 1400,
+          amount: 1400,
+        },
+      ],
+      payments: [],
+    },
+    {
+      invoiceNumber: "INV-2026-006",
+      schoolId: school.id,
+      studentId: student2.id,
+      groupId: null,
+      type: "situational" as const,
+      status: "overdue" as const,
+      totalAmount: 450,
+      paidAmount: 0,
+      dueDate: "2026-09-05",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      notes: "Kit componente electronice & senzori Arduino. Termen limită depășit.",
+      items: [
+        {
+          description: "Kit componente electronice & senzori Arduino",
+          quantity: 1,
+          unitPrice: 450,
+          amount: 450,
+        },
+      ],
+      payments: [],
+    },
+    {
+      invoiceNumber: "INV-2026-007",
+      schoolId: school.id,
+      studentId: student3.id,
+      groupId: groupEnglishA.id,
+      type: "subscription" as const,
+      status: "issued" as const,
+      totalAmount: 1200,
+      paidAmount: 0,
+      dueDate: "2026-10-05",
+      periodStart: "2026-10-01",
+      periodEnd: "2026-10-31",
+      notes: "Factură emisă în avans pentru luna Octombrie 2026.",
+      items: [
+        {
+          description: "Abonament Octombrie 2026 - Grupa A (Engleză)",
+          quantity: 1,
+          unitPrice: 1200,
+          amount: 1200,
+        },
+      ],
+      payments: [],
+    },
+    {
+      invoiceNumber: "INV-2026-008",
+      schoolId: school.id,
+      studentId: student4.id,
+      groupId: groupEnglishB.id,
+      type: "situational" as const,
+      status: "draft" as const,
+      totalAmount: 300,
+      paidAmount: 0,
+      dueDate: "2026-10-01",
+      periodStart: null,
+      periodEnd: null,
+      notes: "Ciornă - de verificat sosirea manualelor Cambridge înainte de emitere.",
+      items: [
+        {
+          description: "Manual Cambridge English Prepare! Level 2",
+          quantity: 1,
+          unitPrice: 300,
+          amount: 300,
+        },
+      ],
+      payments: [],
+    },
+    {
+      invoiceNumber: "INV-2026-009",
+      schoolId: school.id,
+      studentId: student1.id,
+      groupId: groupEnglishA.id,
+      type: "situational" as const,
+      status: "cancelled" as const,
+      totalAmount: 500,
+      paidAmount: 0,
+      dueDate: "2026-09-15",
+      periodStart: null,
+      periodEnd: null,
+      notes: "Factură emisă eronat (dublură), anulată de administrator conform cererii părintelui.",
+      items: [
+        {
+          description: "Taxă înscriere concurs (emisă eronat)",
+          quantity: 1,
+          unitPrice: 500,
+          amount: 500,
+        },
+      ],
+      payments: [],
+    },
+  ];
+
+  for (const invData of sampleInvoices) {
+    const { items, payments: payList, ...invFields } = invData;
+    let [inv] = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.invoiceNumber, invFields.invoiceNumber))
+      .limit(1);
+
+    if (!inv) {
+      [inv] = await db.insert(invoices).values(invFields).returning();
+      console.log(`✅ Created Invoice: ${inv.invoiceNumber} (${inv.status})`);
+    } else {
+      console.log(`ℹ️ Using existing Invoice: ${inv.invoiceNumber}`);
+    }
+
+    // Insert line items idempotently
+    for (const item of items) {
+      const [existingItem] = await db
+        .select()
+        .from(invoiceItems)
+        .where(
+          and(
+            eq(invoiceItems.invoiceId, inv.id),
+            eq(invoiceItems.description, item.description),
+          ),
+        )
+        .limit(1);
+      if (!existingItem) {
+        await db.insert(invoiceItems).values({
+          invoiceId: inv.id,
+          ...item,
+        });
+      }
+    }
+
+    // Insert payments idempotently
+    for (const p of payList) {
+      const [existingPayment] = await db
+        .select()
+        .from(payments)
+        .where(
+          and(
+            eq(payments.invoiceId, inv.id),
+            eq(payments.receiptNumber, p.receiptNumber!),
+          ),
+        )
+        .limit(1);
+      if (!existingPayment) {
+        await db.insert(payments).values({
+          invoiceId: inv.id,
+          studentId: inv.studentId,
+          schoolId: inv.schoolId,
+          recordedByUserId: adminUser?.id ?? null,
+          ...p,
+        });
+      }
+    }
+  }
+  console.log("✅ Configured sample billing invoices, line items, and payment receipts");
 
   console.log("");
   console.log("🎉 Seed completed!");
