@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DownloadIcon, XIcon, InvoiceIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/icons";
-import type { DebtorsListItem } from "@/server/billingStatisticsService";
+import type { DebtorsListItem, PaymentExportItem } from "@/server/billingStatisticsService";
 
 export type ExportCsvModalProps = {
   invoicesData?: Array<{
@@ -19,14 +19,7 @@ export type ExportCsvModalProps = {
     dueDate?: string | null;
     createdAt?: Date | string | null;
   }>;
-  paymentsData?: Array<{
-    paymentDate: string;
-    receiptNumber?: string | null;
-    studentName?: string;
-    invoiceNumber?: string;
-    method: string;
-    amount: number;
-  }>;
+  paymentsData?: PaymentExportItem[];
   debtorsData?: DebtorsListItem[];
 };
 
