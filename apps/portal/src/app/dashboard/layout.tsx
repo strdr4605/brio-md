@@ -4,7 +4,12 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SessionProvider } from "next-auth/react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
   if (!session?.user || (session.user as any).expired) {
     redirect("/");

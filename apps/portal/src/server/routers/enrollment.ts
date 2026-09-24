@@ -43,7 +43,7 @@ export const enrollmentRouter = router({
           .enum(["subscription_monthly", "subscription_course", "per_lesson", "custom"])
           .optional(),
         customPrice: z.number().int().min(0).max(100_000_000).nullable().optional(),
-        discountPercent: z.number().int().min(0).max(100).default(0).optional(),
+        discountPercent: z.number().int().min(0).max(100).nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -125,11 +125,11 @@ export const enrollmentRouter = router({
             groupId: grp.id,
             courseId: grp.courseId,
             status: "active",
-            joinedAt: new Date(),
-            leftAt: null,
             billingType: input.billingType ?? "subscription_monthly",
             customPrice: input.customPrice !== undefined ? input.customPrice : null,
             discountPercent: input.discountPercent ?? 0,
+            joinedAt: new Date(),
+            leftAt: null,
           })
           .onConflictDoUpdate({
             target: [studentGroupEnrollments.studentId, studentGroupEnrollments.groupId],

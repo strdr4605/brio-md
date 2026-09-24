@@ -151,7 +151,7 @@ export default function InvoicesPage() {
 
   if (!isBillingAllowed) {
     return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs max-w-lg mx-auto mt-8">
+      <div data-testid="access-denied" className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs max-w-lg mx-auto mt-8">
         <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
           <InvoiceIcon className="w-6 h-6" />
         </div>

@@ -115,6 +115,15 @@ async function seed() {
     })
     .onConflictDoNothing();
 
+  await db
+    .insert(permissionDefinitions)
+    .values({
+      key: "manage_billing",
+      label: "Gestiune Facturare",
+      description: "Permite accesul la facturi, plăți și generarea abonamentelor recurente.",
+    })
+    .onConflictDoNothing();
+
   // Create SuperAdmin
   const superadminHash = await hash("admin123", 12);
   await db
