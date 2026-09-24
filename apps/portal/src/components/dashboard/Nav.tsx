@@ -20,6 +20,7 @@ import {
   XIcon,
   UserCheckIcon,
   BarChartIcon,
+  InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { trpc } from "@/lib/trpc";
@@ -223,6 +224,7 @@ export function Nav({
                 {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
               </div>
