@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/icons";
 import { BillingKpiCards } from "@/components/dashboard/invoices/BillingKpiCards";
 import { RevenueDistributionChart } from "@/components/dashboard/invoices/RevenueDistributionChart";
+import { DebtorsTable } from "@/components/dashboard/invoices/DebtorsTable";
+import { ExportCsvModal } from "@/components/dashboard/invoices/ExportCsvModal";
 
 type DatePreset = "mtd" | "last30" | "ytd" | "all" | "custom";
 
@@ -80,6 +82,18 @@ export default function FinancialStatisticsPage() {
     },
   );
 
+  // Fetch Invoices and Payments for CSV Export
+  const { data: rawInvoices = [] } = trpc.billing.getInvoices.useQuery(
+    {
+      schoolId: selectedSchoolId !== "all" ? selectedSchoolId : undefined,
+      dateRange: dateRange,
+      limit: 500,
+    },
+    {
+      enabled: isSuperOrAdmin,
+    },
+  );
+
   if (sessionStatus === "loading") {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -101,6 +115,9 @@ export default function FinancialStatisticsPage() {
       </div>
     );
   }
+
+  // Payments data prepared for CSV export
+  const paymentsCsvData = statistics?.recentPayments || [];
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -257,6 +274,13 @@ export default function FinancialStatisticsPage() {
               <path d="M3 21v-5h5" />
             </svg>
           </button>
+
+          {/* Export CSV Modal Button */}
+          <ExportCsvModal
+            invoicesData={rawInvoices}
+            paymentsData={paymentsCsvData}
+            debtorsData={statistics?.debtors || []}
+          />
         </div>
       </div>
 
@@ -304,6 +328,12 @@ export default function FinancialStatisticsPage() {
         modelDistribution={statistics?.billingModelDistribution || []}
         courseBreakdown={statistics?.courseBreakdown || []}
         groupBreakdown={statistics?.groupBreakdown || []}
+        isLoading={isLoadingStats}
+      />
+
+      {/* 3. Debtors List (Top Restanțieri) with ParentCallWidget */}
+      <DebtorsTable
+        debtors={statistics?.debtors || []}
         isLoading={isLoadingStats}
       />
     </div>
