@@ -23,7 +23,6 @@ export type InvoicesTableProps = {
   invoices: InvoiceRowData[];
   isLoading?: boolean;
   onRecordPayment?: (invoice: InvoiceRowData) => void;
-  onViewDetails?: (invoice: InvoiceRowData) => void;
   onCancelInvoice?: (invoice: InvoiceRowData) => void;
 };
 
@@ -31,7 +30,6 @@ export function InvoicesTable({
   invoices,
   isLoading = false,
   onRecordPayment,
-  onViewDetails,
   onCancelInvoice,
 }: InvoicesTableProps) {
   const formatMdl = (amount: number) => {
@@ -181,7 +179,7 @@ export function InvoicesTable({
               <th className="py-3 px-4 text-right">Achitat</th>
               <th className="py-3 px-4 text-right">Rest de plată</th>
               <th className="py-3 px-4 text-center">Status</th>
-              <th className="py-3 px-4 text-right">Acțiuni</th>
+              <th className="py-3 px-4">Acțiuni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -273,8 +271,8 @@ export function InvoicesTable({
                   </td>
 
                   {/* Acțiuni */}
-                  <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1.5">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <div className="flex items-center justify-start gap-1.5">
                       {canPay && onRecordPayment && (
                         <button
                           type="button"
@@ -282,16 +280,6 @@ export function InvoicesTable({
                           className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
                         >
                           Achită
-                        </button>
-                      )}
-
-                      {onViewDetails && (
-                        <button
-                          type="button"
-                          onClick={() => onViewDetails(inv)}
-                          className="px-2 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                          Detalii
                         </button>
                       )}
 
@@ -303,6 +291,10 @@ export function InvoicesTable({
                         >
                           Anulează
                         </button>
+                      )}
+
+                      {!canPay && !canCancel && (
+                        <span className="text-slate-400 font-medium">—</span>
                       )}
                     </div>
                   </td>

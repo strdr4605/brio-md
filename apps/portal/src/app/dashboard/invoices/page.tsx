@@ -165,12 +165,6 @@ export default function InvoicesPage() {
     setTimeout(() => setFeedbackMessage(null), 5000);
   };
 
-  const handleViewDetails = (inv: InvoiceRowData) => {
-    if (inv.studentId) {
-      window.location.href = `/dashboard/students/${inv.studentId}`;
-    }
-  };
-
   const handleCancelInvoice = (inv: InvoiceRowData) => {
     const reason = window.prompt(
       `Confirmați anularea facturii ${inv.invoiceNumber || inv.id}. Introduceți motivul:`,
@@ -291,7 +285,6 @@ export default function InvoicesPage() {
         invoices={filteredInvoices}
         isLoading={isLoadingInvoices}
         onRecordPayment={handleRecordPayment}
-        onViewDetails={handleViewDetails}
         onCancelInvoice={handleCancelInvoice}
       />
     </div>
