@@ -53,7 +53,8 @@ export function ExportCsvModal({
   function escapeCsvCell(val: unknown): string {
     if (val === null || val === undefined) return '""';
     const str = String(val);
-    const escaped = str.replace(/"/g, '""');
+    const sanitized = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+    const escaped = sanitized.replace(/"/g, '""');
     return `"${escaped}"`;
   }
 
