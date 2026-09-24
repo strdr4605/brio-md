@@ -19,8 +19,10 @@ import {
   LogOutIcon,
   XIcon,
   UserCheckIcon,
+  InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { trpc } from "@/lib/trpc";
 
 export type NavProps = {
   userName?: string;
@@ -44,8 +46,15 @@ export function Nav({
   const pathname = usePathname();
   const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
   const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
+  const isBillingAllowed =
+    permissions?.includes("manage_billing") || isSuperOrAdmin;
   const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
   const canAccessDoor = permissions?.includes("open-front-door") || isSuperOrAdmin;
+
+  const { data: overdueCount = 0 } = trpc.billing.getOverdueCount.useQuery(
+    undefined,
+    { enabled: isBillingAllowed, staleTime: 60_000 },
+  );
 
   // Smart Accordions
   const [academicOpen, setAcademicOpen] = useState(true);
@@ -59,7 +68,8 @@ export function Nav({
   const renderNavLink = (
     href: string,
     label: string,
-    IconComponent: React.ComponentType<{ className?: string }>
+    IconComponent: React.ComponentType<{ className?: string }>,
+    badgeCount?: number,
   ) => {
     const active = isRouteActive(href);
 
@@ -68,7 +78,7 @@ export function Nav({
         <Link
           href={href}
           onClick={onCloseMobile}
-          className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group ${
+          className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group relative ${
             active
               ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm shadow-blue-500/25"
               : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.08]"
@@ -80,6 +90,12 @@ export function Nav({
               active ? "text-blue-400" : ""
             }`}
           />
+          {Boolean(badgeCount && badgeCount > 0) && (
+            <span
+              data-testid="overdue-badge-collapsed"
+              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0c0e14]"
+            />
+          )}
         </Link>
       );
     }
@@ -98,7 +114,15 @@ export function Nav({
         <IconComponent
           className={`w-5 h-5 shrink-0 ${active ? "text-blue-400" : ""}`}
         />
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-medium flex-1 truncate">{label}</span>
+        {Boolean(badgeCount && badgeCount > 0) && (
+          <span
+            data-testid="overdue-badge"
+            className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0"
+          >
+            {badgeCount}
+          </span>
+        )}
       </Link>
     );
   };
@@ -198,6 +222,7 @@ export function Nav({
                 {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
                 {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
               </div>
             )}
