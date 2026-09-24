@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, adminProcedure } from "../trpc";
+import { router, adminProcedure, billingProcedure } from "../trpc";
 import { db } from "@/lib/db";
+import {
+  fetchOverdueInvoicesCount,
+  fetchInvoicesSummary,
+} from "../invoiceSummaryService";
 import {
   fetchInvoices,
   fetchInvoiceById,
@@ -36,7 +40,7 @@ const dateSchema = z
 
 export const billingRouter = router({
   // 1. Get Invoices (with pagination, filters, and search)
-  getInvoices: adminProcedure
+  getInvoices: billingProcedure
     .input(
       z
         .object({
@@ -62,6 +66,22 @@ export const billingRouter = router({
     .query(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await fetchInvoices(db, input, ctx.user);
+    }),
+
+  // 1b. Get Overdue Invoices Count (Lightweight query for navigation badge)
+  getOverdueCount: billingProcedure
+    .input(z.object({ schoolId: z.number().int().positive().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchOverdueInvoicesCount(db, ctx.user, input?.schoolId);
+    }),
+
+  // 1c. Get Invoices KPI Summary (Lightweight aggregation query for dashboard overview cards)
+  getInvoicesSummary: billingProcedure
+    .input(z.object({ schoolId: z.number().int().positive().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await fetchInvoicesSummary(db, ctx.user, input?.schoolId);
     }),
 
   // 2. Get Student Balance Summary
@@ -216,7 +236,7 @@ export const billingRouter = router({
     }),
 
   // 8. Cancel Invoice (Atomic Transaction)
-  cancelInvoice: adminProcedure
+  cancelInvoice: billingProcedure
     .input(
       z
         .object({

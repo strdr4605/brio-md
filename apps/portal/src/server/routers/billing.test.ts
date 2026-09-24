@@ -2492,4 +2492,92 @@ const sampleStudentSchool1 = {
       expect(result).toEqual([]);
     });
   });
+
+  describe("getOverdueCount & getInvoicesSummary", () => {
+    const billingUser = {
+      id: "5",
+      email: "accountant@example.com",
+      name: "Accountant User",
+      role: "accountant",
+      permissions: ["manage_billing"],
+      courseIds: [],
+      schoolId: 1,
+    };
+
+    it("fetches overdue count for school admin", async () => {
+      (db.select as any).mockReturnValueOnce(createQueryChain([{ count: 4 }]));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const count = await caller.getOverdueCount();
+
+      expect(count).toBe(4);
+    });
+
+    it("allows user with manage_billing permission to fetch overdue count", async () => {
+      (db.select as any).mockReturnValueOnce(createQueryChain([{ count: 7 }]));
+
+      const caller = billingRouter.createCaller({ user: billingUser });
+      const count = await caller.getOverdueCount();
+
+      expect(count).toBe(7);
+    });
+
+    it("rejects unauthorized user without billing permissions for getOverdueCount", async () => {
+      const caller = billingRouter.createCaller({ user: teacherUser });
+
+      await expect(caller.getOverdueCount()).rejects.toThrow(
+        "Nu aveți permisiunea de a accesa modulul de facturare.",
+      );
+    });
+
+    it("fetches aggregated KPI summary for school admin", async () => {
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          {
+            totalInvoiced: 45000,
+            totalCollected: 32000,
+            activeDebt: 13000,
+            overdueCount: 2,
+          },
+        ]),
+      );
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const summary = await caller.getInvoicesSummary();
+
+      expect(summary).toEqual({
+        totalInvoiced: 45000,
+        totalCollected: 32000,
+        activeDebt: 13000,
+        overdueCount: 2,
+      });
+    });
+
+    it("allows user with manage_billing permission to fetch invoices summary", async () => {
+      (db.select as any).mockReturnValueOnce(
+        createQueryChain([
+          {
+            totalInvoiced: 10000,
+            totalCollected: 10000,
+            activeDebt: 0,
+            overdueCount: 0,
+          },
+        ]),
+      );
+
+      const caller = billingRouter.createCaller({ user: billingUser });
+      const summary = await caller.getInvoicesSummary();
+
+      expect(summary.totalInvoiced).toBe(10000);
+      expect(summary.activeDebt).toBe(0);
+    });
+
+    it("rejects unauthorized user without billing permissions for getInvoicesSummary", async () => {
+      const caller = billingRouter.createCaller({ user: teacherUser });
+
+      await expect(caller.getInvoicesSummary()).rejects.toThrow(
+        "Nu aveți permisiunea de a accesa modulul de facturare.",
+      );
+    });
+  });
 });
