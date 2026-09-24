@@ -92,36 +92,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return session;
         }
 
-        const [dbUser] = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
+        try {
+          const [dbUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
 
-        if (!dbUser || !dbUser.active) {
-          session.user.id = token.id as string;
-          session.user.expired = true;
-          return session;
-        }
-
-        if (dbUser.lastChangedAt && token.iat) {
-          const tokenIssuedAt = new Date(token.iat * 1000);
-          if (dbUser.lastChangedAt > tokenIssuedAt) {
+          if (!dbUser || !dbUser.active) {
             session.user.id = token.id as string;
             session.user.expired = true;
             return session;
           }
-        }
 
-        session.user.id = String(dbUser.id);
-        session.user.email = dbUser.email ?? "";
-        session.user.name = dbUser.name ?? "";
-        session.user.role = dbUser.role as typeof session.user.role;
-        session.user.permissions = (dbUser.permissions || []) as typeof session.user.permissions;
-        session.user.courseIds = (dbUser.courseIds || []) as typeof session.user.courseIds;
-        session.user.studentId = dbUser.studentId as typeof session.user.studentId;
-        session.user.schoolId = dbUser.schoolId as typeof session.user.schoolId;
-        session.user.expired = false;
+          if (dbUser.lastChangedAt && token.iat) {
+            const tokenIssuedAt = new Date(token.iat * 1000);
+            if (dbUser.lastChangedAt > tokenIssuedAt) {
+              session.user.id = token.id as string;
+              session.user.expired = true;
+              return session;
+            }
+          }
+
+          session.user.id = String(dbUser.id);
+          session.user.email = dbUser.email ?? "";
+          session.user.name = dbUser.name ?? "";
+          session.user.role = dbUser.role as typeof session.user.role;
+          session.user.permissions = (dbUser.permissions || []) as typeof session.user.permissions;
+          session.user.courseIds = (dbUser.courseIds || []) as typeof session.user.courseIds;
+          session.user.studentId = dbUser.studentId as typeof session.user.studentId;
+          session.user.schoolId = dbUser.schoolId as typeof session.user.schoolId;
+          session.user.expired = false;
+        } catch {
+          session.user.id = token.id as string;
+          session.user.expired = true;
+        }
       }
       return session;
     },
