@@ -67,6 +67,19 @@ export type GroupRevenueItem = {
   debt: number;
 };
 
+export type PaymentExportItem = {
+  id: number;
+  invoiceId: number;
+  invoiceNumber: string | null;
+  studentId: number;
+  studentName: string;
+  amount: number;
+  paymentDate: string;
+  method: string;
+  receiptNumber: string | null;
+  notes: string | null;
+};
+
 export type BillingStatisticsResult = {
   kpis: {
     collectionRate: number;
@@ -83,6 +96,7 @@ export type BillingStatisticsResult = {
   courseBreakdown: CourseRevenueItem[];
   groupBreakdown: GroupRevenueItem[];
   debtors: DebtorsListItem[];
+  recentPayments: PaymentExportItem[];
 };
 
 const ROMANIAN_MONTH_NAMES: Record<string, string> = {
@@ -104,6 +118,15 @@ export function formatMonthLabel(yearMonth: string): string {
   const [year, month] = yearMonth.split("-");
   const monthName = ROMANIAN_MONTH_NAMES[month] || month;
   return `${monthName} ${year}`;
+}
+
+export function toDateString(val: Date | string | null | undefined): string | null {
+  if (!val) return null;
+  if (typeof val === "string") return val.slice(0, 10);
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return val.toISOString().slice(0, 10);
+  }
+  return null;
 }
 
 export async function fetchBillingStatistics(
@@ -162,7 +185,7 @@ export async function fetchBillingStatistics(
     .leftJoin(courses, eq(groups.courseId, courses.id))
     .where(and(...invoiceConditions));
 
-  // 2. Fetch Payments
+  // 2. Fetch Payments (enriched with student and invoice for reporting)
   const paymentConditions = [];
   if (targetSchoolId !== undefined) {
     paymentConditions.push(eq(payments.schoolId, targetSchoolId));
@@ -172,13 +195,20 @@ export async function fetchBillingStatistics(
     .select({
       id: payments.id,
       invoiceId: payments.invoiceId,
+      invoiceNumber: invoices.invoiceNumber,
       studentId: payments.studentId,
+      studentName: students.name,
       schoolId: payments.schoolId,
       amount: payments.amount,
       paymentDate: payments.paymentDate,
+      method: payments.method,
+      receiptNumber: payments.receiptNumber,
+      notes: payments.notes,
       createdAt: payments.createdAt,
     })
     .from(payments)
+    .leftJoin(students, eq(payments.studentId, students.id))
+    .leftJoin(invoices, eq(payments.invoiceId, invoices.id))
     .where(paymentConditions.length > 0 ? and(...paymentConditions) : undefined);
 
   // 3. Fetch Active Subscriptions for Projected Recurring Revenue (MRR)
@@ -215,7 +245,7 @@ export async function fetchBillingStatistics(
 
   // Filter invoices for the selected period (by dueDate or createdAt)
   const filteredInvoices = allInvoices.filter((inv) => {
-    const refDate = inv.dueDate || (inv.createdAt ? inv.createdAt.toISOString().slice(0, 10) : null);
+    const refDate = inv.dueDate || toDateString(inv.createdAt);
     return isInDateRange(refDate);
   });
 
@@ -274,7 +304,8 @@ export async function fetchBillingStatistics(
 
   // Also include months present in filtered invoices and payments
   for (const inv of filteredInvoices) {
-    const m = (inv.dueDate || (inv.createdAt ? inv.createdAt.toISOString().slice(0, 10) : "")).slice(0, 7);
+    const refDate = inv.dueDate || toDateString(inv.createdAt);
+    const m = refDate ? refDate.slice(0, 7) : "";
     if (m && m.length === 7) monthsSet.add(m);
   }
   for (const p of filteredPayments) {
@@ -291,7 +322,8 @@ export async function fetchBillingStatistics(
   }
 
   for (const inv of allInvoices) {
-    const m = (inv.dueDate || (inv.createdAt ? inv.createdAt.toISOString().slice(0, 10) : "")).slice(0, 7);
+    const refDate = inv.dueDate || toDateString(inv.createdAt);
+    const m = refDate ? refDate.slice(0, 7) : "";
     if (monthMap.has(m)) {
       const curr = monthMap.get(m)!;
       curr.billed += inv.totalAmount || 0;
@@ -513,8 +545,11 @@ export async function fetchBillingStatistics(
     .map((d) => {
       let overdueDays = 0;
       if (d.earliestDueDate && d.earliestDueDate < todayStr) {
-        const diffMs = today.getTime() - new Date(`${d.earliestDueDate}T00:00:00Z`).getTime();
-        overdueDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        const parsedTime = new Date(`${d.earliestDueDate}T00:00:00Z`).getTime();
+        if (!isNaN(parsedTime)) {
+          const diffMs = today.getTime() - parsedTime;
+          overdueDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        }
       }
 
       return {
@@ -538,6 +573,21 @@ export async function fetchBillingStatistics(
       return b.overdueDays - a.overdueDays;
     });
 
+  const recentPayments: PaymentExportItem[] = filteredPayments
+    .map((p) => ({
+      id: p.id,
+      invoiceId: p.invoiceId,
+      invoiceNumber: p.invoiceNumber ?? null,
+      studentId: p.studentId,
+      studentName: p.studentName ?? "Elev Necunoscut",
+      amount: p.amount,
+      paymentDate: p.paymentDate,
+      method: p.method ?? "other",
+      receiptNumber: p.receiptNumber ?? null,
+      notes: p.notes ?? null,
+    }))
+    .sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
+
   return {
     kpis: {
       collectionRate,
@@ -554,6 +604,7 @@ export async function fetchBillingStatistics(
     courseBreakdown,
     groupBreakdown,
     debtors,
+    recentPayments,
   };
 }
 
@@ -578,5 +629,6 @@ function getEmptyBillingStatisticsResult(): BillingStatisticsResult {
     courseBreakdown: [],
     groupBreakdown: [],
     debtors: [],
+    recentPayments: [],
   };
 }

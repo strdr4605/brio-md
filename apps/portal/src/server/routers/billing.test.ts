@@ -1471,19 +1471,29 @@ const sampleStudentSchool1 = {
         {
           id: 1,
           invoiceId: 1,
+          invoiceNumber: "INV-2026-001",
           studentId: 10,
+          studentName: "Alex Popescu",
           schoolId: 1,
           amount: 600,
           paymentDate: "2026-09-12",
+          method: "card",
+          receiptNumber: "RCP-001",
+          notes: "Plata online",
           createdAt: new Date("2026-09-12T10:00:00Z"),
         },
         {
           id: 2,
           invoiceId: 2,
+          invoiceNumber: "INV-2026-002",
           studentId: 11,
+          studentName: "Ion Creangă",
           schoolId: 1,
           amount: 500,
           paymentDate: "2026-09-16",
+          method: "cash",
+          receiptNumber: "RCP-002",
+          notes: null,
           createdAt: new Date("2026-09-16T10:00:00Z"),
         },
       ];
@@ -1526,6 +1536,12 @@ const sampleStudentSchool1 = {
       expect(stats.debtors[0].parentPhone).toBe("+37360000000");
       expect(stats.debtors[0].earliestDueDate).toBe("2026-08-20");
       expect(stats.debtors[0].overdueDays).toBeGreaterThan(0);
+
+      // Recent payments export
+      expect(stats.recentPayments).toHaveLength(2);
+      expect(stats.recentPayments[0].studentName).toBe("Ion Creangă"); // sorted desc: 2026-09-16
+      expect(stats.recentPayments[0].invoiceNumber).toBe("INV-2026-002");
+      expect(stats.recentPayments[1].studentName).toBe("Alex Popescu"); // 2026-09-12
 
       // Model distribution
       const subModel = stats.billingModelDistribution.find((m) => m.type === "subscription");

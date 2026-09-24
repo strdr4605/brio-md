@@ -54,6 +54,7 @@ export function Nav({
 
   const isRouteActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/dashboard/invoices") return pathname === "/dashboard/invoices";
     return pathname.startsWith(href);
   };
 

@@ -117,7 +117,7 @@ export default function FinancialStatisticsPage() {
   }
 
   // Payments data prepared for CSV export
-  const paymentsCsvData = (statistics?.trends || []).flatMap(() => []);
+  const paymentsCsvData = statistics?.recentPayments || [];
 
   return (
     <div className="space-y-6 animate-fade-in-up">
