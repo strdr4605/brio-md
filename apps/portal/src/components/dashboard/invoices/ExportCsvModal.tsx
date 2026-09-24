@@ -42,7 +42,12 @@ export function ExportCsvModal({
       if (e.key === "Escape") setIsOpen(false);
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [isOpen]);
 
   function escapeCsvCell(val: unknown): string {
@@ -170,16 +175,21 @@ export function ExportCsvModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) setIsOpen(false);
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto"
     >
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl max-w-md w-full space-y-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-csv-modal-title"
+        className="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl max-w-md w-full space-y-4 my-auto"
+      >
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <DownloadIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 id="export-csv-modal-title" className="text-sm font-bold text-slate-900">
                 Exportă Rapoarte Financiare CSV
               </h3>
               <p className="text-[11px] text-slate-500">
