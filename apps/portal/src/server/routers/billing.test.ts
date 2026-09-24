@@ -1499,9 +1499,9 @@ const sampleStudentSchool1 = {
       ];
 
       const mockEnrollments = [
-        { id: 1, studentId: 10, groupId: 101, billingType: "subscription_monthly", customPrice: 1200 },
-        { id: 2, studentId: 11, groupId: 102, billingType: "subscription_monthly", customPrice: 1000 },
-        { id: 3, studentId: 12, groupId: 103, billingType: "per_lesson", customPrice: 200 },
+        { id: 1, studentId: 10, groupId: 101, groupName: "Grupa A", billingType: "subscription_monthly", customPrice: 1200 },
+        { id: 2, studentId: 11, groupId: 102, groupName: "Grupa B", billingType: "subscription_monthly", customPrice: 1000 },
+        { id: 3, studentId: 12, groupId: 103, groupName: "Grupa C", billingType: "per_lesson", customPrice: 200 },
       ];
 
       (db.select as any)
@@ -1573,7 +1573,7 @@ const sampleStudentSchool1 = {
       const mockPayments: any[] = [];
       const mockEnrollments = [
         // customPrice is null: should fall back to student 10's subscription invoice (1400 MDL)
-        { id: 1, studentId: 10, groupId: 101, billingType: "subscription_monthly", customPrice: null },
+        { id: 1, studentId: 10, groupId: 101, groupName: "Grupa A", billingType: "subscription_monthly", customPrice: null },
       ];
 
       (db.select as any)
@@ -1587,6 +1587,57 @@ const sampleStudentSchool1 = {
       });
 
       expect(stats.kpis.projectedRecurringRevenue).toBe(1400);
+    });
+
+    it("enriches debtors with active enrolled groups when unpaid invoice has no groupId (situational)", async () => {
+      const mockInvoices = [
+        {
+          id: 6,
+          schoolId: 1,
+          studentId: 2,
+          studentName: "Elena Ionescu",
+          studentPhone: "+37369000002",
+          parentName: "Ion Ionescu",
+          parentPhone: "+37361111111",
+          groupId: null, // Situational fee without specific group
+          groupName: null,
+          courseId: null,
+          courseName: null,
+          invoiceNumber: "INV-2026-006",
+          type: "situational",
+          status: "overdue",
+          totalAmount: 450,
+          paidAmount: 0,
+          dueDate: "2026-09-05",
+          createdAt: new Date("2026-09-01T10:00:00Z"),
+        },
+      ];
+      const mockPayments: any[] = [];
+      const mockEnrollments = [
+        {
+          id: 10,
+          studentId: 2,
+          groupId: 102,
+          groupName: "Robotics Cohort 1 - Miercuri 15:00",
+          billingType: "subscription_monthly",
+          customPrice: 1400,
+        },
+      ];
+
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain(mockInvoices))
+        .mockReturnValueOnce(createQueryChain(mockPayments))
+        .mockReturnValueOnce(createQueryChain(mockEnrollments));
+
+      const caller = billingRouter.createCaller({ user: school1Admin });
+      const stats = await caller.getStatistics({
+        dateRange: { from: "2026-09-01", to: "2026-09-30" },
+      });
+
+      expect(stats.debtors).toHaveLength(1);
+      expect(stats.debtors[0].studentName).toBe("Elena Ionescu");
+      expect(stats.debtors[0].totalDebt).toBe(450);
+      expect(stats.debtors[0].groupNames).toEqual(["Robotics Cohort 1 - Miercuri 15:00"]);
     });
 
     it("allows superadmin to query statistics across all schools or for specific school", async () => {

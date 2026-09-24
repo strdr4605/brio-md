@@ -87,20 +87,21 @@ export function ExportCsvModal({
     ];
 
     const rows = invoicesData.map((inv) => {
-      const remaining = Math.max(0, (inv.totalAmount || 0) - (inv.paidAmount || 0));
+      const remaining =
+        inv.status === "cancelled" ? 0 : Math.max(0, (inv.totalAmount || 0) - (inv.paidAmount || 0));
       return [
-        escapeCsvCell(inv.invoiceNumber),
-        escapeCsvCell(inv.studentName),
-        escapeCsvCell(inv.studentPhone || ""),
-        escapeCsvCell(inv.parentName || ""),
-        escapeCsvCell(inv.parentPhone || ""),
-        escapeCsvCell(inv.groupName || ""),
-        escapeCsvCell(inv.type),
-        escapeCsvCell(inv.status),
-        escapeCsvCell(inv.totalAmount),
-        escapeCsvCell(inv.paidAmount || 0),
+        escapeCsvCell(inv.invoiceNumber || "-"),
+        escapeCsvCell(inv.studentName || "-"),
+        escapeCsvCell(inv.studentPhone || "-"),
+        escapeCsvCell(inv.parentName || "-"),
+        escapeCsvCell(inv.parentPhone || "-"),
+        escapeCsvCell(inv.groupName || "-"),
+        escapeCsvCell(inv.type || "-"),
+        escapeCsvCell(inv.status || "-"),
+        escapeCsvCell(inv.totalAmount ?? 0),
+        escapeCsvCell(inv.paidAmount ?? 0),
         escapeCsvCell(remaining),
-        escapeCsvCell(inv.dueDate || ""),
+        escapeCsvCell(inv.dueDate || "-"),
       ].join(",");
     });
 
@@ -122,12 +123,12 @@ export function ExportCsvModal({
 
     const rows = paymentsData.map((p) => {
       return [
-        escapeCsvCell(p.paymentDate),
-        escapeCsvCell(p.receiptNumber || ""),
-        escapeCsvCell(p.studentName || ""),
-        escapeCsvCell(p.invoiceNumber || ""),
-        escapeCsvCell(p.method),
-        escapeCsvCell(p.amount),
+        escapeCsvCell(p.paymentDate || "-"),
+        escapeCsvCell(p.receiptNumber || "-"),
+        escapeCsvCell(p.studentName || "-"),
+        escapeCsvCell(p.invoiceNumber || "-"),
+        escapeCsvCell(p.method || "-"),
+        escapeCsvCell(p.amount ?? 0),
       ].join(",");
     });
 
@@ -151,16 +152,17 @@ export function ExportCsvModal({
     ];
 
     const rows = debtorsData.map((d) => {
+      const groupsStr = d.groupNames && d.groupNames.length > 0 ? d.groupNames.join("; ") : "-";
       return [
-        escapeCsvCell(d.studentName),
-        escapeCsvCell(d.studentPhone || ""),
-        escapeCsvCell(d.parentName || ""),
-        escapeCsvCell(d.parentPhone || ""),
-        escapeCsvCell(d.groupNames.join("; ")),
-        escapeCsvCell(d.unpaidInvoicesCount),
-        escapeCsvCell(d.overdueDays),
-        escapeCsvCell(d.earliestDueDate || ""),
-        escapeCsvCell(d.totalDebt),
+        escapeCsvCell(d.studentName || "-"),
+        escapeCsvCell(d.studentPhone || "-"),
+        escapeCsvCell(d.parentName || "-"),
+        escapeCsvCell(d.parentPhone || "-"),
+        escapeCsvCell(groupsStr),
+        escapeCsvCell(d.unpaidInvoicesCount ?? 0),
+        escapeCsvCell(d.overdueDays ?? 0),
+        escapeCsvCell(d.earliestDueDate || "-"),
+        escapeCsvCell(d.totalDebt ?? 0),
       ].join(",");
     });
 

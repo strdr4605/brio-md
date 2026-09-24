@@ -87,7 +87,7 @@ export default function FinancialStatisticsPage() {
     {
       schoolId: selectedSchoolId !== "all" ? selectedSchoolId : undefined,
       dateRange: dateRange,
-      limit: 100,
+      limit: 500,
     },
     {
       enabled: isSuperOrAdmin,

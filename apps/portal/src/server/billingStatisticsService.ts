@@ -222,6 +222,7 @@ export async function fetchBillingStatistics(
       id: studentGroupEnrollments.id,
       studentId: studentGroupEnrollments.studentId,
       groupId: studentGroupEnrollments.groupId,
+      groupName: groups.name,
       billingType: studentGroupEnrollments.billingType,
       customPrice: studentGroupEnrollments.customPrice,
     })
@@ -571,6 +572,44 @@ export async function fetchBillingStatistics(
     if (inv.dueDate) {
       if (!debtor.earliestDueDate || inv.dueDate < debtor.earliestDueDate) {
         debtor.earliestDueDate = inv.dueDate;
+      }
+    }
+  }
+
+  // Enrich each debtor with active enrolled groups, falling back to any invoiced groups
+  const studentActiveGroupsMap = new Map<number, Set<string>>();
+  for (const enr of activeEnrollments) {
+    if (enr.groupName) {
+      if (!studentActiveGroupsMap.has(enr.studentId)) {
+        studentActiveGroupsMap.set(enr.studentId, new Set<string>());
+      }
+      studentActiveGroupsMap.get(enr.studentId)!.add(enr.groupName);
+    }
+  }
+
+  const studentAllInvoicesGroupsMap = new Map<number, Set<string>>();
+  for (const inv of allInvoices) {
+    if (inv.groupName) {
+      if (!studentAllInvoicesGroupsMap.has(inv.studentId)) {
+        studentAllInvoicesGroupsMap.set(inv.studentId, new Set<string>());
+      }
+      studentAllInvoicesGroupsMap.get(inv.studentId)!.add(inv.groupName);
+    }
+  }
+
+  for (const debtor of studentDebtorMap.values()) {
+    const activeGroups = studentActiveGroupsMap.get(debtor.studentId);
+    if (activeGroups) {
+      for (const g of activeGroups) {
+        debtor.groups.add(g);
+      }
+    }
+    if (debtor.groups.size === 0) {
+      const historicalGroups = studentAllInvoicesGroupsMap.get(debtor.studentId);
+      if (historicalGroups) {
+        for (const g of historicalGroups) {
+          debtor.groups.add(g);
+        }
       }
     }
   }
