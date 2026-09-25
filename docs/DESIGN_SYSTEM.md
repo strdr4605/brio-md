@@ -26,20 +26,32 @@
 
 | Token | Class / Hex | Usage |
 | :--- | :--- | :--- |
-| **Canvas** | `bg-[#f4f6f8]` | Main page background across all apps |
+| **Canvas** | `bg-[#f8fafc]` + subtle ambient radial gradient | Main page background with soft ambient depth |
 | **Surface / Card** | `bg-white` (`#ffffff`) | Card containers, tables, slide-over drawers |
 | **Subdued Surface**| `bg-[#f8fafc]` | Table header background, secondary utility panels |
-| **Borders** | `border-[#e5edf5]` | 1px clean card and table dividers |
+| **Borders** | `border-slate-200/80` (`#e2e8f0`) | 1px clean card and table dividers |
 | **Primary Accent** | `bg-[#635bff]` (`#534be8` hover) | Stripe Violet-Indigo for primary actions, active tabs |
-| **Text Primary**   | `text-[#061b31]` | Deep navy headings, strong titles, key metrics |
-| **Text Body**      | `text-[#334155]` | Slate 700 standard text |
-| **Text Muted**     | `text-[#64748d]` | Slate 500 secondary labels, timestamps |
+| **Text Primary**   | `text-[#0f172a]` | Deep slate-navy headings, authoritative and calm |
+| **Text Body**      | `text-[#334155]` | Slate 700 standard body text |
+| **Text Muted**     | `text-[#64748b]` / `text-slate-400` | Subdued secondary labels, captions (weight 400) |
 
-### 2.2 Elevation & Shadows
+### 2.2 Elevation & Shadows (Multi-Layered Luxury)
 
-Stripe's signature blue-tinted elevation:
-- **Card resting:** `box-shadow: 0 2px 5px rgba(50, 50, 93, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);`
-- **Drawer & Overlay:** `box-shadow: 0 10px 30px rgba(50, 50, 93, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);`
+Stripe Atlas / Linear multi-layered shadow stack:
+```css
+box-shadow: 
+  0 0 0 1px rgba(15, 23, 42, 0.02),
+  0 1px 2px -0.5px rgba(15, 23, 42, 0.04),
+  0 4px 12px -2px rgba(15, 23, 42, 0.04),
+  0 16px 32px -4px rgba(15, 23, 42, 0.02);
+```
+
+### 2.3 Status Chips (Pastel Harmony)
+
+Instead of stark neon dots or loud solid badges, use harmonious pastel micro-pills:
+- **Success:** `bg-emerald-50/80 border border-emerald-200/50 text-emerald-800` + 6px soft emerald dot.
+- **Warning:** `bg-amber-50/80 border border-amber-200/50 text-amber-800` + 6px soft amber dot.
+- **Neutral:** `bg-slate-100/70 border border-slate-200/60 text-slate-600` + 6px slate dot.
 
 ### 2.3 Typography & Numbers
 

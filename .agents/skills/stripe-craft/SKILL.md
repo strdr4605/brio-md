@@ -46,17 +46,17 @@ For every decorative element, badge, border, or icon:
 ```css
 :root {
   /* Surfaces */
-  --canvas:           #f4f6f8;             /* Subtle cool-warm background */
+  --canvas:           #f8fafc;             /* Subtle cool-warm background with radial glow */
   --surface-card:     #ffffff;             /* Card surface */
   --surface-subdued:  #f8fafc;             /* Table headers, secondary panels */
   --surface-hover:    rgba(0, 0, 0, 0.02); /* Row hover */
 
   /* Borders & Hairlines */
-  --border-subtle:    #e5edf5;             /* Standard 1px card border */
-  --border-hairline:  rgba(15, 23, 42, 0.06);
+  --border-subtle:    rgba(226, 232, 240, 0.8); /* Refined 1px card border */
+  --border-hairline:  rgba(15, 23, 42, 0.04);
 
   /* Typography Colors */
-  --text-heading:     #061b31;             /* Deep navy, authoritative, warm */
+  --text-heading:     #0f172a;             /* Deep slate-navy, authoritative, calm */
   --text-body:        #334155;             /* Slate 700 */
   --text-muted:       #64748d;             /* Slate 500 */
   --text-placeholder: #94a3b8;             /* Slate 400 */
@@ -67,18 +67,18 @@ For every decorative element, badge, border, or icon:
   --brand-active:     #4239d6;
   --brand-tint:       rgba(99, 91, 255, 0.08);
 
-  /* Status Colors */
+  /* Status Colors (Pastel Harmony) */
   --status-success:   #10b981;             /* Emerald */
   --status-warning:   #f59e0b;             /* Amber */
   --status-danger:    #ef4444;             /* Rose */
 
-  /* Elevation (Stripe Blue-tinted Shadows) */
-  --shadow-card:      0 2px 5px rgba(50, 50, 93, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-drawer:    0 10px 30px rgba(50, 50, 93, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+  /* Elevation (Multi-layer luxury shadow stack) */
+  --shadow-card:      0 0 0 1px rgba(15, 23, 42, 0.02), 0 1px 2px -0.5px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.04), 0 16px 32px -4px rgba(15, 23, 42, 0.02);
+  --shadow-drawer:    -12px 0 35px rgba(15, 23, 42, 0.12), -1px 0 3px rgba(15, 23, 42, 0.04);
 
   /* Radii */
   --radius-button:    8px;
-  --radius-card:      12px;
+  --radius-card:      14px;
   --radius-modal:     16px;
 }
 ```
