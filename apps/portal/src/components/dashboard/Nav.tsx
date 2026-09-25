@@ -67,266 +67,299 @@ export function Nav({
     return pathname.startsWith(href);
   };
 
-  const renderNavLink = (
-    href: string,
-    label: string,
-    IconComponent: React.ComponentType<{ className?: string }>,
-    badgeCount?: number,
-  ) => {
-    const active = isRouteActive(href);
+  const renderNavContent = (collapsed: boolean) => {
+    const renderNavLink = (
+      href: string,
+      label: string,
+      IconComponent: React.ComponentType<{ className?: string }>,
+      badgeCount?: number,
+    ) => {
+      const active = isRouteActive(href);
 
-    if (isCollapsed) {
+      if (collapsed) {
+        return (
+          <Link
+            href={href}
+            onClick={onCloseMobile}
+            className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group relative ${
+              active
+                ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm shadow-blue-500/25"
+                : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.08]"
+            }`}
+            title={label}
+          >
+            <IconComponent
+              className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${
+                active ? "text-blue-400" : ""
+              }`}
+            />
+            {Boolean(badgeCount && badgeCount > 0) && (
+              <span
+                data-testid="overdue-badge-collapsed"
+                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0c0e14]"
+              />
+            )}
+          </Link>
+        );
+      }
+
       return (
         <Link
           href={href}
           onClick={onCloseMobile}
-          className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group relative ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 ${
             active
-              ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm shadow-blue-500/25"
-              : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.08]"
+              ? "bg-gradient-to-r from-blue-600/25 to-indigo-600/15 text-white font-semibold border-l-2 border-blue-500 shadow-sm"
+              : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
           }`}
           title={label}
         >
           <IconComponent
-            className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${
-              active ? "text-blue-400" : ""
-            }`}
+            className={`w-5 h-5 shrink-0 ${active ? "text-blue-400" : ""}`}
           />
+          <span className="text-sm font-medium flex-1 truncate">{label}</span>
           {Boolean(badgeCount && badgeCount > 0) && (
             <span
-              data-testid="overdue-badge-collapsed"
-              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0c0e14]"
-            />
+              data-testid="overdue-badge"
+              className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0"
+            >
+              {badgeCount}
+            </span>
           )}
         </Link>
       );
-    }
+    };
 
     return (
-      <Link
-        href={href}
-        onClick={onCloseMobile}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 ${
-          active
-            ? "bg-gradient-to-r from-blue-600/25 to-indigo-600/15 text-white font-semibold border-l-2 border-blue-500 shadow-sm"
-            : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-        }`}
-        title={label}
-      >
-        <IconComponent
-          className={`w-5 h-5 shrink-0 ${active ? "text-blue-400" : ""}`}
-        />
-        <span className="text-sm font-medium flex-1 truncate">{label}</span>
-        {Boolean(badgeCount && badgeCount > 0) && (
-          <span
-            data-testid="overdue-badge"
-            className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0"
-          >
-            {badgeCount}
-          </span>
-        )}
-      </Link>
-    );
-  };
-
-  const navContent = (
-    <div className="flex flex-col h-full select-none w-full overflow-hidden">
-      {/* Brand Header */}
-      <div
-        className={`h-16 flex items-center border-b border-white/[0.08] shrink-0 ${
-          isCollapsed ? "justify-center px-2" : "justify-between px-4"
-        }`}
-      >
-        {isCollapsed ? (
-          <button
-            onClick={onToggleCollapse}
-            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition relative group"
-            title="Extinde meniul lateral"
-            aria-label="Extinde meniul lateral"
-          >
-            B
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0c0e14] border border-white/30 flex items-center justify-center text-slate-300 group-hover:text-white transition">
-              <ChevronRightIcon className="w-2.5 h-2.5" />
-            </span>
-          </button>
-        ) : (
-          <>
-            <Link href="/dashboard" className="flex items-center gap-2.5 group overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 transition">
-                B
-              </div>
-              <div className="flex flex-col">
-                <span className="text-white font-bold text-base tracking-tight leading-none">
-                  Brio<span className="text-blue-500">.md</span>
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
-                  Portal Management
-                </span>
-              </div>
-            </Link>
-
+      <div className="flex flex-col h-full select-none w-full overflow-hidden">
+        {/* Brand Header */}
+        <div
+          className={`h-16 flex items-center border-b border-white/[0.08] shrink-0 ${
+            collapsed ? "justify-center px-2" : "justify-between px-4"
+          }`}
+        >
+          {collapsed ? (
             <button
               onClick={onToggleCollapse}
-              className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition"
-              title="Restrânge meniul"
-              aria-label="Restrânge meniul"
+              className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition relative group"
+              title="Extinde meniul lateral"
+              aria-label="Extinde meniul lateral"
             >
-              <ChevronLeftIcon className="w-4 h-4" />
+              B
+              <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0c0e14] border border-white/30 flex items-center justify-center text-slate-300 group-hover:text-white transition">
+                <ChevronRightIcon className="w-2.5 h-2.5" />
+              </span>
             </button>
-          </>
-        )}
-
-        {/* Mobile close button */}
-        <button
-          onClick={onCloseMobile}
-          className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
-          aria-label="Închide meniul"
-        >
-          <XIcon className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Navigation List */}
-      <nav className={`flex-1 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin ${isCollapsed ? "px-2" : "px-2.5"}`}>
-        {/* Principal / Overview */}
-        <div className="space-y-1">
-          {!isCollapsed && (
-            <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
-              Prezentare
-            </div>
-          )}
-          {renderNavLink("/dashboard", "Panou Principal", DashboardIcon)}
-        </div>
-
-        {/* Group: Gestiune Academică (Smart Accordion) */}
-        {(isSuperOrAdmin || canManageStudents) && (
-          <div className="space-y-1">
-            {isCollapsed ? (
-              <div className="border-t border-white/[0.08] my-2 mx-1" />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setAcademicOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
-              >
-                <span>Gestiune Academică</span>
-                <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    academicOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-              </button>
-            )}
-
-            {(academicOpen || isCollapsed) && (
-              <div className="space-y-1">
-                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon)}
-                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
-                {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
-                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Group: Securitate & Control (Smart Accordion) */}
-        {(canAccessDoor || isSuperAdmin) && (
-          <div className="space-y-1">
-            {isCollapsed ? (
-              <div className="border-t border-white/[0.08] my-2 mx-1" />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setSecurityOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
-              >
-                <span>Control & Acces</span>
-                <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    securityOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-              </button>
-            )}
-
-            {(securityOpen || isCollapsed) && (
-              <div className="space-y-1">
-                {canAccessDoor && renderNavLink("/dashboard/roller-door", "Roletă Intrare", DoorIcon)}
-                {isSuperAdmin && renderNavLink("/dashboard/permissions", "Permisiuni", KeyIcon)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Group: Sistem */}
-        <div className="space-y-1">
-          {isCollapsed ? (
-            <div className="border-t border-white/[0.08] my-2 mx-1" />
           ) : (
-            <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
-              Sistem
+            <>
+              <Link
+                href="/dashboard"
+                onClick={onCloseMobile}
+                className="flex items-center gap-2.5 group overflow-hidden"
+              >
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 transition">
+                  B
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white font-bold text-base tracking-tight leading-none">
+                    Brio<span className="text-blue-500">.md</span>
+                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
+                    Portal Management
+                  </span>
+                </div>
+              </Link>
+
+              <button
+                onClick={onToggleCollapse}
+                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition"
+                title="Restrânge meniul"
+                aria-label="Restrânge meniul"
+              >
+                <ChevronLeftIcon className="w-4 h-4" />
+              </button>
+            </>
+          )}
+
+          {/* Mobile close button */}
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
+            aria-label="Închide meniul"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Navigation List */}
+        <nav
+          className={`flex-1 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin ${
+            collapsed ? "px-2" : "px-2.5"
+          }`}
+        >
+          {/* Principal / Overview */}
+          <div className="space-y-1">
+            {!collapsed && (
+              <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                Prezentare
+              </div>
+            )}
+            {renderNavLink("/dashboard", "Panou Principal", DashboardIcon)}
+          </div>
+
+          {/* Group: Gestiune Academică (Smart Accordion) */}
+          {(isSuperOrAdmin || canManageStudents) && (
+            <div className="space-y-1">
+              {collapsed ? (
+                <div className="border-t border-white/[0.08] my-2 mx-1" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAcademicOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
+                >
+                  <span>Gestiune Academică</span>
+                  <ChevronDownIcon
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      academicOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+              )}
+
+              {(academicOpen || collapsed) && (
+                <div className="space-y-1">
+                  {canManageStudents &&
+                    renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon)}
+                  {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
+                  {canManageStudents &&
+                    renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
+                  {isSuperOrAdmin &&
+                    renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
+                  {isBillingAllowed &&
+                    renderNavLink(
+                      "/dashboard/invoices",
+                      "Facturare",
+                      InvoiceIcon,
+                      overdueCount,
+                    )}
+                  {isSuperOrAdmin &&
+                    renderNavLink(
+                      "/dashboard/invoices/statistics",
+                      "Statistici Financiare",
+                      BarChartIcon,
+                    )}
+                  {isSuperOrAdmin &&
+                    renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
+                </div>
+              )}
             </div>
           )}
-          {renderNavLink("/dashboard/settings", "Setări", SettingsIcon)}
-        </div>
-      </nav>
 
-      {/* User Profile & Sign Out Footer */}
-      <div className={`border-t border-white/[0.08] bg-black/25 shrink-0 ${isCollapsed ? "p-2.5" : "p-3"}`}>
-        {isCollapsed ? (
-          <div className="flex flex-col items-center gap-2">
-            <Link
-              href="/dashboard/settings"
-              className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center ring-2 ring-white/10 hover:scale-105 transition"
-              title={`Profil: ${userName || "Utilizator"}`}
-            >
-              {userName ? userName.charAt(0).toUpperCase() : "U"}
-            </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="w-10 h-10 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition active:scale-95"
-              title="Deconectare"
-              aria-label="Deconectare"
-            >
-              <LogOutIcon className="w-4 h-4" />
-            </button>
+          {/* Group: Securitate & Control (Smart Accordion) */}
+          {(canAccessDoor || isSuperAdmin) && (
+            <div className="space-y-1">
+              {collapsed ? (
+                <div className="border-t border-white/[0.08] my-2 mx-1" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSecurityOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
+                >
+                  <span>Control & Acces</span>
+                  <ChevronDownIcon
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      securityOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+              )}
+
+              {(securityOpen || collapsed) && (
+                <div className="space-y-1">
+                  {canAccessDoor &&
+                    renderNavLink("/dashboard/roller-door", "Roletă Intrare", DoorIcon)}
+                  {isSuperAdmin &&
+                    renderNavLink("/dashboard/permissions", "Permisiuni", KeyIcon)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Group: Sistem */}
+          <div className="space-y-1">
+            {collapsed ? (
+              <div className="border-t border-white/[0.08] my-2 mx-1" />
+            ) : (
+              <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                Sistem
+              </div>
+            )}
+            {renderNavLink("/dashboard/settings", "Setări", SettingsIcon)}
           </div>
-        ) : (
-          <div className="flex items-center justify-between gap-2.5">
-            <Link
-              href="/dashboard/settings"
-              className="flex items-center gap-2.5 min-w-0 group"
-              title="Setări cont"
-            >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-2 ring-white/10 group-hover:scale-105 transition">
+        </nav>
+
+        {/* User Profile & Sign Out Footer */}
+        <div
+          className={`border-t border-white/[0.08] bg-black/25 shrink-0 ${
+            collapsed ? "p-2.5" : "p-3"
+          }`}
+        >
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <Link
+                href="/dashboard/settings"
+                onClick={onCloseMobile}
+                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center ring-2 ring-white/10 hover:scale-105 transition"
+                title={`Profil: ${userName || "Utilizator"}`}
+              >
                 {userName ? userName.charAt(0).toUpperCase() : "U"}
-              </div>
-              <div className="min-w-0 flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-200 truncate leading-tight group-hover:text-blue-400 transition-colors">
-                  {userName || "Utilizator"}
-                </span>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">
-                  {role || "Staff"}
-                </span>
-              </div>
-            </Link>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="w-10 h-10 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition active:scale-95"
+                title="Deconectare"
+                aria-label="Deconectare"
+              >
+                <LogOutIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2.5">
+              <Link
+                href="/dashboard/settings"
+                onClick={onCloseMobile}
+                className="flex items-center gap-2.5 min-w-0 group"
+                title="Setări cont"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-2 ring-white/10 group-hover:scale-105 transition">
+                  {userName ? userName.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div className="min-w-0 flex flex-col text-left">
+                  <span className="text-xs font-semibold text-slate-200 truncate leading-tight group-hover:text-blue-400 transition-colors">
+                    {userName || "Utilizator"}
+                  </span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">
+                    {role || "Staff"}
+                  </span>
+                </div>
+              </Link>
 
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 active:scale-95"
-              title="Deconectare"
-              aria-label="Deconectare"
-            >
-              <LogOutIcon className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 active:scale-95"
+                title="Deconectare"
+                aria-label="Deconectare"
+              >
+                <LogOutIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -336,7 +369,7 @@ export function Nav({
           isCollapsed ? "w-[72px]" : "w-[260px]"
         }`}
       >
-        {navContent}
+        {renderNavContent(isCollapsed)}
       </aside>
 
       {/* Mobile Drawer Backdrop & Menu */}
@@ -347,7 +380,7 @@ export function Nav({
             onClick={onCloseMobile}
           />
           <div className="relative w-[280px] max-w-[85vw] bg-[#0c0e14] h-full shadow-2xl z-10 border-r border-white/[0.1] overflow-hidden">
-            {navContent}
+            {renderNavContent(false)}
           </div>
         </div>
       )}
