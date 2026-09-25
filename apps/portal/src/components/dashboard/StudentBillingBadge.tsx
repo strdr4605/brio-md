@@ -86,6 +86,7 @@ export function StudentBillingBadge({
 
   return (
     <div
+      data-brio-id="billing-badge"
       className="relative inline-flex items-center"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}

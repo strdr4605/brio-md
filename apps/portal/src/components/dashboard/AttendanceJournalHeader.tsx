@@ -105,7 +105,11 @@ export function AttendanceJournalHeader({
       )}
 
       {/* Main Gradebook Control Deck */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div
+        id="journal-header-card"
+        data-brio-id="attendance-header"
+        className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3"
+      >
         {/* Left: Back & Group Title / Instant Switcher */}
         <div className="flex items-center gap-3">
           <button

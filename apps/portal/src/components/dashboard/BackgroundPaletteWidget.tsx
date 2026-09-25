@@ -7,8 +7,12 @@ import { getRandomTheme, applyThemeToDom } from "./theme/themeApplicator";
 import { TabsColorsAccents } from "./theme/TabsColorsAccents";
 import { TabsSurfacesShadows } from "./theme/TabsSurfacesShadows";
 import { TabsDetailsAdvanced } from "./theme/TabsDetailsAdvanced";
+import { TabsObjectStyler } from "./theme/TabsObjectStyler";
+import { ElementInspectorOverlay } from "./theme/ElementInspectorOverlay";
+import { PRESET_TARGETS, PresetTarget, ObjectStylesMap, ElementCustomStyle } from "./theme/objectStylerTypes";
+import { applyObjectStylesToDom, loadObjectStyles, saveObjectStyles } from "./theme/objectStylerApplicator";
 
-type MainTabType = "colors" | "surfaces" | "details";
+type MainTabType = "colors" | "surfaces" | "details" | "objects";
 
 export function BackgroundPaletteWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +20,11 @@ export function BackgroundPaletteWidget() {
   const [activeColorCategory, setActiveColorCategory] = useState<"Toate" | CategoryType>("Toate");
   const [theme, setTheme] = useState<BrioThemeConfig>(DEFAULT_THEME);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Object Customizer state
+  const [selectedTarget, setSelectedTarget] = useState<PresetTarget>(PRESET_TARGETS[0]);
+  const [isInspecting, setIsInspecting] = useState(false);
+  const [objectStyles, setObjectStyles] = useState<ObjectStylesMap>({});
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -32,17 +41,22 @@ export function BackgroundPaletteWidget() {
           const merged: BrioThemeConfig = { ...DEFAULT_THEME, ...parsed };
           setTheme(merged);
           applyThemeToDom(merged);
-          return;
         } catch {
-          // ignore parsing error
+          // ignore
+        }
+      } else {
+        const legacyBg = localStorage.getItem("brio_dashboard_bg");
+        if (legacyBg) {
+          const initial: BrioThemeConfig = { ...DEFAULT_THEME, bg: legacyBg };
+          setTheme(initial);
+          applyThemeToDom(initial);
         }
       }
-      const legacyBg = localStorage.getItem("brio_dashboard_bg");
-      if (legacyBg) {
-        const initial: BrioThemeConfig = { ...DEFAULT_THEME, bg: legacyBg };
-        setTheme(initial);
-        applyThemeToDom(initial);
-      }
+
+      // Load object-specific styles
+      const savedObjectStyles = loadObjectStyles();
+      setObjectStyles(savedObjectStyles);
+      applyObjectStylesToDom(savedObjectStyles);
     }
   }, []);
 
@@ -58,6 +72,44 @@ export function BackgroundPaletteWidget() {
       localStorage.setItem("brio_dashboard_bg", next.bg);
       return next;
     });
+  };
+
+  const handleUpdateObjectStyle = (targetId: string, updates: Partial<ElementCustomStyle>) => {
+    setObjectStyles((prev) => {
+      const nextMap = {
+        ...prev,
+        [targetId]: { ...prev[targetId], ...updates },
+      };
+      applyObjectStylesToDom(nextMap);
+      saveObjectStyles(nextMap);
+      return nextMap;
+    });
+  };
+
+  const handleResetObjectTarget = (targetId: string) => {
+    setObjectStyles((prev) => {
+      const nextMap = { ...prev };
+      delete nextMap[targetId];
+      applyObjectStylesToDom(nextMap);
+      saveObjectStyles(nextMap);
+      return nextMap;
+    });
+    showToast("Stil obiect resetat");
+  };
+
+  const handleResetAllObjectTargets = () => {
+    setObjectStyles({});
+    applyObjectStylesToDom({});
+    saveObjectStyles({});
+    showToast("Toate obiectele resetate");
+  };
+
+  const handleInspectSelect = (target: PresetTarget) => {
+    setSelectedTarget(target);
+    setIsInspecting(false);
+    setActiveTab("objects");
+    setIsOpen(true);
+    showToast(`🎯 Selectat: ${target.name}`);
   };
 
   const handleRandomize = () => {
@@ -92,8 +144,6 @@ export function BackgroundPaletteWidget() {
       `--card-radius: ${currentRadius};`,
       `--pattern: ${theme.patternId};`,
       `--font: ${theme.fontId};`,
-      `--hover-effect: ${theme.hoverId};`,
-      `--density: ${theme.densityId};`,
     ].join("\n");
 
     try {
@@ -106,6 +156,13 @@ export function BackgroundPaletteWidget() {
 
   return (
     <>
+      {/* Live Element Inspector Overlay */}
+      <ElementInspectorOverlay
+        isActive={isInspecting}
+        onSelect={handleInspectSelect}
+        onCancel={() => setIsInspecting(false)}
+      />
+
       {/* Floating Widget Trigger */}
       <div className="fixed bottom-5 right-5 z-40">
         <button
@@ -137,7 +194,7 @@ export function BackgroundPaletteWidget() {
       {isOpen && (
         <div
           id="theme-palette-modal"
-          className="fixed bottom-18 right-5 z-50 w-88 sm:w-96 bg-white/98 backdrop-blur-2xl rounded-2xl border border-slate-200/90 shadow-2xl p-4 text-slate-800 animate-fade-in"
+          className="fixed bottom-18 right-5 z-50 w-88 sm:w-98 bg-white/98 backdrop-blur-2xl rounded-2xl border border-slate-200/90 shadow-2xl p-4 text-slate-800 animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -155,7 +212,7 @@ export function BackgroundPaletteWidget() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400">Personalizează culori, carduri, texturi și efecte</p>
+                <p className="text-[10px] text-slate-400">Personalizează culori, carduri, texturi și obiecte</p>
               </div>
             </div>
             <button
@@ -174,7 +231,7 @@ export function BackgroundPaletteWidget() {
             </div>
           )}
 
-          {/* 3 Main Navigation Tabs */}
+          {/* 4 Main Navigation Tabs */}
           <div className="flex items-center gap-1 my-2.5 bg-slate-100/90 p-1 rounded-xl text-[11px] font-bold">
             <button
               type="button"
@@ -203,6 +260,15 @@ export function BackgroundPaletteWidget() {
             >
               ✨ Efecte
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("objects")}
+              className={`flex-1 py-1 rounded-lg transition ${
+                activeTab === "objects" ? "bg-blue-600 text-white shadow-2xs" : "text-blue-600 hover:text-blue-800"
+              }`}
+            >
+              🎯 Obiecte
+            </button>
           </div>
 
           {/* Tab 1: Background & Accent Colors */}
@@ -223,6 +289,23 @@ export function BackgroundPaletteWidget() {
           {/* Tab 3: Patterns, Fonts, Hover, Density, Header Glass */}
           {activeTab === "details" && (
             <TabsDetailsAdvanced theme={theme} onUpdateTheme={updateTheme} />
+          )}
+
+          {/* Tab 4: Object Styler & Inspector */}
+          {activeTab === "objects" && (
+            <TabsObjectStyler
+              selectedTarget={selectedTarget}
+              onSelectTarget={setSelectedTarget}
+              stylesMap={objectStyles}
+              onUpdateStyle={handleUpdateObjectStyle}
+              onResetTarget={handleResetObjectTarget}
+              onResetAllTargets={handleResetAllObjectTargets}
+              onStartInspect={() => {
+                setIsInspecting(true);
+                setIsOpen(false);
+              }}
+              onShowToast={showToast}
+            />
           )}
 
           {/* Footer Controls: Randomize, Copy CSS, Reset */}

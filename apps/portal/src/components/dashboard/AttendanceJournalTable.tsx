@@ -269,7 +269,11 @@ export function AttendanceJournalTable({
 
       {/* High-Density Physical School Journal Table */}
       {!isLoading && data && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col flex-1">
+        <div
+          id="journal-table-card"
+          data-brio-id="attendance-table"
+          className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col flex-1"
+        >
           <div className="overflow-x-auto flex-1 select-none">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
