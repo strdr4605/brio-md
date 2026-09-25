@@ -82,10 +82,10 @@ export function EditAttendanceModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900">
               Modificare Prezență
@@ -104,7 +104,7 @@ export function EditAttendanceModal({
         </div>
 
         {/* Form Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4">
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700">
               {error}
@@ -116,7 +116,7 @@ export function EditAttendanceModal({
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
               Statut Prezență
             </label>
-            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+            <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/80">
               {STATUS_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -167,7 +167,7 @@ export function EditAttendanceModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
