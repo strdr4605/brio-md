@@ -1,28 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  BrioThemeConfig,
-  SHADOW_PRESETS,
-  SURFACE_PRESETS,
-  RADIUS_PRESETS,
-  DEFAULT_THEME,
-  getRandomTheme,
-  applyThemeToDom,
-  CategoryType,
-} from "./themePresets";
-import {
-  ColorsTab,
-  ShadowsTab,
-  SurfacesTab,
-  RadiusTab,
-} from "./ThemeStudioTabs";
+import { BrioThemeConfig, CategoryType } from "./theme/themeTypes";
+import { DEFAULT_THEME, SHADOW_PRESETS, SURFACE_PRESETS, RADIUS_PRESETS } from "./theme/themePresets";
+import { getRandomTheme, applyThemeToDom } from "./theme/themeApplicator";
+import { TabsColorsAccents } from "./theme/TabsColorsAccents";
+import { TabsSurfacesShadows } from "./theme/TabsSurfacesShadows";
+import { TabsDetailsAdvanced } from "./theme/TabsDetailsAdvanced";
 
-type TabType = "colors" | "shadows" | "surfaces" | "radius";
+type MainTabType = "colors" | "surfaces" | "details";
 
 export function BackgroundPaletteWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("colors");
+  const [activeTab, setActiveTab] = useState<MainTabType>("colors");
   const [activeColorCategory, setActiveColorCategory] = useState<"Toate" | CategoryType>("Toate");
   const [theme, setTheme] = useState<BrioThemeConfig>(DEFAULT_THEME);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -39,8 +29,9 @@ export function BackgroundPaletteWidget() {
       if (savedTheme) {
         try {
           const parsed = JSON.parse(savedTheme) as BrioThemeConfig;
-          setTheme(parsed);
-          applyThemeToDom(parsed);
+          const merged: BrioThemeConfig = { ...DEFAULT_THEME, ...parsed };
+          setTheme(merged);
+          applyThemeToDom(merged);
           return;
         } catch {
           // ignore parsing error
@@ -48,7 +39,7 @@ export function BackgroundPaletteWidget() {
       }
       const legacyBg = localStorage.getItem("brio_dashboard_bg");
       if (legacyBg) {
-        const initial = { ...DEFAULT_THEME, bg: legacyBg };
+        const initial: BrioThemeConfig = { ...DEFAULT_THEME, bg: legacyBg };
         setTheme(initial);
         applyThemeToDom(initial);
       }
@@ -91,7 +82,20 @@ export function BackgroundPaletteWidget() {
     const currentSurface = SURFACE_PRESETS.find((s) => s.id === theme.surfaceId);
     const currentRadius = RADIUS_PRESETS.find((r) => r.id === theme.radiusId)?.radius || "1rem";
 
-    const css = `/* Brio Theme: ${theme.name || "Personalizat"} */\n--dashboard-bg: ${theme.bg};\n--card-bg: ${currentSurface?.bg};\n--card-blur: ${currentSurface?.blur};\n--card-shadow: ${currentShadow};\n--card-radius: ${currentRadius};`;
+    const css = [
+      `/* Brio Theme: ${theme.name || "Personalizat"} */`,
+      `--dashboard-bg: ${theme.bg};`,
+      `--accent-color: ${theme.accentColor};`,
+      `--card-bg: ${currentSurface?.bg};`,
+      `--card-blur: ${currentSurface?.blur};`,
+      `--card-shadow: ${currentShadow};`,
+      `--card-radius: ${currentRadius};`,
+      `--pattern: ${theme.patternId};`,
+      `--font: ${theme.fontId};`,
+      `--hover-effect: ${theme.hoverId};`,
+      `--density: ${theme.densityId};`,
+    ].join("\n");
+
     try {
       await navigator.clipboard.writeText(css);
       showToast("📋 CSS copiat!");
@@ -115,13 +119,17 @@ export function BackgroundPaletteWidget() {
           title="Personalizează stilul, culorile și umbrele"
         >
           <span className="text-base group-hover:rotate-12 transition-transform">🎨</span>
-          <span className="text-xs font-black tracking-tight hidden sm:inline">
-            Stil Studio
-          </span>
-          <span
-            className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs"
-            style={{ backgroundColor: theme.bg }}
-          />
+          <span className="text-xs font-black tracking-tight hidden sm:inline">Stil Studio</span>
+          <div className="flex items-center gap-1">
+            <span
+              className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs"
+              style={{ backgroundColor: theme.bg }}
+            />
+            <span
+              className="w-2.5 h-2.5 rounded-full border border-white shadow-2xs -ml-1.5"
+              style={{ backgroundColor: theme.accentColor }}
+            />
+          </div>
         </button>
       </div>
 
@@ -129,25 +137,25 @@ export function BackgroundPaletteWidget() {
       {isOpen && (
         <div
           id="theme-palette-modal"
-          className="fixed bottom-18 right-5 z-50 w-84 sm:w-92 bg-white/98 backdrop-blur-2xl rounded-2xl border border-slate-200/90 shadow-2xl p-4 text-slate-800 animate-fade-in"
+          className="fixed bottom-18 right-5 z-50 w-88 sm:w-96 bg-white/98 backdrop-blur-2xl rounded-2xl border border-slate-200/90 shadow-2xl p-4 text-slate-800 animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🎨</span>
+              <span className="text-xl">🎨</span>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    Studio Stil
+                    Studio Personalizare
                   </h3>
                   {theme.name && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 truncate max-w-[120px]">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 truncate max-w-[130px]">
                       {theme.name}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-400">Alege aspectul ideal pentru dashboard</p>
+                <p className="text-[10px] text-slate-400">Personalizează culori, carduri, texturi și efecte</p>
               </div>
             </div>
             <button
@@ -166,32 +174,40 @@ export function BackgroundPaletteWidget() {
             </div>
           )}
 
-          {/* Navigation Tabs */}
-          <div className="flex items-center gap-1 my-3 bg-slate-100/90 p-1 rounded-xl text-[11px] font-bold">
-            {(
-              [
-                { id: "colors", label: "🎨 Culoare" },
-                { id: "shadows", label: "☁️ Umbre" },
-                { id: "surfaces", label: "🪟 Carduri" },
-                { id: "radius", label: "📐 Colțuri" },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-1 rounded-lg transition ${
-                  activeTab === tab.id ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* 3 Main Navigation Tabs */}
+          <div className="flex items-center gap-1 my-2.5 bg-slate-100/90 p-1 rounded-xl text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setActiveTab("colors")}
+              className={`flex-1 py-1 rounded-lg transition ${
+                activeTab === "colors" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              🎨 Culori
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("surfaces")}
+              className={`flex-1 py-1 rounded-lg transition ${
+                activeTab === "surfaces" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              🪟 Carduri
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("details")}
+              className={`flex-1 py-1 rounded-lg transition ${
+                activeTab === "details" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              ✨ Efecte
+            </button>
           </div>
 
-          {/* Tab Contents */}
+          {/* Tab 1: Background & Accent Colors */}
           {activeTab === "colors" && (
-            <ColorsTab
+            <TabsColorsAccents
               theme={theme}
               activeColorCategory={activeColorCategory}
               onSelectCategory={setActiveColorCategory}
@@ -199,16 +215,14 @@ export function BackgroundPaletteWidget() {
             />
           )}
 
-          {activeTab === "shadows" && (
-            <ShadowsTab theme={theme} onUpdateTheme={updateTheme} />
-          )}
-
+          {/* Tab 2: Shadows, Surfaces, Radius, Borders */}
           {activeTab === "surfaces" && (
-            <SurfacesTab theme={theme} onUpdateTheme={updateTheme} />
+            <TabsSurfacesShadows theme={theme} onUpdateTheme={updateTheme} />
           )}
 
-          {activeTab === "radius" && (
-            <RadiusTab theme={theme} onUpdateTheme={updateTheme} />
+          {/* Tab 3: Patterns, Fonts, Hover, Density, Header Glass */}
+          {activeTab === "details" && (
+            <TabsDetailsAdvanced theme={theme} onUpdateTheme={updateTheme} />
           )}
 
           {/* Footer Controls: Randomize, Copy CSS, Reset */}
@@ -217,7 +231,7 @@ export function BackgroundPaletteWidget() {
               type="button"
               onClick={handleRandomize}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-black shadow-md hover:shadow-indigo-500/25 hover:opacity-95 transition active:scale-95 cursor-pointer"
-              title="Generează un stil aleator coordonat"
+              title="Generează un stil complet aleator"
             >
               <span>🎲</span>
               <span>Random</span>
