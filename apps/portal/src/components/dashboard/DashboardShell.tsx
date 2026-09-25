@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Nav } from "./Nav";
 import { TopHeader } from "./TopHeader";
 import { TeacherActiveSessionDetector } from "./TeacherActiveSessionDetector";
+import { BackgroundPaletteWidget } from "./BackgroundPaletteWidget";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -39,7 +40,11 @@ export function DashboardShell({
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col antialiased">
+    <div
+      id="dashboard-root"
+      style={{ backgroundColor: "var(--dashboard-bg, #f8fafc)" }}
+      className="min-h-screen text-slate-800 flex flex-col antialiased transition-colors duration-200"
+    >
       {/* Sidebar Navigation */}
       <Nav
         userName={userName}
@@ -71,6 +76,9 @@ export function DashboardShell({
           {children}
         </main>
       </div>
+
+      {/* Floating Background Palette Customizer */}
+      <BackgroundPaletteWidget />
     </div>
   );
 }

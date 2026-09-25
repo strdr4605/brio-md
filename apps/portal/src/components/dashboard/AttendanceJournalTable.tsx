@@ -213,10 +213,10 @@ export function AttendanceJournalTable({
   return (
     <div
       ref={containerRef}
-      className={`bg-[#f8fafc] text-slate-900 flex flex-col transition-all ${
+      className={`text-slate-900 flex flex-col transition-all ${
         isFullscreen
           ? "fixed inset-0 z-[100] p-3 sm:p-5 overflow-auto bg-slate-100 min-h-screen"
-          : "space-y-3.5"
+          : "space-y-3.5 bg-transparent"
       }`}
     >
       <AttendanceJournalHeader
