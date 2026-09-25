@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ParentCallWidget } from "./ParentCallWidget";
 import { AbsenceCommentWidget } from "./AbsenceCommentWidget";
 import { CheckCircleIcon } from "@/components/ui/icons";
+import { StudentBillingBadge, StudentBillingProps } from "./StudentBillingBadge";
 
 export type AttendanceStudentItem = {
   studentId: number;
@@ -12,6 +13,7 @@ export type AttendanceStudentItem = {
   parentName?: string | null;
   parentPhone?: string | null;
   age?: number | null;
+  billing?: StudentBillingProps["billing"];
   status: "present" | "absent" | "late" | "excused" | null;
   comment: string | null;
 };
@@ -194,11 +196,17 @@ export function AttendanceSheet({
             Boolean(current.comment);
           const isCommentOpen = openCommentStudentId === student.studentId;
 
+          const isUnpaid = Boolean(student.billing?.hasDebt || student.billing?.isOverdue);
+
           return (
             <div
               key={student.studentId}
               className={`px-5 py-3 transition-colors ${
-                isAbsent ? "bg-rose-50/25 hover:bg-rose-50/40" : "hover:bg-slate-50/60"
+                isAbsent
+                  ? "bg-rose-50/25 hover:bg-rose-50/40"
+                  : isUnpaid
+                    ? "bg-rose-50/15 hover:bg-rose-50/30 border-l-4 border-l-rose-500"
+                    : "hover:bg-slate-50/60"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -210,7 +218,7 @@ export function AttendanceSheet({
 
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-slate-900 truncate">
+                      <span className={`text-sm truncate ${isUnpaid ? "text-rose-950 font-black" : "text-slate-900 font-semibold"}`}>
                         {student.studentName}
                       </span>
                       {student.age && (
@@ -220,13 +228,20 @@ export function AttendanceSheet({
                       )}
                     </div>
 
-                    {/* Instant Parent Contact Widget */}
-                    <div className="mt-0.5">
+                    {/* Instant Parent Contact Widget & Billing Pill */}
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                       <ParentCallWidget
                         parentName={student.parentName}
                         parentPhone={student.parentPhone}
                         compact
                       />
+                      {student.billing && (
+                        <StudentBillingBadge
+                          billing={student.billing}
+                          studentName={student.studentName}
+                          compact
+                        />
+                      )}
                     </div>
                   </div>
                 </div>

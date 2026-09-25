@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ParentCallWidget } from "./ParentCallWidget";
 import { EditAttendanceModal } from "./EditAttendanceModal";
+import { StudentBillingBadge, StudentBillingProps } from "./StudentBillingBadge";
 
 export type MatrixStudent = {
   studentId: number;
@@ -11,6 +12,7 @@ export type MatrixStudent = {
   parentName?: string | null;
   parentPhone?: string | null;
   age?: number | null;
+  billing?: StudentBillingProps["billing"];
   cells: Record<
     string,
     {
@@ -169,43 +171,52 @@ export function AttendanceMatrix({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {students.map((student) => (
-                  <tr
-                    key={student.studentId}
-                    className={`hover:bg-slate-50/70 transition-colors ${
-                      student.stats.hasConsecutiveAbsences ? "bg-rose-50/30" : ""
-                    }`}
-                  >
-                    {/* Sticky Student Column */}
-                    <td className="sticky left-0 z-10 bg-white py-2 px-2.5 sm:px-4 border-r border-slate-200/80 shadow-xs">
-                      <div className="flex flex-col min-w-0 max-w-[125px] sm:max-w-[210px]">
-                        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                          <span className="font-bold text-slate-900 text-xs truncate max-w-full">
-                            {student.studentName}
-                          </span>
-                          {student.age && (
-                            <span className="text-[10px] text-slate-400 shrink-0">
-                              ({student.age} ani)
+                {students.map((student) => {
+                  const isUnpaid = Boolean(student.billing?.hasDebt || student.billing?.isOverdue);
+                  return (
+                    <tr
+                      key={student.studentId}
+                      className={`hover:bg-slate-50/70 transition-colors ${
+                        student.stats.hasConsecutiveAbsences ? "bg-rose-50/30" : isUnpaid ? "bg-rose-50/20" : ""
+                      }`}
+                    >
+                      {/* Sticky Student Column */}
+                      <td className={`sticky left-0 z-10 bg-white py-2 px-2.5 sm:px-4 border-r border-slate-200/80 shadow-xs ${isUnpaid ? "border-l-4 border-l-rose-500" : ""}`}>
+                        <div className="flex flex-col min-w-0 max-w-[135px] sm:max-w-[210px]">
+                          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                            <span className={`font-bold text-xs truncate max-w-full ${isUnpaid ? "text-rose-950 font-black" : "text-slate-900"}`}>
+                              {student.studentName}
                             </span>
-                          )}
-                          {student.stats.hasConsecutiveAbsences && (
-                            <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 shrink-0"
-                              title={`Elevul are ${student.stats.maxConsecutiveAbsences} absențe consecutive`}
-                            >
-                              ⚠️ {student.stats.maxConsecutiveAbsences}+ abs
-                            </span>
-                          )}
+                            {student.age && (
+                              <span className="text-[10px] text-slate-400 shrink-0">
+                                ({student.age} ani)
+                              </span>
+                            )}
+                            {student.stats.hasConsecutiveAbsences && (
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 shrink-0"
+                                title={`Elevul are ${student.stats.maxConsecutiveAbsences} absențe consecutive`}
+                              >
+                                ⚠️ {student.stats.maxConsecutiveAbsences}+ abs
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            <ParentCallWidget
+                              parentName={student.parentName}
+                              parentPhone={student.parentPhone}
+                              compact
+                            />
+                            {student.billing && (
+                              <StudentBillingBadge
+                                billing={student.billing}
+                                studentName={student.studentName}
+                                compact
+                              />
+                            )}
+                          </div>
                         </div>
-                        <div className="mt-0.5 min-w-0">
-                          <ParentCallWidget
-                            parentName={student.parentName}
-                            parentPhone={student.parentPhone}
-                            compact
-                          />
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
                     {/* Attendance Rate */}
                     <td className="py-2 px-1 sm:px-3 text-center border-r border-slate-200/80 font-bold">
@@ -291,8 +302,9 @@ export function AttendanceMatrix({
                       );
                     })}
                   </tr>
-                ))}
-              </tbody>
+                );
+              })}
+            </tbody>
             </table>
           </div>
         )}

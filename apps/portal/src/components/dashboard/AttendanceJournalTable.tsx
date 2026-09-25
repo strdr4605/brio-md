@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { AttendanceCell, AttendanceStatus } from "./AttendanceCell";
 import { AttendanceJournalHeader } from "./AttendanceJournalHeader";
+import { AttendanceJournalToolbar, JournalFilterMode } from "./AttendanceJournalToolbar";
+import { StudentBillingBadge } from "./StudentBillingBadge";
 import { PhoneIcon } from "@/components/ui/icons";
 import {
   getMonthLabel,
@@ -41,7 +43,6 @@ export function AttendanceJournalTable({
   const isSuperOrAdmin =
     permissions.includes("super") || permissions.includes("admin") || role === "superadmin" || role === "admin";
 
-  // Current month state in YYYY-MM format
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (initialMonthStr) return initialMonthStr;
     const now = new Date();
@@ -50,14 +51,15 @@ export function AttendanceJournalTable({
 
   const monthLabel = useMemo(() => getMonthLabel(currentMonth), [currentMonth]);
 
-  // Fetch journal matrix from server
+  const [filterMode, setFilterMode] = useState<JournalFilterMode>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
   const utils = trpc.useUtils();
   const { data, isLoading, error } = trpc.attendance.getJournal.useQuery(
     { groupId, month: currentMonth },
     { refetchOnWindowFocus: false },
   );
 
-  // Optimistic local state for immediate 1-click / 2-click feedback
   const [localRecords, setLocalRecords] = useState<
     Record<string, { status: AttendanceStatus; comment: string | null }>
   >({});
@@ -68,7 +70,6 @@ export function AttendanceJournalTable({
 
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
 
-  // Quick mark mutation with immediate active session invalidation
   const quickMarkMutation = trpc.attendance.quickMark.useMutation({
     onMutate: () => setSaveStatus("saving"),
     onSuccess: () => {
@@ -149,7 +150,6 @@ export function AttendanceJournalTable({
     }
   }, [initialFullscreen]);
 
-  // Handle ESC key and browser fullscreen exit
   useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && isFullscreen) setIsFullscreen(false);
@@ -178,13 +178,45 @@ export function AttendanceJournalTable({
     return computeDateTotals(data.dates, data.students, localRecords);
   }, [data?.dates, data?.students, localRecords]);
 
+  const { debtCount, paidCount, totalDebtAmount } = useMemo(() => {
+    let debt = 0;
+    let paid = 0;
+    let totalDebt = 0;
+    for (const s of data?.students || []) {
+      const isUnpaid = Boolean(s.billing?.hasDebt || s.billing?.isOverdue);
+      if (isUnpaid) {
+        debt++;
+        totalDebt += s.billing?.debtAmount || 0;
+      } else {
+        paid++;
+      }
+    }
+    return { debtCount: debt, paidCount: paid, totalDebtAmount: totalDebt };
+  }, [data?.students]);
+
+  const displayedStudents = useMemo(() => {
+    if (!data?.students) return [];
+    return data.students.filter((s) => {
+      const isUnpaid = Boolean(s.billing?.hasDebt || s.billing?.isOverdue);
+      if (filterMode === "debt" && !isUnpaid) return false;
+      if (filterMode === "paid" && isUnpaid) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = s.studentName.toLowerCase().includes(q);
+        const matchParent = s.parentName?.toLowerCase().includes(q);
+        if (!matchName && !matchParent) return false;
+      }
+      return true;
+    });
+  }, [data?.students, filterMode, searchQuery]);
+
   return (
     <div
       ref={containerRef}
       className={`bg-[#f8fafc] text-slate-900 flex flex-col transition-all ${
         isFullscreen
           ? "fixed inset-0 z-[100] p-3 sm:p-5 overflow-auto bg-slate-100 min-h-screen"
-          : "space-y-4"
+          : "space-y-3.5"
       }`}
     >
       <AttendanceJournalHeader
@@ -207,6 +239,20 @@ export function AttendanceJournalTable({
         onSave={handleManualSave}
         canEditAnyDate={isSuperOrAdmin}
       />
+
+      {/* Attendance & Billing Status Filter Toolbar */}
+      {!isLoading && Boolean(data?.students?.length) && (
+        <AttendanceJournalToolbar
+          filterMode={filterMode}
+          onFilterChange={setFilterMode}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          totalStudents={data?.students.length ?? 0}
+          debtCount={debtCount}
+          paidCount={paidCount}
+          totalDebtAmount={totalDebtAmount}
+        />
+      )}
 
       {/* Loading & Error States */}
       {isLoading && (
@@ -231,13 +277,13 @@ export function AttendanceJournalTable({
                   <th className="sticky left-0 z-20 bg-slate-100 w-10 p-2 text-center border-r border-slate-200">
                     #
                   </th>
-                  <th className="sticky left-10 z-20 bg-slate-100 w-48 sm:w-56 p-2.5 border-r border-slate-200 truncate">
-                    Elev (Nume & Contact)
+                  <th className="sticky left-10 z-20 bg-slate-100 w-52 sm:w-60 p-2.5 border-r border-slate-200 truncate">
+                    Elev (Nume, Abonament & Contact)
                   </th>
                   {data.dates.map((d) => (
                     <th
                       key={d.date}
-                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : isSuperOrAdmin ? `Arhivă ${d.date} (Editabilă - Admin)` : `Arhivă ${d.date} (Doar ziua de azi editabilă)`}
+                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : isSuperOrAdmin ? `Arhivă ${d.date} (Editabilă - Admin)` : `Arhivă ${d.date}`}
                       className={`w-10 sm:w-11 p-1 text-center border-r border-slate-200/80 transition-colors ${
                         d.isToday ? "bg-blue-100/90 text-blue-900 ring-2 ring-blue-500 ring-inset" : isSuperOrAdmin ? "bg-slate-50 hover:bg-slate-100/80" : "bg-slate-100/60"
                       }`}
@@ -262,35 +308,60 @@ export function AttendanceJournalTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/80 text-xs">
-                {data.students.length === 0 ? (
+                {displayedStudents.length === 0 ? (
                   <tr>
                     <td colSpan={data.dates.length + 5} className="p-8 text-center text-slate-400 text-xs">
-                      Nu există elevi înscriși în această grupă.
+                      {data.students.length === 0
+                        ? "Nu există elevi înscriși în această grupă."
+                        : "Niciun elev nu corespunde filtrelor selectate."}
                     </td>
                   </tr>
                 ) : (
-                  data.students.map((student, idx) => {
+                  displayedStudents.map((student, idx) => {
                     const stats = studentStats[student.studentId] || { present: 0, absent: 0, pct: 100 };
+                    const isUnpaid = Boolean(student.billing?.hasDebt || student.billing?.isOverdue);
                     return (
-                      <tr key={student.studentId} className="hover:bg-slate-50/80 transition-colors group">
+                      <tr
+                        key={student.studentId}
+                        className={`hover:bg-slate-50/80 transition-colors group ${
+                          isUnpaid ? "bg-rose-50/25" : ""
+                        }`}
+                      >
                         <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50/80 text-center font-bold text-slate-400 text-[11px] border-r border-slate-200 py-1">
                           {idx + 1}
                         </td>
-                        <td className="sticky left-10 z-10 bg-white group-hover:bg-slate-50/80 px-2.5 py-1 border-r border-slate-200 font-bold text-slate-900 truncate">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="truncate max-w-[170px]" title={student.studentName}>
-                              {student.studentName}
-                            </span>
-                            {Boolean(student.parentPhone) && (
-                              <a
-                                href={`tel:${student.parentPhone}`}
-                                title={`Părinte: ${student.parentName || "Familie"} (${student.parentPhone})`}
-                                className="text-slate-400 hover:text-blue-600 transition p-0.5 rounded"
-                                onClick={(e) => e.stopPropagation()}
+                        <td
+                          className={`sticky left-10 z-10 bg-white group-hover:bg-slate-50/80 px-2.5 py-1.5 border-r border-slate-200 font-bold text-slate-900 truncate ${
+                            isUnpaid ? "border-l-4 border-l-rose-500 bg-rose-50/30" : ""
+                          }`}
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className={`truncate max-w-[155px] ${
+                                  isUnpaid ? "text-rose-950 font-black" : "text-slate-900"
+                                }`}
+                                title={student.studentName}
                               >
-                                <PhoneIcon className="w-3 h-3" />
-                              </a>
-                            )}
+                                {student.studentName}
+                              </span>
+                              {Boolean(student.parentPhone) && (
+                                <a
+                                  href={`tel:${student.parentPhone}`}
+                                  title={`Părinte: ${student.parentName || "Familie"} (${student.parentPhone})`}
+                                  className="text-slate-400 hover:text-blue-600 transition p-0.5 rounded shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <PhoneIcon className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                            <div className="mt-0.5">
+                              <StudentBillingBadge
+                                billing={student.billing}
+                                studentName={student.studentName}
+                              />
+                            </div>
                           </div>
                         </td>
                         {data.dates.map((d) => {
