@@ -1,7 +1,6 @@
 # Brio.md Design System & UI Standard (Linear Precision × MengTo)
 
 > **Single Source of Truth** for UI/UX across Brio.md (Portal, Learn, Landing).  
-> Powered by **Linear Precision** (`.agents/skills/linear-craft`).  
 > All developers and AI agents must strictly adhere to this specification.
 
 ---
