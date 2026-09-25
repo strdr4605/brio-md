@@ -28,3 +28,11 @@ Review the generated SQL in `packages/db/drizzle/` before committing.
 - **Before Coding:** For tasks that require decomposition, present the proposed PR sequence, explain the purpose of each PR, and identify dependencies between them. Do not write code until the plan is approved.
 
 - **After Each PR:** Verify that the affected code compiles, passes `npm run lint`, and builds successfully before considering the PR complete.
+
+# UI & Design System Standards
+
+- **Single Source of Truth:** All UI work must adhere strictly to [`docs/DESIGN_SYSTEM.md`](file:///Users/Apple/Documents/Homework/Practice/project/brio-md/docs/DESIGN_SYSTEM.md).
+- **Shared Primitives First:** Never invent custom ad-hoc button, card, badge, or modal styles using raw Tailwind strings in feature pages. Always consume or extend shared components from `@brio-md/ui`.
+- **Low Cognitive Load:** Follow Progressive Disclosure. Do not dump historical tables and deep settings directly onto the main page; defer secondary details into tabs, slide-over drawers, or modal dialogs.
+- **Stitch Design Alignment:** When generating or refining screens in Stitch, always use the master prompt template specified in `docs/DESIGN_SYSTEM.md` to ensure identical tokens and layout consistency across the team.
+
