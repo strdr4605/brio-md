@@ -14,6 +14,7 @@ import {
   DENSITY_PRESETS,
   CURATED_THEMES,
 } from "./themePresets";
+import { loadGoogleFont } from "./fontsData";
 
 export function getRandomTheme(): BrioThemeConfig {
   const isCurated = Math.random() < 0.65;
@@ -129,6 +130,12 @@ export function applyThemeToDom(theme: BrioThemeConfig) {
   const font = FONT_PRESETS.find((f) => f.id === theme.fontId) || FONT_PRESETS[0];
   const borderWidth = BORDER_WIDTH_PRESETS.find((b) => b.id === theme.borderWidthId) || BORDER_WIDTH_PRESETS[1];
 
+  let resolvedFontFamily = font.fontFamily;
+  if (theme.fontName) {
+    loadGoogleFont(theme.fontName);
+    resolvedFontFamily = `"${theme.fontName}", system-ui, sans-serif`;
+  }
+
   document.documentElement.style.setProperty("--dashboard-bg", theme.bg);
   document.body.style.backgroundColor = theme.bg;
 
@@ -151,7 +158,9 @@ export function applyThemeToDom(theme: BrioThemeConfig) {
   styleTag.textContent = `
     #dashboard-root {
       background-color: ${theme.bg} !important;
-      font-family: ${font.fontFamily} !important;
+      font-family: ${resolvedFontFamily} !important;
+      ${theme.fontLetterSpacing ? `letter-spacing: ${theme.fontLetterSpacing} !important;` : ""}
+      ${theme.fontSizeScale ? `font-size: ${theme.fontSizeScale} !important;` : ""}
       ${patternCss}
     }
     #dashboard-root [class*="fixed inset-0"][class*="z-[100]"] {

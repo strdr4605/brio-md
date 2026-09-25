@@ -77,6 +77,9 @@ export type BrioThemeConfig = {
   radiusId: string;
   patternId: string;
   fontId: string;
+  fontName?: string;
+  fontLetterSpacing?: string;
+  fontSizeScale?: string;
   borderWidthId: string;
   hoverId: string;
   densityId: string;

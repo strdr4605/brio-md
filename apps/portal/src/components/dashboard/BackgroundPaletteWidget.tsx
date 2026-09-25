@@ -7,12 +7,14 @@ import { getRandomTheme, applyThemeToDom } from "./theme/themeApplicator";
 import { TabsColorsAccents } from "./theme/TabsColorsAccents";
 import { TabsSurfacesShadows } from "./theme/TabsSurfacesShadows";
 import { TabsDetailsAdvanced } from "./theme/TabsDetailsAdvanced";
+import { TabsFontGallery } from "./theme/TabsFontGallery";
 import { TabsObjectStyler } from "./theme/TabsObjectStyler";
 import { ElementInspectorOverlay } from "./theme/ElementInspectorOverlay";
 import { PRESET_TARGETS, PresetTarget, ObjectStylesMap, ElementCustomStyle } from "./theme/objectStylerTypes";
 import { applyObjectStylesToDom, loadObjectStyles, saveObjectStyles } from "./theme/objectStylerApplicator";
+import { FONT_COLLECTION, loadGoogleFont } from "./theme/fontsData";
 
-type MainTabType = "colors" | "surfaces" | "details" | "objects";
+type MainTabType = "colors" | "surfaces" | "details" | "fonts" | "objects";
 
 export function BackgroundPaletteWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -114,11 +116,17 @@ export function BackgroundPaletteWidget() {
 
   const handleRandomize = () => {
     const rolled = getRandomTheme();
+    if (Math.random() > 0.3) {
+      const randomFont = FONT_COLLECTION[Math.floor(Math.random() * FONT_COLLECTION.length)];
+      loadGoogleFont(randomFont.name);
+      rolled.fontName = randomFont.name;
+      rolled.fontId = "custom_font";
+    }
     setTheme(rolled);
     applyThemeToDom(rolled);
     localStorage.setItem("brio_custom_theme", JSON.stringify(rolled));
     localStorage.setItem("brio_dashboard_bg", rolled.bg);
-    showToast(`✨ ${rolled.name || "Stil Nou"}!`);
+    showToast(`✨ ${rolled.name || "Stil Nou"} (${rolled.fontName || "Inter"})!`);
   };
 
   const handleReset = () => {
@@ -142,8 +150,8 @@ export function BackgroundPaletteWidget() {
       `--card-blur: ${currentSurface?.blur};`,
       `--card-shadow: ${currentShadow};`,
       `--card-radius: ${currentRadius};`,
+      `--font-family: "${theme.fontName || "Inter"}", sans-serif;`,
       `--pattern: ${theme.patternId};`,
-      `--font: ${theme.fontId};`,
     ].join("\n");
 
     try {
@@ -173,7 +181,7 @@ export function BackgroundPaletteWidget() {
               ? "bg-slate-900 text-white border-slate-900 ring-4 ring-blue-500/20"
               : "bg-white/95 text-slate-800 border-slate-200/90 hover:bg-white hover:border-blue-400 backdrop-blur-md"
           }`}
-          title="Personalizează stilul, culorile și umbrele"
+          title="Personalizează stilul, fonturile și obiectele"
         >
           <span className="text-base group-hover:rotate-12 transition-transform">🎨</span>
           <span className="text-xs font-black tracking-tight hidden sm:inline">Stil Studio</span>
@@ -212,7 +220,7 @@ export function BackgroundPaletteWidget() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400">Personalizează culori, carduri, texturi și obiecte</p>
+                <p className="text-[10px] text-slate-400">110+ fonturi, culori, efecte și obiecte</p>
               </div>
             </div>
             <button
@@ -231,8 +239,8 @@ export function BackgroundPaletteWidget() {
             </div>
           )}
 
-          {/* 4 Main Navigation Tabs */}
-          <div className="flex items-center gap-1 my-2.5 bg-slate-100/90 p-1 rounded-xl text-[11px] font-bold">
+          {/* 5 Main Navigation Tabs */}
+          <div className="flex items-center gap-1 my-2.5 bg-slate-100/90 p-1 rounded-xl text-[10px] font-bold">
             <button
               type="button"
               onClick={() => setActiveTab("colors")}
@@ -259,6 +267,15 @@ export function BackgroundPaletteWidget() {
               }`}
             >
               ✨ Efecte
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("fonts")}
+              className={`flex-1 py-1 rounded-lg transition ${
+                activeTab === "fonts" ? "bg-indigo-600 text-white shadow-2xs" : "text-indigo-600 hover:text-indigo-800"
+              }`}
+            >
+              🔤 Fonturi
             </button>
             <button
               type="button"
@@ -291,7 +308,16 @@ export function BackgroundPaletteWidget() {
             <TabsDetailsAdvanced theme={theme} onUpdateTheme={updateTheme} />
           )}
 
-          {/* Tab 4: Object Styler & Inspector */}
+          {/* Tab 4: 110+ Google Fonts Gallery */}
+          {activeTab === "fonts" && (
+            <TabsFontGallery
+              theme={theme}
+              onUpdateTheme={updateTheme}
+              onShowToast={showToast}
+            />
+          )}
+
+          {/* Tab 5: Object Styler & Inspector */}
           {activeTab === "objects" && (
             <TabsObjectStyler
               selectedTarget={selectedTarget}
@@ -314,7 +340,7 @@ export function BackgroundPaletteWidget() {
               type="button"
               onClick={handleRandomize}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-black shadow-md hover:shadow-indigo-500/25 hover:opacity-95 transition active:scale-95 cursor-pointer"
-              title="Generează un stil complet aleator"
+              title="Generează un stil complet aleator cu font nou"
             >
               <span>🎲</span>
               <span>Random</span>
