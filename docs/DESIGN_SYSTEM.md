@@ -1,104 +1,82 @@
-# Brio.md Design System & UI Standard
+# Brio.md Design System & UI Standard (UI-Craft Graphite)
 
-> **Single Source of Truth** for UI/UX across Brio.md (Portal, Learn, Landing).  
+> **Single Source of Truth** for UI/UX across Brio.md.  
+> Powered by the **UI-Craft** design engineering framework (`.agents/skills/ui-craft`).  
 > All developers and AI agents must strictly adhere to this specification.
 
 ---
 
-## 1. Design Philosophy
+## 1. Design Philosophy: "No AI Slop"
 
-- **Inspiration:** Modern minimalist SaaS (Linear, Stripe, Supabase).
-- **Core Principle: Low Cognitive Load.** Show the user what matters *now* (80% use case). Hide detailed histories, secondary forms, and deep settings behind tabs, drawers, or modal dialogs (Progressive Disclosure).
-- **No Decorative Clutter:** No rainbow gradients, no neon glowing orbs, no heavy drop-shadows, and no excessive uppercase labels. The content and clean typography must lead the user.
+- **Inspiration:** Production-grade tools (Linear, Stripe, Raycast, Supabase).
+- **Core Principle: Signal-to-Noise Ratio.** The UI must disappear behind the school's actual data.
+- **Strict Anti-Patterns (Tells of AI-generated UI):**
+  - ❌ **No emojis in buttons or labels:** Never use `📞`, `💬`, `⚠️`. Use clean 1.5px stroke SVG outline icons.
+  - ❌ **No rainbow badge pills:** Never wrap every word in thick colored badges. Use subtle 6px status dots (`inline-block rounded-full bg-emerald-500 mr-1.5`) with neutral text.
+  - ❌ **No identical clone cards:** Differentiate the primary KPI metric with a sparkline or subtle tint; secondary metrics stay neutral.
+  - ❌ **No ALL CAPS headers:** Use natural sentence case (`Active students`, `Attendance status`) for faster cognitive scanning.
+  - ❌ **No decorative neon gradients or heavy drop-shadows:** Use clean 1px hairline borders (`#e4e4e7`) with subtle ambient elevation.
 
 ---
 
-## 2. Design Tokens
+## 2. Design Tokens (Graphite Preset)
 
-### 2.1 Color Palette
+### 2.1 Surfaces & Neutrals
 
 | Token | Class / Hex | Usage |
 | :--- | :--- | :--- |
-| **Page Background** | `bg-slate-50` (`#f8fafc`) | Main background for all application pages |
-| **Surface / Card** | `bg-white` (`#ffffff`) | Background for cards, tables, modal dialogs, drawers |
-| **Surface Subdued** | `bg-slate-50/75` (`#f8fafc`) | Table headers, secondary nested panels, filter toolbars |
-| **Borders** | `border-slate-200/80` (`#e2e8f0`) | 1px border for all cards, table rows, and dividers |
-| **Primary Accent** | `bg-blue-600` (`#2563eb`) | Primary action buttons, active navigation indicators, focus rings |
-| **Primary Hover** | `bg-blue-700` (`#1d4ed8`) | Hover state for primary actions |
-| **Text Heading** | `text-slate-900` (`#0f172a`) | Page titles, card headings, key metrics |
-| **Text Body** | `text-slate-600` (`#475569`) | Standard content, table cell data, descriptions |
-| **Text Muted** | `text-slate-400` (`#94a3b8`) | Timestamps, secondary metadata, placeholders |
+| **Canvas** | `bg-[#fafafa]` | Clean, cool neutral page background |
+| **Surface / Card** | `bg-white` (`#ffffff`) | Main card surface, tables, modal dialogs |
+| **Subdued Surface**| `bg-[#f4f4f5]` | Table headers, secondary nested panels, filter buttons |
+| **Hairline Border**| `border-[#e4e4e7]` | 1px border for all cards, table rows, and dividers |
+| **Primary Accent** | `bg-[#18181b]` / `bg-indigo-600` | Primary action buttons, active navigation, focus rings |
+| **Text Primary**   | `text-[#09090b]` | Primary headings, table row values, key metrics |
+| **Text Secondary** | `text-[#71717a]` | Subtitles, table headers, metadata |
+| **Text Muted**     | `text-[#a1a1aa]` | Inactive states, timestamps, placeholders |
 
-### 2.2 Semantic Status Colors
+### 2.2 Typography & Numbers
 
-All status indicators, badges, and alerts must use matching pastel background + strong text:
-
-| Status | Background | Border | Text | Usage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Success** | `bg-emerald-50` | `border-emerald-200` | `text-emerald-700` | Present, Paid in full, Active group, Saved |
-| **Danger** | `bg-rose-50` | `border-rose-200` | `text-rose-700` | Absent, Overdue invoice, Cancelled, Critical alert |
-| **Warning** | `bg-amber-50` | `border-amber-200` | `text-amber-700` | Late arrival, Pending payment, Unmarked session |
-| **Neutral** | `bg-slate-100` | `border-slate-200` | `text-slate-700` | Archived, Inactive, Standard informational tag |
-| **Brand/Info** | `bg-blue-50` | `border-blue-200` | `text-blue-700` | Excused absence, In progress, Selected filter |
-
-### 2.3 Radii & Elevation
-
-- **Cards & Modals:** `rounded-xl` (12px).
-- **Buttons & Form Inputs:** `rounded-lg` (8px).
-- **Badges & Avatars:** `rounded-full`.
-- **Shadows:** Only `shadow-sm` on resting cards. `shadow-md` on hover cards or floating drawers. Never use `shadow-xl` or colored glow shadows.
+- **Font Family:** `Inter`, `-apple-system`, `sans-serif`.
+- **Numbers:** Always use `tabular-nums` (`font-variant-numeric: tabular-nums`) for dates, phone numbers, prices, and metrics so columns align vertically.
+- **Letter Spacing:** `tracking-tight` (`-0.02em`) on large numbers and headings.
 
 ---
 
-## 3. Shared UI Primitives (`@brio-md/ui`)
+## 3. UI-Craft Skills Available in Project
 
-Developers must import components from `@brio-md/ui` instead of writing raw Tailwind markup for recurring UI elements:
-
-1. `<Button variant="primary | secondary | outline | ghost | danger" size="sm | md | lg">`
-2. `<Card>` (supports `<Card.Header>`, `<Card.Body>`, `<Card.Footer>`)
-3. `<Badge variant="success | danger | warning | neutral | info">`
-4. `<StatCard title="..." value="..." trend="..." icon={...}>`
-5. `<Tabs tabs={[{ id, label, count }]} activeTab={...} onChange={...}>`
-6. `<EmptyState icon={...} title="..." description="..." action={...}>`
-7. `<Drawer isOpen={...} onClose={...} title="...">` (Slide-over panel)
+The workspace includes the full `.agents/skills` suite:
+- `/craft <surface>` — generate designer-grade dashboards, tables, and settings.
+- `/critique` — audit a screen against Nielsen's 10 usability heuristics and design laws.
+- `/polish` — run the 10-point acceptance bar before merging.
+- `/distill` — cut visual clutter and simplify an over-built screen.
+- `/tokens` — inspect and manage design tokens.
 
 ---
 
-## 4. Master Stitch Prompt Template
-
-When generating screens in Stitch, all team members must use this template to guarantee visual alignment:
+## 4. Master Stitch Prompt Template (Craft-Grade)
 
 ```text
-[SYSTEM DESIGN SPECIFICATION - BRIO.MD]
-Role: Lead UI/UX Designer for Brio.md educational SaaS platform.
-Canvas: Desktop 1440px (or Mobile 390px for mobile attendance view).
-Aesthetic: Modern, clean, minimal SaaS (inspired by Linear and Stripe). High contrast, generous whitespace, zero visual clutter.
+[SYSTEM DESIGN SPECIFICATION - BRIO.MD (GRAPHITE)]
+Role: Lead Design Engineer for Brio.md educational management system.
+Aesthetic: Linear/Stripe-grade minimal SaaS. Highly functional, quiet, data-dense, zero AI-slop.
 Design Tokens:
-- Background: #f8fafc (Slate 50).
-- Surfaces: #ffffff with 1px border #e2e8f0, subtle shadow (0 1px 2px rgba(0,0,0,0.05)), border radius 12px (rounded-xl).
-- Primary Accent: #2563eb (Royal Blue).
-- Semantics: Emerald for Success/Paid, Rose for Danger/Overdue, Amber for Warning/Late, Slate for Neutral.
-- Typography: Inter/Sans-serif, clean hierarchy, max 3 font sizes per container.
-- Anti-patterns: Avoid heavy background gradients, glowing neon orbs, or rainbow-colored borders.
+- Canvas: #fafafa.
+- Surface: #ffffff with 1px border #e4e4e7, hairline shadow (0 1px 2px rgba(0,0,0,0.03)), radius 8px-10px.
+- Typography: Inter/Sans-serif, sentence-case headers only. Tabular figures for all numbers.
+- Palette: 90% monochrome neutrals (#09090b text, #71717a secondary), single deep indigo (#4f46e5) or zinc accent.
+- Statuses: 6px inline dots (emerald for active/paid, amber for late/unmarked, rose for debt/absent), never bulky colored pills.
+- Icons: 1.5px stroke SVG line icons. Strict prohibition of emoji characters in UI controls.
 
 [SCREEN-SPECIFIC SPECIFICATION]
-Screen Name: [Insert Screen Name: e.g. Student Profile Hub]
-User Persona: [Insert: e.g. School Administrator / Teacher]
-Primary User Action: [What is the #1 thing user does on this screen?]
+Screen Name: [e.g. School Dashboard / Student Dossier]
+User Persona: [e.g. School Administrator / Teacher]
+Primary User Action: [e.g. Mark today's class attendance]
 
-Layout Structure:
-1. Navigation: Standard collapsible left sidebar (Logo "Brio.md", clean icon links).
-2. Top Header: Breadcrumbs ("Dashboard / [Section] / [Screen]"), search bar (Cmd+K style), school switcher, user avatar.
+Composition:
+1. Navigation: Clean collapsed/expanded sidebar with subtle active state tint.
+2. Header: Quiet breadcrumb, search trigger (Cmd+K), branch indicator.
 3. Content Area:
-   - [Specify 2-3 primary cards or two-column split layout]
-   - [Specify what is deferred to tabs or slide-over drawer to prevent clutter]
+   - Primary metric with sparkline trend.
+   - Dense, scannable table with sentence-case headers and inline status dots.
+   - Secondary details deferred to slide-over drawer or clean tabs.
 ```
-
----
-
-## 5. Anti-Patterns (What NOT to do)
-
-- ❌ **Do NOT** place more than 4 KPI cards on any screen.
-- ❌ **Do NOT** put full tables of historical data on the main overview (use "Last 5 records" + link/tab to full history).
-- ❌ **Do NOT** write ad-hoc button or badge classes (e.g. `<button className="bg-gradient-to-r from-blue-600 to-indigo-600 ...">`). Use standard `@brio-md/ui` primitives.
-- ❌ **Do NOT** create pages longer than 500 lines without breaking them into modular subcomponents (e.g., tabs, cards, widgets).
