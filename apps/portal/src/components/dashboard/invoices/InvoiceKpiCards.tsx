@@ -28,7 +28,7 @@ export function InvoiceKpiCards({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-pulse">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-28 bg-slate-100 rounded-2xl border border-slate-200/70" />
         ))}
@@ -37,9 +37,9 @@ export function InvoiceKpiCards({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {/* 1. Total Facturat */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Total Facturat
@@ -60,7 +60,7 @@ export function InvoiceKpiCards({
       </div>
 
       {/* 2. Total Încasat */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Total Încasat
@@ -86,7 +86,7 @@ export function InvoiceKpiCards({
       </div>
 
       {/* 3. Datorii Active */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Datorii Active
@@ -108,7 +108,7 @@ export function InvoiceKpiCards({
 
       {/* 4. Facturi Restante (Overdue) */}
       <div
-        className={`rounded-2xl p-5 border shadow-xs flex flex-col justify-between transition-colors ${
+        className={`rounded-2xl p-4 sm:p-5 border shadow-xs flex flex-col justify-between transition-colors ${
           overdueCount > 0
             ? "bg-rose-50/40 border-rose-200 hover:border-rose-300"
             : "bg-white border-slate-200/80 hover:border-slate-300"
