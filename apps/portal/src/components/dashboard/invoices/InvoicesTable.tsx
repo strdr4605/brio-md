@@ -184,20 +184,20 @@ export function InvoicesTable({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-              <th className="py-3 px-4">Factură</th>
-              <th className="py-3 px-4">Student</th>
-              <th className="py-3 px-4">Grupă</th>
-              <th className="py-3 px-4">Tip</th>
-              <th className="py-3 px-4">Scadență</th>
-              <th className="py-3 px-4 text-right">Total</th>
-              <th className="py-3 px-4 text-right">Achitat</th>
-              <th className="py-3 px-4 text-right">Rest de plată</th>
-              <th className="py-3 px-4 text-center">Status</th>
-              <th className="py-3 px-4">Acțiuni</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Factură</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Student</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Grupă</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Tip</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Scadență</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Total</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Achitat</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Rest de plată</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Status</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Acțiuni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -217,7 +217,7 @@ export function InvoicesTable({
                   }`}
                 >
                   {/* Factură */}
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-3 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
                     <div>{inv.invoiceNumber || `#INV-${inv.id}`}</div>
                     <div className="text-[10px] text-slate-400 font-normal mt-0.5">
                       {formatDate(inv.createdAt)}

@@ -42,12 +42,12 @@ export function CancelInvoiceModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cancel-invoice-title"
     >
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200/80 transform transition-all">
+      <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-xl border border-slate-200/80 transform transition-all">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
             <AlertTriangleIcon className="w-5 h-5" />

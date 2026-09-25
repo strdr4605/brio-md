@@ -57,8 +57,8 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-green-50 to-white">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Learning Portal</h1>
 
         <LoginForm variant="green" error={error} onSubmit={handleLogin} />
