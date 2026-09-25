@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BrioThemeConfig, CategoryType } from "./theme/themeTypes";
-import { DEFAULT_THEME, SHADOW_PRESETS, SURFACE_PRESETS, RADIUS_PRESETS } from "./theme/themePresets";
+import { DEFAULT_THEME, SHADOW_PRESETS, SURFACE_PRESETS, RADIUS_PRESETS, GLACIAL_SORA_THEME } from "./theme/themePresets";
 import { getRandomTheme, applyThemeToDom } from "./theme/themeApplicator";
 import { TabsColorsAccents } from "./theme/TabsColorsAccents";
 import { TabsSurfacesShadows } from "./theme/TabsSurfacesShadows";
 import { TabsDetailsAdvanced } from "./theme/TabsDetailsAdvanced";
 import { TabsFontGallery } from "./theme/TabsFontGallery";
 import { TabsObjectStyler } from "./theme/TabsObjectStyler";
+import { ThemeStudioFooter } from "./theme/ThemeStudioFooter";
 import { ElementInspectorOverlay } from "./theme/ElementInspectorOverlay";
 import { PRESET_TARGETS, PresetTarget, ObjectStylesMap, ElementCustomStyle } from "./theme/objectStylerTypes";
 import { applyObjectStylesToDom, loadObjectStyles, saveObjectStyles } from "./theme/objectStylerApplicator";
@@ -47,12 +48,8 @@ export function BackgroundPaletteWidget() {
           // ignore
         }
       } else {
-        const legacyBg = localStorage.getItem("brio_dashboard_bg");
-        if (legacyBg) {
-          const initial: BrioThemeConfig = { ...DEFAULT_THEME, bg: legacyBg };
-          setTheme(initial);
-          applyThemeToDom(initial);
-        }
+        setTheme(DEFAULT_THEME);
+        applyThemeToDom(DEFAULT_THEME);
       }
 
       // Load object-specific styles
@@ -74,6 +71,14 @@ export function BackgroundPaletteWidget() {
       localStorage.setItem("brio_dashboard_bg", next.bg);
       return next;
     });
+  };
+
+  const handleApplyPreset = (preset: BrioThemeConfig) => {
+    setTheme(preset);
+    applyThemeToDom(preset);
+    localStorage.setItem("brio_custom_theme", JSON.stringify(preset));
+    localStorage.setItem("brio_dashboard_bg", preset.bg);
+    showToast(`⭐ ${preset.name || "Stil"} activat!`);
   };
 
   const handleUpdateObjectStyle = (targetId: string, updates: Partial<ElementCustomStyle>) => {
@@ -130,11 +135,7 @@ export function BackgroundPaletteWidget() {
   };
 
   const handleReset = () => {
-    setTheme(DEFAULT_THEME);
-    applyThemeToDom(DEFAULT_THEME);
-    localStorage.removeItem("brio_custom_theme");
-    localStorage.removeItem("brio_dashboard_bg");
-    showToast("Revenit la Brio Implicit");
+    handleApplyPreset(GLACIAL_SORA_THEME);
   };
 
   const handleCopyCss = async () => {
@@ -334,34 +335,14 @@ export function BackgroundPaletteWidget() {
             />
           )}
 
-          {/* Footer Controls: Randomize, Copy CSS, Reset */}
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={handleRandomize}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-black shadow-md hover:shadow-indigo-500/25 hover:opacity-95 transition active:scale-95 cursor-pointer"
-              title="Generează un stil complet aleator cu font nou"
-            >
-              <span>🎲</span>
-              <span>Random</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyCss}
-              className="py-2 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-bold hover:bg-slate-100 transition active:scale-95 cursor-pointer"
-              title="Copiază variabilele CSS în clipboard"
-            >
-              📋 CSS
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="py-2 px-2.5 rounded-xl border border-slate-200 text-slate-500 text-xs font-bold hover:text-slate-800 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
-              title="Revino la stilul implicit"
-            >
-              ↺ Reset
-            </button>
-          </div>
+          {/* Footer Controls: Quick Favorite, Randomize, Copy CSS, Reset */}
+          <ThemeStudioFooter
+            theme={theme}
+            onRandomize={handleRandomize}
+            onCopyCss={handleCopyCss}
+            onReset={handleReset}
+            onApplyPreset={handleApplyPreset}
+          />
         </div>
       )}
     </>

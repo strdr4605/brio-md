@@ -19,6 +19,7 @@ export const COLOR_PRESETS: ColorPreset[] = [
   { name: "Zinc Modern", hex: "#f4f4f5", category: "Luminos" },
   { name: "Perlă Caldă", hex: "#fafaf9", category: "Luminos" },
   { name: "Mentă Proaspătă", hex: "#f0fdf4", category: "Pastel" },
+  { name: "Albastru Glaciar", hex: "#d0e1fb", category: "Pastel" },
   { name: "Gheață Bleu", hex: "#f0f6fc", category: "Pastel" },
   { name: "Hârtie Caldă", hex: "#fcfaf6", category: "Pastel" },
   { name: "Nisip Fin", hex: "#f7f4ed", category: "Pastel" },
@@ -33,6 +34,7 @@ export const COLOR_PRESETS: ColorPreset[] = [
 
 export const ACCENT_PRESETS: AccentPreset[] = [
   { id: "blue", name: "Albastru Electric", hex: "#2563eb", twClass: "bg-blue-600" },
+  { id: "slate_blue", name: "Slate Blue Cald", hex: "#92a2c3", twClass: "bg-slate-400" },
   { id: "indigo", name: "Indigo / Violet", hex: "#6366f1", twClass: "bg-indigo-600" },
   { id: "emerald", name: "Smarald Verde", hex: "#059669", twClass: "bg-emerald-600" },
   { id: "rose", name: "Trandafiriu / Rose", hex: "#e11d48", twClass: "bg-rose-600" },
@@ -107,6 +109,21 @@ export const DENSITY_PRESETS: DensityPreset[] = [
 ];
 
 export const CURATED_THEMES: BrioThemeConfig[] = [
+  {
+    name: "Aura Glaciară (Sora)",
+    bg: "#d0e1fb",
+    accentColor: "#92a2c3",
+    shadowId: "glow_emerald",
+    surfaceId: "frosted",
+    radiusId: "xl",
+    patternId: "none",
+    fontId: "custom_font",
+    fontName: "Sora",
+    borderWidthId: "thin",
+    hoverId: "lift",
+    densityId: "normal",
+    headerGlass: true,
+  },
   {
     name: "Brio Default",
     bg: "#f8fafc",
@@ -263,4 +280,5 @@ export const CURATED_THEMES: BrioThemeConfig[] = [
   },
 ];
 
-export const DEFAULT_THEME: BrioThemeConfig = CURATED_THEMES[0];
+export const GLACIAL_SORA_THEME: BrioThemeConfig = CURATED_THEMES[0];
+export const DEFAULT_THEME: BrioThemeConfig = GLACIAL_SORA_THEME;
