@@ -31,8 +31,15 @@ Review the generated SQL in `packages/db/drizzle/` before committing.
 
 # UI & Design System Standards
 
-- **Single Source of Truth:** All UI work must adhere strictly to [`docs/DESIGN_SYSTEM.md`](file:///Users/Apple/Documents/Homework/Practice/project/brio-md/docs/DESIGN_SYSTEM.md).
-- **Shared Primitives First:** Never invent custom ad-hoc button, card, badge, or modal styles using raw Tailwind strings in feature pages. Always consume or extend shared components from `@brio-md/ui`.
+- **Single Source of Truth:** All UI work must adhere strictly to [`docs/DESIGN_SYSTEM.md`](file:///Users/Apple/Documents/Homework/Practice/project/brio-md/docs/DESIGN_SYSTEM.md) (**Precision Slate Minimal** standard).
+- **Shared Primitives First:** Never invent custom ad-hoc button, card, badge, or modal styles using raw Tailwind strings in feature pages. Always consume shared primitives from `@brio-md/ui`:
+  - `<Button variant="primary" | "secondary" | "warning" | "ghost">`
+  - `<Card>` (`<CardHeader>`, `<CardContent>`, `<CardFooter>`)
+  - `<StatusDot status="active" | "warning" | "error" | "neutral">`
+  - `<Tabs>`
+  - `<StatCard>`
+  - `<AlertBanner>`
 - **Low Cognitive Load:** Follow Progressive Disclosure. Do not dump historical tables and deep settings directly onto the main page; defer secondary details into tabs, slide-over drawers, or modal dialogs.
-- **Stitch Design Alignment:** When generating or refining screens in Stitch, always use the master prompt template specified in `docs/DESIGN_SYSTEM.md` to ensure identical tokens and layout consistency across the team.
+- **Stitch Design Alignment:** When generating screens in Stitch, use the `Precision Slate Minimal` tokens (Canvas `#F8FAFC`, Surface `#FFFFFF`, Border `#E2E8F0`, Primary Button `#0F172A`).
+- **Zero AI-Slop:** Strictly no emojis in buttons, no rainbow badge pills, no glowing orbs, no nested cards inside cards. Group by whitespace.
 
