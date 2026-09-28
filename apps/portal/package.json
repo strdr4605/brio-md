@@ -8,6 +8,7 @@
     "start": "next start",
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx src/scripts/seed.ts",
+    "cron:subscriptions": "npx tsx src/scripts/cronSubscriptions.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
