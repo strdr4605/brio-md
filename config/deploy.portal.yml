@@ -50,5 +50,11 @@ accessories:
     options:
       health-cmd: pg_isready -U brio
 
+  cron:
+    image: alpine:3.20
+    roles:
+      - web
+    cmd: /bin/sh -c "echo '0 0 1 * * wget -q -O- --post-data=\"\" https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true' > /etc/crontabs/root && crond -f -l 2"
+
 volumes:
   - /var/data/brio-md/postgres:/var/lib/postgresql/data
