@@ -71,6 +71,8 @@ services:
     command:
       - |
         echo "0 0 1 * * wget -q -O- --post-data='' http://portal:3000/api/cron/check-subscriptions?autoCreateMissing=true" > /etc/crontabs/root
+        sleep 10
+        wget -q -O- --post-data='' http://portal:3000/api/cron/check-subscriptions?autoCreateMissing=true || true
         crond -f -l 2
 
 volumes:
