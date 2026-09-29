@@ -108,21 +108,14 @@ export function RecordPaymentModal({
     e.preventDefault();
     setError(null);
 
-    if (!selectedInvoiceId) {
-      setError("Vă rugăm selectați o factură.");
+    if (!selectedInvoiceId || !selectedInvoice) {
+      setError("Vă rugăm selectați o factură validă.");
       return;
     }
-
-    if (!selectedInvoice) {
-      setError("Factura selectată nu a fost găsită.");
-      return;
-    }
-
     if (selectedInvoice.status === "draft") {
       setError("Nu se pot înregistra plăți pentru facturi în ciornă. Emiteți factura mai întâi.");
       return;
     }
-
     if (selectedInvoice.status === "cancelled") {
       setError("Factura selectată este anulată.");
       return;
@@ -133,7 +126,6 @@ export function RecordPaymentModal({
       setError("Suma plății trebuie să fie un număr pozitiv mai mare ca 0.");
       return;
     }
-
     if (parsedAmount > remainingBalance) {
       setError(`Suma plătită (${parsedAmount} MDL) depășește restanța rămasă (${remainingBalance} MDL).`);
       return;
@@ -151,21 +143,15 @@ export function RecordPaymentModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onClick={onClose} aria-hidden="true" />
 
-      {/* Modal Dialog */}
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/50">
+        <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-bold text-slate-900">Înregistrează Plată</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Elev: <span className="font-semibold text-slate-700">{studentName}</span>
+              Elev: <span className="font-semibold text-slate-800">{studentName}</span>
             </p>
           </div>
           <button
@@ -174,7 +160,7 @@ export function RecordPaymentModal({
             className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
             aria-label="Închide"
           >
-            <XIcon className="w-5 h-5" />
+            <XIcon className="w-4 h-4" />
           </button>
         </div>
 
@@ -183,7 +169,7 @@ export function RecordPaymentModal({
           <div className="p-6 space-y-4 max-h-[calc(85vh-130px)] overflow-y-auto">
             {error && (
               <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-start gap-2">
-                <AlertTriangleIcon className="w-4 h-4 shrink-0 mt-0.5" />
+                <AlertTriangleIcon className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                 <span className="font-medium">{error}</span>
               </div>
             )}
@@ -203,7 +189,7 @@ export function RecordPaymentModal({
                   <select
                     value={selectedInvoiceId || ""}
                     onChange={(e) => handleInvoiceChange(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 font-medium text-slate-800"
                     required
                   >
                     {invoices.map((inv) => {
@@ -223,30 +209,16 @@ export function RecordPaymentModal({
                 {selectedInvoice && (
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 grid grid-cols-3 gap-2 text-center text-xs">
                     <div>
-                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                        Total Factură
-                      </span>
-                      <span className="font-bold text-slate-800 text-sm">
-                        {selectedInvoice.totalAmount} MDL
-                      </span>
+                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total Factură</span>
+                      <span className="font-bold text-slate-800 text-sm">{selectedInvoice.totalAmount} MDL</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                        Deja Achitat
-                      </span>
-                      <span className="font-bold text-emerald-600 text-sm">
-                        {selectedInvoice.paidAmount || 0} MDL
-                      </span>
+                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Deja Achitat</span>
+                      <span className="font-bold text-emerald-600 text-sm">{selectedInvoice.paidAmount || 0} MDL</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                        Restanță Curentă
-                      </span>
-                      <span
-                        className={`font-bold text-sm ${
-                          remainingBalance > 0 ? "text-rose-600" : "text-slate-400"
-                        }`}
-                      >
+                      <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Restanță Curentă</span>
+                      <span className={`font-bold text-sm ${remainingBalance > 0 ? "text-rose-600" : "text-slate-400"}`}>
                         {remainingBalance} MDL
                       </span>
                     </div>
@@ -264,7 +236,7 @@ export function RecordPaymentModal({
                         <button
                           type="button"
                           onClick={() => setAmount(remainingBalance.toString())}
-                          className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                          className="text-[10px] font-bold text-slate-700 hover:text-slate-900 hover:underline"
                         >
                           Suma integrală
                         </button>
@@ -276,7 +248,7 @@ export function RecordPaymentModal({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0"
-                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-900"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 font-bold text-slate-900"
                       required
                     />
                   </div>
@@ -287,8 +259,8 @@ export function RecordPaymentModal({
                     </label>
                     <select
                       value={method}
-                      onChange={(e) => setMethod(e.target.value as "cash" | "bank_transfer" | "card" | "other")}
-                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                      onChange={(e) => setMethod(e.target.value as any)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 font-medium text-slate-800"
                     >
                       <option value="cash">Numerar (Cash)</option>
                       <option value="bank_transfer">Transfer bancar</option>
@@ -308,36 +280,32 @@ export function RecordPaymentModal({
                       type="date"
                       value={paymentDate}
                       onChange={(e) => setPaymentDate(e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Număr chitanță / Bon fiscal
-                    </label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Număr chitanță / Bon fiscal</label>
                     <input
                       type="text"
                       placeholder="ex: BON-9281, CHIT-001"
                       value={receiptNumber}
                       onChange={(e) => setReceiptNumber(e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800"
                     />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Notițe / Comentariu plată
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Notițe / Comentariu plată</label>
                   <textarea
                     rows={2}
                     placeholder="Detalii suplimentare referitoare la tranzacție..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 resize-none"
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800 resize-none"
                   />
                 </div>
               </>

@@ -25,7 +25,7 @@ const STATUS_OPTIONS: {
   { value: "present", label: "Prezent", activeColor: "bg-emerald-600 text-white shadow-xs" },
   { value: "absent", label: "Absent", activeColor: "bg-rose-600 text-white shadow-xs" },
   { value: "late", label: "Întârziat", activeColor: "bg-amber-500 text-white shadow-xs" },
-  { value: "excused", label: "Motivat", activeColor: "bg-blue-600 text-white shadow-xs" },
+  { value: "excused", label: "Motivat", activeColor: "bg-slate-700 text-white shadow-xs" },
 ];
 
 const PRESET_COMMENTS = ["Bolnav", "Familie", "Avertizat", "Motivat", "Fără motiv"];
@@ -148,7 +148,7 @@ export function EditAttendanceModal({
                   onClick={() => setComment(preset)}
                   className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition ${
                     comment === preset
-                      ? "bg-blue-50 text-blue-700 border-blue-300"
+                      ? "bg-slate-900 text-white border-transparent shadow-xs"
                       : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
@@ -161,7 +161,7 @@ export function EditAttendanceModal({
               onChange={(e) => setComment(e.target.value)}
               placeholder="Adaugă un comentariu sau motiv..."
               rows={3}
-              className="w-full text-xs text-slate-800 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none"
+              className="w-full text-xs text-slate-800 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition resize-none"
             />
           </div>
         </div>
@@ -180,7 +180,7 @@ export function EditAttendanceModal({
             type="button"
             onClick={handleSave}
             disabled={updateMutation.isPending}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/25 transition active:scale-95 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-xs transition active:scale-95 disabled:opacity-50"
           >
             {updateMutation.isPending ? "Se salvează..." : "Salvează Modificarea"}
           </button>

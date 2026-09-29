@@ -179,7 +179,7 @@ export function GroupFormModal({
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-100 transition"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
             aria-label="Închide"
           >
             <XIcon className="w-5 h-5" />
@@ -187,24 +187,24 @@ export function GroupFormModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-medium text-rose-700">
               {error}
             </div>
           )}
 
           {liveConflicts.map((c, i) => (
-            <div key={i} className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
-              <span className="text-amber-500 font-bold shrink-0">⚠️</span>
+            <div key={i} className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+              <span className="text-amber-600 font-bold shrink-0">⚠️</span>
               <span>{c.message}</span>
             </div>
           ))}
 
           {/* Group Name */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
-              Nume Grupă <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nume Grupă <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -212,13 +212,13 @@ export function GroupFormModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="ex: Grupa A - Începători, Grupa 101"
               required
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             />
           </div>
 
           {/* Days of Week Multi-select */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Zile de desfășurare
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -229,10 +229,10 @@ export function GroupFormModal({
                     key={day.key}
                     type="button"
                     onClick={() => toggleDay(day.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                       selected
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                        ? "bg-slate-900 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                     }`}
                   >
                     <span>{day.label}</span>
@@ -244,7 +244,7 @@ export function GroupFormModal({
 
           {/* Schedule Time Slot */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Interval Orar
             </label>
             <input
@@ -252,7 +252,7 @@ export function GroupFormModal({
               value={scheduleTime}
               onChange={(e) => setScheduleTime(e.target.value)}
               placeholder="ex: 17:30 - 18:30 sau 10:00 - 11:30"
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             />
             {/* Quick Time Presets */}
             <div className="flex flex-wrap gap-1 mt-1.5">
@@ -261,7 +261,7 @@ export function GroupFormModal({
                   key={preset}
                   type="button"
                   onClick={() => setScheduleTime(preset)}
-                  className="px-2 py-0.5 text-[11px] rounded bg-neutral-100 text-neutral-500 hover:bg-blue-50 hover:text-blue-600 transition"
+                  className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition"
                 >
                   {preset}
                 </button>
@@ -271,7 +271,7 @@ export function GroupFormModal({
 
           {/* Room / Building */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Sală / Clădire / Club
             </label>
             <input
@@ -279,19 +279,19 @@ export function GroupFormModal({
               value={room}
               onChange={(e) => setRoom(e.target.value)}
               placeholder="ex: Sala 204, Corpul B sau Clubul Principal"
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             />
           </div>
 
           {/* Assigned Teacher */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Profesor Asignat
             </label>
             <select
               value={teacherId}
               onChange={(e) => setTeacherId(e.target.value ? Number(e.target.value) : "")}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             >
               <option value="">-- Fără profesor alocat --</option>
               {teacherOptions.map((t) => (
@@ -310,28 +310,28 @@ export function GroupFormModal({
                 type="checkbox"
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-900/20"
               />
-              <label htmlFor="group-active-toggle" className="text-sm font-medium text-neutral-700 cursor-pointer">
+              <label htmlFor="group-active-toggle" className="text-sm font-medium text-slate-700 cursor-pointer">
                 Grupă activă (debifează pentru arhivare)
               </label>
             </div>
           )}
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-lg transition"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
             >
               Anulează
             </button>
             <button
               type="submit"
               disabled={isSubmitting || liveConflicts.length > 0}
-              className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-2 active:scale-95"
             >
               {isSubmitting && (
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
