@@ -118,7 +118,7 @@ export function EditPricingModal({
               <select
                 value={billingType}
                 onChange={(e) => setBillingType(e.target.value as any)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 font-medium text-slate-800"
               >
                 <option value="subscription_monthly">Abonament lunar</option>
                 <option value="per_lesson">Plată per lecție</option>
@@ -137,7 +137,7 @@ export function EditPricingModal({
                 placeholder="Lasă gol pentru preț implicit curs"
                 value={customPrice}
                 onChange={(e) => setCustomPrice(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800"
               />
             </div>
 
@@ -152,7 +152,7 @@ export function EditPricingModal({
                 placeholder="0"
                 value={discountPercent}
                 onChange={(e) => setDiscountPercent(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800"
               />
             </div>
           </div>
@@ -168,7 +168,7 @@ export function EditPricingModal({
             <button
               type="submit"
               disabled={updatePricingMutation.isPending}
-              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-4 h-4" />
               <span>{updatePricingMutation.isPending ? "Se salvează..." : "Salvează Tarif"}</span>
