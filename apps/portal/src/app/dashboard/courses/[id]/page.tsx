@@ -75,10 +75,14 @@ export default function CourseDetailPage({ params }: PageProps) {
 
   if (!isSuperOrAdmin) {
     return (
-      <div className="p-6">
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl text-sm font-medium">
-          Nu ai permisiuni suficiente pentru a gestiona acest curs.
+      <div className="max-w-2xl mx-auto mt-12 bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
+          <BookOpenIcon className="w-6 h-6" />
         </div>
+        <h2 className="text-base font-bold text-slate-900">Acces Restricționat</h2>
+        <p className="text-sm text-slate-500 mt-1">
+          Nu ai permisiuni suficiente pentru a gestiona acest curs.
+        </p>
       </div>
     );
   }
@@ -252,6 +256,7 @@ export default function CourseDetailPage({ params }: PageProps) {
           courseId={courseId}
           courseName={course.name}
           schoolId={course.schoolId}
+          initialGroupId={selectedRosterGroup.id}
         />
       )}
     </div>

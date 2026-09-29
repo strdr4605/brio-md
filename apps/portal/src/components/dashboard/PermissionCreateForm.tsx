@@ -20,6 +20,9 @@ export function PermissionCreateForm({
   const createMutation = trpc.permissionDefinition.create.useMutation({
     onSuccess: () => {
       utils.permissionDefinition.list.invalidate();
+      setNewKey("");
+      setNewLabel("");
+      setNewDesc("");
       onSuccess();
     },
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { XIcon, PlusIcon, UsersIcon, CalendarIcon } from "@/components/ui/icons";
@@ -14,16 +14,30 @@ type Props = {
   courseId: number;
   courseName: string;
   schoolId?: number | null;
+  initialGroupId?: number | null;
 };
 
 type StatusFilterTab = "active" | "inactive_or_archived" | "all";
 
-export function CourseGroupsDrawer({ isOpen, onClose, courseId, courseName, schoolId }: Props) {
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+export function CourseGroupsDrawer({
+  isOpen,
+  onClose,
+  courseId,
+  courseName,
+  schoolId,
+  initialGroupId,
+}: Props) {
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(initialGroupId ?? null);
   const [activeTab, setActiveTab] = useState<StatusFilterTab>("active");
   const [showAddStudentDrawer, setShowAddStudentDrawer] = useState(false);
   const [showCreateGroupForm, setShowCreateGroupForm] = useState(false);
   const [createGroupError, setCreateGroupError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialGroupId) {
+      setSelectedGroupId(initialGroupId);
+    }
+  }, [initialGroupId]);
 
   const utils = trpc.useUtils();
 
@@ -75,28 +89,19 @@ export function CourseGroupsDrawer({ isOpen, onClose, courseId, courseName, scho
     });
   };
 
-  const handleStatusChange = (
-    enrollmentId: number,
-    nextStatus: "active" | "inactive" | "archived",
-  ) => {
-    updateStatusMutation.mutate({
-      enrollmentId,
-      status: nextStatus,
-    });
+  const handleStatusChange = (enrollmentId: number, nextStatus: "active" | "inactive" | "archived") => {
+    updateStatusMutation.mutate({ enrollmentId, status: nextStatus });
   };
 
   if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
-
-      {/* Drawer Panel */}
       <div className="relative w-full max-w-2xl bg-white shadow-2xl flex flex-col h-full z-10 animate-slide-left border-l border-slate-200/80">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-white shrink-0">
@@ -283,11 +288,7 @@ export function CourseGroupsDrawer({ isOpen, onClose, courseId, courseName, scho
           ) : roster.length === 0 ? (
             <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
               <p className="text-sm font-bold text-slate-800">
-                {activeTab === "active"
-                  ? "Nu există studenți activi în această grupă"
-                  : activeTab === "inactive_or_archived"
-                    ? "Nu există studenți inactivi sau arhivați"
-                    : "Nu este înrolat niciun student"}
+                {activeTab === "active" ? "Nu există studenți activi în această grupă" : activeTab === "inactive_or_archived" ? "Nu există studenți inactivi sau arhivați" : "Nu este înrolat niciun student"}
               </p>
               <p className="text-xs text-slate-500 mt-1 mb-4">
                 Folosește butonul de înrolare pentru a adăuga studenți în grupă.
