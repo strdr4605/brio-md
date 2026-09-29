@@ -185,19 +185,16 @@ export function InvoicesTable({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
       <div className="overflow-x-auto scrollbar-thin">
-        <table className="w-full min-w-[1140px] text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-              <th className="py-3 px-3.5 whitespace-nowrap min-w-[125px]">Factură</th>
-              <th className="py-3 px-3.5 min-w-[150px]">Student</th>
-              <th className="py-3 px-3.5 min-w-[140px]">Grupă</th>
-              <th className="py-3 px-3 whitespace-nowrap min-w-[95px]">Tip</th>
-              <th className="py-3 px-3.5 whitespace-nowrap min-w-[115px]">Scadență</th>
-              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[95px]">Total</th>
-              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[90px]">Achitat</th>
-              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[105px]">Rest de plată</th>
-              <th className="py-3 px-3.5 text-center whitespace-nowrap min-w-[120px]">Status</th>
-              <th className="py-3 px-4 text-right whitespace-nowrap min-w-[155px]">Acțiuni</th>
+              <th className="py-3 px-4">Factură</th>
+              <th className="py-3 px-4">Student</th>
+              <th className="py-3 px-4">Grupă & Tip</th>
+              <th className="py-3 px-4">Scadență</th>
+              <th className="py-3 px-4 text-right">Sumă & Sold</th>
+              <th className="py-3 px-4 text-center">Status</th>
+              <th className="py-3 px-4 text-right">Acțiuni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -206,8 +203,12 @@ export function InvoicesTable({
               const paid = inv.paidAmount ?? 0;
               const balance = Math.max(0, total - paid);
               const overdue = isOverdue(inv);
-              const canPay = inv.status !== "paid" && inv.status !== "cancelled" && balance > 0;
-              const canCancel = inv.status !== "paid" && inv.status !== "cancelled";
+              const canPay =
+                inv.status !== "paid" &&
+                inv.status !== "cancelled" &&
+                balance > 0;
+              const canCancel =
+                inv.status !== "paid" && inv.status !== "cancelled";
 
               return (
                 <tr
@@ -217,7 +218,7 @@ export function InvoicesTable({
                   }`}
                 >
                   {/* Factură */}
-                  <td className="py-3 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
                     <div>{inv.invoiceNumber || `#INV-${inv.id}`}</div>
                     <div className="text-[10px] text-slate-400 font-normal mt-0.5">
                       {formatDate(inv.createdAt)}
@@ -228,7 +229,7 @@ export function InvoicesTable({
                   <td className="py-3.5 px-4">
                     <Link
                       href={`/dashboard/students/${inv.studentId}`}
-                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors block"
+                      className="font-bold text-slate-900 hover:text-slate-600 transition-colors block"
                     >
                       {inv.studentName}
                     </Link>
@@ -239,21 +240,23 @@ export function InvoicesTable({
                     )}
                   </td>
 
-                  {/* Grupă */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    {inv.groupName ? (
-                      <span className="font-semibold text-slate-700">{inv.groupName}</span>
-                    ) : (
-                      <span className="text-slate-400 italic">General</span>
-                    )}
+                  {/* Grupă & Tip */}
+                  <td className="py-3.5 px-4">
+                    <div className="font-semibold text-slate-700 truncate max-w-[200px]">
+                      {inv.groupName || (
+                        <span className="text-slate-400 italic">General</span>
+                      )}
+                    </div>
+                    <div className="mt-1">{getTypeBadge(inv.type)}</div>
                   </td>
-
-                  {/* Tip */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">{getTypeBadge(inv.type)}</td>
 
                   {/* Scadență */}
                   <td className="py-3.5 px-4 whitespace-nowrap font-medium">
-                    <span className={overdue ? "text-rose-600 font-bold" : "text-slate-600"}>
+                    <span
+                      className={
+                        overdue ? "text-rose-600 font-bold" : "text-slate-600"
+                      }
+                    >
                       {formatDate(inv.dueDate)}
                     </span>
                     {overdue && (
@@ -263,24 +266,29 @@ export function InvoicesTable({
                     )}
                   </td>
 
-                  {/* Total */}
-                  <td className="py-3.5 px-4 text-right font-black text-slate-900 whitespace-nowrap">
-                    {formatMdl(total)}{" "}
-                    <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                  </td>
-
-                  {/* Achitat */}
-                  <td className="py-3.5 px-4 text-right font-bold text-emerald-600 whitespace-nowrap">
-                    {formatMdl(paid)}{" "}
-                    <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                  </td>
-
-                  {/* Rest de plată */}
-                  <td className="py-3.5 px-4 text-right font-black whitespace-nowrap">
-                    <span className={balance > 0 ? "text-amber-700 font-bold" : "text-slate-400"}>
-                      {formatMdl(balance)}{" "}
-                      <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                    </span>
+                  {/* Sumă & Sold */}
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <div className="font-black text-slate-900 text-sm">
+                      {formatMdl(total)}{" "}
+                      <span className="text-[10px] font-normal text-slate-400">
+                        MDL
+                      </span>
+                    </div>
+                    <div className="text-[11px] mt-0.5">
+                      {balance === 0 ? (
+                        <span className="text-emerald-700 font-semibold">
+                          Achitat integral
+                        </span>
+                      ) : paid > 0 ? (
+                        <span className="text-amber-800 font-semibold">
+                          Rest: {formatMdl(balance)} MDL
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">
+                          Rest: {formatMdl(balance)} MDL
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Status */}
@@ -289,7 +297,7 @@ export function InvoicesTable({
                   </td>
 
                   {/* Acțiuni */}
-                  <td className="py-3.5 px-4 text-right whitespace-nowrap min-w-[155px]">
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       {canPay && onRecordPayment && (
                         <button
