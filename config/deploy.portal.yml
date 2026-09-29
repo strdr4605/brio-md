@@ -18,6 +18,7 @@ env:
     - TASMOTA_IP
     - TASMOTA_USER
     - TASMOTA_PASSWORD
+    - CRON_SECRET
   clear:
     NODE_ENV: production
     AUTH_TRUST_HOST: "true"
@@ -54,7 +55,10 @@ accessories:
     image: alpine:3.20
     roles:
       - web
-    cmd: /bin/sh -c "echo '0 0 1 * * wget -q -O- --post-data=\"\" https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true' > /etc/crontabs/root && sleep 10 && (wget -q -O- --post-data=\"\" https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true || true) && crond -f -l 2"
+    env:
+      secret:
+        - CRON_SECRET
+    cmd: /bin/sh -c "echo '0 0 1 * * wget -q -O- --header=\"Authorization: Bearer '$CRON_SECRET'\" --post-data=\"\" https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true' > /etc/crontabs/root && sleep 10 && (wget -q -O- --header=\"Authorization: Bearer '$CRON_SECRET'\" --post-data=\"\" https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true || true) && crond -f -l 2"
 
 volumes:
   - /var/data/brio-md/postgres:/var/lib/postgresql/data

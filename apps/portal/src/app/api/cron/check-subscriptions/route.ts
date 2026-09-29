@@ -8,7 +8,10 @@ import { runMonthlySubscriptionCheck } from "@/server/subscriptionCronService";
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    // В локальной разработке или если токен не настроен — разрешаем запуск
+    if (process.env.NODE_ENV === "production") {
+      return false; // Fail closed in production: never allow unauthenticated cron in production
+    }
+    // В локальной разработке или тестовом окружении без секрета — разрешаем запуск
     return true;
   }
 

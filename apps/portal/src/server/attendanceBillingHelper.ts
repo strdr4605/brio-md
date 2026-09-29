@@ -46,7 +46,9 @@ export async function attachBillingInfoToStudents<T extends StudentBillingInput>
   const studentIds = Array.from(new Set(studentsList.map((s) => s.studentId)));
   const todayStr = new Date().toISOString().slice(0, 10);
   const monthStart = `${monthStr}-01`;
-  const monthEnd = `${monthStr}-31`;
+  const [y, m] = monthStr.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const monthEnd = `${monthStr}-${String(lastDay).padStart(2, "0")}`;
 
   // 1. Fetch non-cancelled invoices for all students in one batch query
   const invoiceConditions = [

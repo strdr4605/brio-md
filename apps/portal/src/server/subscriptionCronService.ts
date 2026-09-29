@@ -27,7 +27,7 @@ export type SubscriptionCheckOptions = {
 export type StudentSubscriptionDetail = {
   studentId: number;
   studentName: string;
-  schoolId: number;
+  schoolId: number | null;
   groupId: number;
   groupName: string;
   courseId: number | null;
@@ -294,7 +294,13 @@ export async function runMonthlySubscriptionCheck(
   if (autoCreateMissing && missingInvoiceCount > 0) {
     const schoolsToProcess = targetSchoolId
       ? [targetSchoolId]
-      : Array.from(new Set(studentsDetails.filter((s) => s.invoiceStatus === "no_invoice").map((s) => s.schoolId)));
+      : Array.from(
+          new Set(
+            studentsDetails
+              .filter((s) => s.invoiceStatus === "no_invoice" && s.schoolId !== null)
+              .map((s) => s.schoolId as number)
+          )
+        );
 
     for (const sid of schoolsToProcess) {
       try {
