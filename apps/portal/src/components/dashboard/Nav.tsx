@@ -124,7 +124,7 @@ export function Nav({
         {collapsed ? (
           <button
             onClick={onToggleCollapse}
-            className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-base flex items-center justify-center hover:opacity-90 transition group shadow-md"
+            className="w-11 h-11 rounded-xl bg-slate-800 text-white font-extrabold text-base flex items-center justify-center hover:bg-slate-700 transition group shadow-xs"
             title="Extinde meniul"
             aria-label="Extinde meniul"
           >
@@ -137,7 +137,7 @@ export function Nav({
               className="flex items-center gap-3 group min-w-0"
               title="Acasă Dashboard"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-800 text-white font-extrabold text-lg flex items-center justify-center shadow-xs group-hover:scale-105 transition shrink-0">
                 B
               </div>
               <div className="flex flex-col">

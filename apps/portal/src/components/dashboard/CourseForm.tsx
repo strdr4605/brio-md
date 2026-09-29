@@ -514,7 +514,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
             type="submit"
             form="course-form"
             disabled={isSaving || isLoadingCourse}
-            className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 rounded-xl transition disabled:opacity-50"
+            className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-xs rounded-xl transition disabled:opacity-50"
           >
             {isSaving ? "Se salvează..." : isEditing ? "Actualizează Curs" : "Creează Curs"}
           </button>

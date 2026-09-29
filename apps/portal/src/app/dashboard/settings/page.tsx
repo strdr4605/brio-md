@@ -57,14 +57,14 @@ export default function SetariPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-md shadow-blue-500/25">
+              <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white font-black text-xl flex items-center justify-center shadow-xs">
                 {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U"}
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900">{session?.user?.name || "Utilizator"}</h2>
                 <p className="text-xs text-slate-500">{session?.user?.email || "Fără adresă de email"}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200/80">
                     {role || "Staff"}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600">
