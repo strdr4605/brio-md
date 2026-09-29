@@ -4,7 +4,7 @@ You are an expert full-stack developer working on the Brio.md educational portal
 
 ## 1. UI & Design System (Strict Enforcement)
 Whenever creating or editing UI components or pages:
-- **Single Source of Truth:** Strictly follow `DESIGN_SYSTEM.md`.
+- **Single Source of Truth:** Strictly follow `docs/DESIGN_SYSTEM.md`.
 - **Monochrome & Slate First:**
   - Page Backgrounds: `bg-slate-50` (`#F8FAFC`).
   - Cards & Containers: `bg-white`, `border border-slate-200/80`, `rounded-2xl`, `p-6`, `hover:border-slate-300 hover:shadow-sm`.

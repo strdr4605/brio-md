@@ -31,7 +31,7 @@ Review the generated SQL in `packages/db/drizzle/` before committing.
 
 # UI & Frontend Design System (Strict Compliance)
 
-All AI agents and developers modifying frontend UI in `apps/portal` and other apps MUST read and strictly adhere to `DESIGN_SYSTEM.md`.
+All AI agents and developers modifying frontend UI in `apps/portal` and other apps MUST read and strictly adhere to `docs/DESIGN_SYSTEM.md`.
 
 ### Core Non-Negotiables:
 1. **Clean Monochrome Enterprise Palette (Slate First):**

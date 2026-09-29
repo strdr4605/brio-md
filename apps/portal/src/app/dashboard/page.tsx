@@ -181,10 +181,10 @@ export default function DashboardPage() {
             footer={<span>Orar sincronizat pe săli</span>}
           />
           <MetricCard
-            title="Prezență & Frecvență"
+            title="Rată Înrolare Cursuri"
             value={loadingStudents ? "..." : `${Math.round(((studentsWithCourses) / (students.length || 1)) * 100)}%`}
             icon={<SchoolIcon className="w-6 h-6" />}
-            href="/dashboard/attendance"
+            href="/dashboard/students"
             footer={<span>Grad înrolare elevi</span>}
           />
         </div>
