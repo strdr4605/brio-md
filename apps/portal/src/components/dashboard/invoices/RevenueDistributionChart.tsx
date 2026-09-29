@@ -56,7 +56,7 @@ export function RevenueDistributionChart({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
               <div className="flex items-center gap-2">
-                <BarChartIcon className="w-5 h-5 text-blue-600" />
+                <BarChartIcon className="w-5 h-5 text-slate-700" />
                 <h3 className="text-base font-bold text-slate-900">
                   Evoluție Lunară: Facturat vs Încasat
                 </h3>
@@ -69,11 +69,11 @@ export function RevenueDistributionChart({
             {/* Legend */}
             <div className="flex items-center gap-4 text-xs font-semibold">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-md bg-blue-600 inline-block" />
+                <span className="w-3 h-3 rounded-md bg-slate-400 inline-block" />
                 <span className="text-slate-600">Facturat</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-md bg-emerald-500 inline-block" />
+                <span className="w-3 h-3 rounded-md bg-emerald-600 inline-block" />
                 <span className="text-slate-600">Încasat</span>
               </div>
             </div>
@@ -106,7 +106,7 @@ export function RevenueDistributionChart({
                       <div
                         className={`w-1/2 max-w-[20px] rounded-t-md transition-all duration-300 ${
                           t.billed > 0
-                            ? "bg-gradient-to-t from-blue-700 to-blue-500 hover:brightness-110"
+                            ? "bg-slate-400 hover:bg-slate-500"
                             : "bg-slate-200/60 h-1 rounded-full"
                         }`}
                         style={{ height: t.billed > 0 ? `${billedHeight}%` : undefined }}
@@ -116,7 +116,7 @@ export function RevenueDistributionChart({
                       <div
                         className={`w-1/2 max-w-[20px] rounded-t-md transition-all duration-300 ${
                           t.collected > 0
-                            ? "bg-gradient-to-t from-emerald-600 to-emerald-400 hover:brightness-110"
+                            ? "bg-emerald-600 hover:bg-emerald-500"
                             : "bg-slate-200/60 h-1 rounded-full"
                         }`}
                         style={{ height: t.collected > 0 ? `${collectedHeight}%` : undefined }}
@@ -218,7 +218,7 @@ export function RevenueDistributionChart({
               onClick={() => setActiveTab("courses")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "courses"
-                  ? "bg-white text-blue-600 shadow-xs"
+                  ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -230,7 +230,7 @@ export function RevenueDistributionChart({
               onClick={() => setActiveTab("groups")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "groups"
-                  ? "bg-white text-blue-600 shadow-xs"
+                  ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
