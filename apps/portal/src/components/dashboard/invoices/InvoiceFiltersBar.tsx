@@ -39,7 +39,7 @@ export function InvoiceFiltersBar({
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-4">
+    <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs space-y-3.5 sm:space-y-4">
       {/* Top: Status Tabs + Quick Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Status Tabs Pills */}
@@ -51,7 +51,7 @@ export function InvoiceFiltersBar({
                 key={t.id}
                 type="button"
                 onClick={() => setStatusTab(t.id)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   active
                     ? "bg-white text-slate-900 shadow-xs scale-[1.01]"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -86,8 +86,8 @@ export function InvoiceFiltersBar({
       </div>
 
       {/* Bottom: Secondary Filters (Type, Group, Reset) */}
-      <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100">
-        <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold mr-1">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold mr-1 w-full sm:w-auto">
           <FilterIcon className="w-3.5 h-3.5" />
           <span>Filtrează:</span>
         </div>
@@ -96,9 +96,9 @@ export function InvoiceFiltersBar({
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto"
         >
-          <option value="all">Toate tipurile de factură</option>
+          <option value="all">Toate tipurile</option>
           <option value="subscription">Abonament lunar</option>
           <option value="per_lesson">Plată per lecție</option>
           <option value="situational">Situativ / Ad-hoc</option>
@@ -108,7 +108,7 @@ export function InvoiceFiltersBar({
         <select
           value={groupIdFilter}
           onChange={(e) => setGroupIdFilter(e.target.value)}
-          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[200px] truncate"
+          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto sm:max-w-[200px] truncate"
         >
           <option value="all">Toate grupele</option>
           {groups.map((g) => (
@@ -123,7 +123,7 @@ export function InvoiceFiltersBar({
           <button
             type="button"
             onClick={onResetFilters}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors ml-auto"
+            className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors w-full sm:w-auto sm:ml-auto"
           >
             <XIcon className="w-3.5 h-3.5" />
             <span>Resetează filtrele</span>

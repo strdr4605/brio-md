@@ -57,10 +57,11 @@ export function Nav({
     label: string,
     IconComponent: React.ComponentType<{ className?: string }>,
     badgeCount?: number,
+    collapsed: boolean = false,
   ) => {
     const active = isRouteActive(href);
 
-    if (isCollapsed) {
+    if (collapsed) {
       return (
         <Link
           href={href}
@@ -112,30 +113,31 @@ export function Nav({
     );
   };
 
-  const navContent = (
+  const renderNavContent = (collapsed: boolean) => (
     <div className="flex flex-col h-full select-none w-full overflow-hidden">
       {/* Brand Header */}
       <div
         className={`h-16 flex items-center border-b border-white/[0.08] shrink-0 ${
-          isCollapsed ? "justify-center px-2" : "justify-between px-4"
+          collapsed ? "justify-center px-2" : "justify-between px-4"
         }`}
       >
-        {isCollapsed ? (
+        {collapsed ? (
           <button
             onClick={onToggleCollapse}
-            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition relative group"
-            title="Extinde meniul lateral"
-            aria-label="Extinde meniul lateral"
+            className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-base flex items-center justify-center hover:opacity-90 transition group shadow-md"
+            title="Extinde meniul"
+            aria-label="Extinde meniul"
           >
-            B
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0c0e14] border border-white/30 flex items-center justify-center text-slate-300 group-hover:text-white transition">
-              <ChevronRightIcon className="w-2.5 h-2.5" />
-            </span>
+            <ChevronRightIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         ) : (
           <>
-            <Link href="/dashboard" className="flex items-center gap-3 group overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 transition">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 group min-w-0"
+              title="Acasă Dashboard"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition shrink-0">
                 B
               </div>
               <div className="flex flex-col">
@@ -170,21 +172,21 @@ export function Nav({
       </div>
 
       {/* Navigation List */}
-      <nav className={`flex-1 py-4 space-y-3.5 overflow-y-auto overflow-x-hidden scrollbar-thin ${isCollapsed ? "px-2" : "px-3"}`}>
+      <nav className={`flex-1 py-4 space-y-3.5 overflow-y-auto overflow-x-hidden scrollbar-thin ${collapsed ? "px-2" : "px-3"}`}>
         {/* Principal / Overview */}
         <div className="space-y-1">
-          {!isCollapsed && (
+          {!collapsed && (
             <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
               Prezentare
             </div>
           )}
-          {renderNavLink("/dashboard", "Panou Principal", DashboardIcon)}
+          {renderNavLink("/dashboard", "Panou Principal", DashboardIcon, undefined, collapsed)}
         </div>
 
         {/* Group: Gestiune Academică */}
         {(isSuperOrAdmin || canManageStudents) && (
           <div className="space-y-1">
-            {isCollapsed ? (
+            {collapsed ? (
               <div className="border-t border-white/[0.08] my-2 mx-1" />
             ) : (
               <button
@@ -201,15 +203,15 @@ export function Nav({
               </button>
             )}
 
-            {(academicOpen || isCollapsed) && (
+            {(academicOpen || collapsed) && (
               <div className="space-y-1">
-                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon)}
-                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon)}
-                {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon)}
-                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon)}
+                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon, undefined, collapsed)}
+                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon, undefined, collapsed)}
+                {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon, undefined, collapsed)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon, undefined, collapsed)}
+                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount, collapsed)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon, undefined, collapsed)}
+                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon, undefined, collapsed)}
               </div>
             )}
           </div>
@@ -218,7 +220,7 @@ export function Nav({
         {/* Group: Securitate & Control */}
         {(canAccessDoor || isSuperAdmin) && (
           <div className="space-y-1">
-            {isCollapsed ? (
+            {collapsed ? (
               <div className="border-t border-white/[0.08] my-2 mx-1" />
             ) : (
               <button
@@ -235,10 +237,10 @@ export function Nav({
               </button>
             )}
 
-            {(securityOpen || isCollapsed) && (
+            {(securityOpen || collapsed) && (
               <div className="space-y-1">
-                {canAccessDoor && renderNavLink("/dashboard/roller-door", "Roletă Intrare", DoorIcon)}
-                {isSuperAdmin && renderNavLink("/dashboard/permissions", "Permisiuni", KeyIcon)}
+                {canAccessDoor && renderNavLink("/dashboard/roller-door", "Roletă Intrare", DoorIcon, undefined, collapsed)}
+                {isSuperAdmin && renderNavLink("/dashboard/permissions", "Permisiuni", KeyIcon, undefined, collapsed)}
               </div>
             )}
           </div>
@@ -246,20 +248,20 @@ export function Nav({
 
         {/* Group: Sistem */}
         <div className="space-y-1">
-          {isCollapsed ? (
+          {collapsed ? (
             <div className="border-t border-white/[0.08] my-2 mx-1" />
           ) : (
             <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
               Sistem
             </div>
           )}
-          {renderNavLink("/dashboard/settings", "Setări", SettingsIcon)}
+          {renderNavLink("/dashboard/settings", "Setări", SettingsIcon, undefined, collapsed)}
         </div>
       </nav>
 
       {/* User Profile & Sign Out Footer */}
-      <div className={`border-t border-white/[0.08] bg-black/30 shrink-0 ${isCollapsed ? "p-2.5" : "p-3.5"}`}>
-        {isCollapsed ? (
+      <div className={`border-t border-white/[0.08] bg-black/30 shrink-0 ${collapsed ? "p-2.5" : "p-3.5"}`}>
+        {collapsed ? (
           <div className="flex flex-col items-center gap-2">
             <Link
               href="/dashboard/settings"
@@ -319,7 +321,7 @@ export function Nav({
           isCollapsed ? "w-[72px]" : "w-[270px]"
         }`}
       >
-        {navContent}
+        {renderNavContent(isCollapsed)}
       </aside>
 
       {/* Mobile Drawer Backdrop & Menu */}
@@ -330,7 +332,7 @@ export function Nav({
             onClick={onCloseMobile}
           />
           <div className="relative w-[280px] max-w-[85vw] bg-[#0c0e14] h-full shadow-2xl z-10 border-r border-white/[0.1] overflow-hidden">
-            {navContent}
+            {renderNavContent(false)}
           </div>
         </div>
       )}

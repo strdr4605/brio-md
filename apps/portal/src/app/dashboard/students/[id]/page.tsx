@@ -362,20 +362,20 @@ export default function StudentProfilePage() {
   return (
     <div className="space-y-6 animate-fade-in-up max-w-7xl mx-auto pb-12">
       {/* Navigation Breadcrumb */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           href="/dashboard/students"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-blue-600 transition"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-blue-600 transition truncate"
         >
-          <ChevronLeftIcon className="w-4 h-4" />
-          <span>Înapoi la Catalog Studenți</span>
+          <ChevronLeftIcon className="w-4 h-4 shrink-0" />
+          <span className="truncate">Înapoi la Catalog Studenți</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setShowEnrollDrawer(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm transition hover:border-slate-300"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm transition hover:border-slate-300"
           >
             <PlusIcon className="w-3.5 h-3.5 text-blue-600" />
             <span>Înrolare în Grupă</span>
@@ -383,7 +383,7 @@ export default function StudentProfilePage() {
           <button
             type="button"
             onClick={() => setShowEditDrawer(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm shadow-blue-500/20 transition hover:scale-[1.01]"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm shadow-blue-500/20 transition hover:scale-[1.01]"
           >
             <span>Editează Profil</span>
           </button>
@@ -392,7 +392,7 @@ export default function StudentProfilePage() {
 
       {/* 1. Header & Contact Information Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-slate-50 via-white to-blue-50/20 border-b border-slate-100">
+        <div className="p-4 sm:p-8 bg-gradient-to-r from-slate-50 via-white to-blue-50/20 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-start sm:items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
@@ -513,11 +513,11 @@ export default function StudentProfilePage() {
       </div>
 
       {/* Primary Navigation Tabs */}
-      <div className="flex items-center gap-4 border-b border-slate-200/80">
+      <div className="flex items-center gap-3 sm:gap-4 border-b border-slate-200/80 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => setActiveTab("academic")}
-          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 shrink-0 ${
             activeTab === "academic"
               ? "border-blue-600 text-blue-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
@@ -533,7 +533,7 @@ export default function StudentProfilePage() {
         <button
           type="button"
           onClick={() => setActiveTab("billing")}
-          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 shrink-0 ${
             activeTab === "billing"
               ? "border-blue-600 text-blue-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
@@ -562,7 +562,7 @@ export default function StudentProfilePage() {
       {activeTab === "academic" ? (
         <>
           {/* 2. Attendance Summary Widget */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -597,8 +597,8 @@ export default function StudentProfilePage() {
         </div>
 
         {/* 4 Attendance KPI Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
               Total Sesiuni
             </span>
@@ -606,11 +606,11 @@ export default function StudentProfilePage() {
             <p className="text-[11px] text-slate-500">Lecții înregistrate în sistem</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200/70 space-y-1">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50/60 border border-emerald-200/70 space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">
               Prezențe Totale
             </span>
-            <div className="flex items-baseline gap-2">
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
               <p className="text-2xl font-black text-emerald-700">
                 {attendanceSummary.attendedCount}
               </p>
@@ -621,7 +621,7 @@ export default function StudentProfilePage() {
             <p className="text-[11px] text-emerald-600">Participare activă la clasă</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-rose-50/60 border border-rose-200/70 space-y-1">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50/60 border border-rose-200/70 space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700 block">
               Absențe Nemotivate
             </span>
@@ -629,7 +629,7 @@ export default function StudentProfilePage() {
             <p className="text-[11px] text-rose-600">Sesiuni ratate fără învoire</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-1">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 block">
               Învoiri / Motivate
             </span>
@@ -766,12 +766,12 @@ export default function StudentProfilePage() {
       {/* 3. Enrolled Courses & Groups (Active vs History) */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         {/* Navigation Tabs */}
-        <div className="px-6 pt-6 border-b border-slate-200/80 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-4 overflow-x-auto scrollbar-none pb-1 sm:pb-0">
             <button
               type="button"
               onClick={() => setCourseTab("active")}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 shrink-0 ${
                 courseTab === "active"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-slate-500 hover:text-slate-900"
@@ -786,7 +786,7 @@ export default function StudentProfilePage() {
             <button
               type="button"
               onClick={() => setCourseTab("history")}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 shrink-0 ${
                 courseTab === "history"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-slate-500 hover:text-slate-900"
@@ -802,14 +802,14 @@ export default function StudentProfilePage() {
           <button
             type="button"
             onClick={() => setShowEnrollDrawer(true)}
-            className="pb-3 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+            className="pb-3 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline shrink-0"
           >
             <span>+ Înrolare nouă</span>
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {isLoadingEnrollments ? (
             <div className="py-12 text-center text-xs text-slate-400">
               Se încarcă lista de grupe...

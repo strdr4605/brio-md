@@ -121,16 +121,16 @@ export function GlobalSearch() {
       {/* Search Modal Overlay - portaled to body to avoid header stacking context */}
       {isOpen &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-3 sm:pt-20 p-2.5 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
             <div
               className="fixed inset-0"
               onClick={() => setIsOpen(false)}
               aria-hidden="true"
             />
 
-            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 flex flex-col max-h-[80vh]">
+            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 flex flex-col max-h-[88vh]">
               {/* Input Header */}
-              <div className="relative flex items-center px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+              <div className="relative flex items-center px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-slate-100 bg-slate-50/50">
                 <SearchIcon className="w-5 h-5 text-blue-600 shrink-0" />
                 <input
                   ref={inputRef}
@@ -138,7 +138,7 @@ export function GlobalSearch() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Caută după nume elev, telefon, nume părinte sau nr. telefon..."
+                  placeholder="Caută elev, părinte, număr telefon..."
                   className="w-full bg-transparent px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none font-medium"
                 />
                 {query ? (

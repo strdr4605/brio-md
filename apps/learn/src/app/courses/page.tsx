@@ -35,7 +35,7 @@ export default async function CoursesPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Learning Portal</h1>
           <div className="flex items-center gap-4">
-            <span>{session.user.name}</span>
+            <span className="truncate max-w-[120px] sm:max-w-none">{session.user.name}</span>
             <form action={handleSignOut}>
               <button type="submit" className="text-sm underline cursor-pointer">
                 Sign Out

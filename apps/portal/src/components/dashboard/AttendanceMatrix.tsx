@@ -79,52 +79,52 @@ export function AttendanceMatrix({
   return (
     <div className="space-y-4">
       {/* Legend & Instructions */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-xs">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-xs">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
             Legendă:
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center justify-center text-[11px]">
               P
             </span>
-            <span className="text-slate-600 font-medium">Prezent</span>
+            <span className="text-slate-600 font-medium text-[11px]">Prezent</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded-md bg-rose-100 text-rose-800 border border-rose-300 font-bold flex items-center justify-center text-[11px]">
               A
             </span>
-            <span className="text-slate-600 font-medium">Absent</span>
+            <span className="text-slate-600 font-medium text-[11px]">Absent</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-800 border border-amber-300 font-bold flex items-center justify-center text-[11px]">
               Î
             </span>
-            <span className="text-slate-600 font-medium">Întârziat</span>
+            <span className="text-slate-600 font-medium text-[11px]">Întârziat</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-800 border border-blue-300 font-bold flex items-center justify-center text-[11px]">
               M
             </span>
-            <span className="text-slate-600 font-medium">Motivat</span>
+            <span className="text-slate-600 font-medium text-[11px]">Motivat</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="relative w-5 h-5 rounded-md bg-slate-100 text-slate-500 border border-slate-300 font-bold flex items-center justify-center text-[10px]">
               •
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500" />
             </span>
-            <span className="text-slate-600 font-medium">Are Comentariu</span>
+            <span className="text-slate-600 font-medium text-[11px]">Comentariu</span>
           </div>
         </div>
 
-        <div className="text-[11px] font-medium min-h-[22px] flex items-center">
+        <div className="text-[10px] sm:text-[11px] font-medium min-h-[20px] flex items-center">
           {hoveredComment ? (
-            <span className="text-blue-700 font-bold animate-fade-in">
+            <span className="text-blue-700 font-bold animate-fade-in truncate max-w-full">
               💬 {hoveredComment.studentName} ({hoveredComment.date}):{" "}
               <span className="italic font-medium text-slate-700">"{hoveredComment.comment}"</span>
             </span>
           ) : (
-            <span className="text-slate-500">💡 Click pe orice celulă pentru a edita statutul sau motivul retroactiv.</span>
+            <span className="text-slate-400">💡 Click pe o celulă pentru editare retroactivă.</span>
           )}
         </div>
       </div>
@@ -141,11 +141,11 @@ export function AttendanceMatrix({
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200/80">
                   {/* Sticky Column: Student Info */}
-                  <th className="sticky left-0 z-20 bg-slate-50 py-3 px-4 min-w-[220px] font-bold text-slate-700 border-r border-slate-200/80 shadow-xs">
+                  <th className="sticky left-0 z-20 bg-slate-50 py-2.5 sm:py-3 px-2.5 sm:px-4 min-w-[130px] sm:min-w-[220px] font-bold text-slate-700 border-r border-slate-200/80 shadow-xs">
                     Elev ({students.length})
                   </th>
                   {/* Attendance Rate */}
-                  <th className="py-3 px-3 min-w-[90px] font-bold text-slate-700 text-center border-r border-slate-200/80">
+                  <th className="py-2.5 sm:py-3 px-1.5 sm:px-3 min-w-[58px] sm:min-w-[90px] font-bold text-slate-700 text-center border-r border-slate-200/80">
                     Rată
                   </th>
                   {/* Dates Columns */}
@@ -154,13 +154,13 @@ export function AttendanceMatrix({
                     return (
                       <th
                         key={dateStr}
-                        className="py-2.5 px-2 min-w-[64px] max-w-[72px] text-center border-r border-slate-100 last:border-r-0"
+                        className="py-2 px-1.5 sm:px-2 min-w-[56px] sm:min-w-[64px] max-w-[68px] sm:max-w-[72px] text-center border-r border-slate-100 last:border-r-0"
                         title={dateStr}
                       >
-                        <div className="text-[10px] uppercase font-bold text-slate-400">
+                        <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">
                           {dayOfWeek}
                         </div>
-                        <div className="text-xs font-bold text-slate-800 whitespace-nowrap">
+                        <div className="text-[11px] sm:text-xs font-bold text-slate-800 whitespace-nowrap">
                           {dayMonth}
                         </div>
                       </th>
@@ -177,27 +177,27 @@ export function AttendanceMatrix({
                     }`}
                   >
                     {/* Sticky Student Column */}
-                    <td className="sticky left-0 z-10 bg-white py-2.5 px-4 border-r border-slate-200/80 shadow-xs">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-slate-900">
+                    <td className="sticky left-0 z-10 bg-white py-2 px-2.5 sm:px-4 border-r border-slate-200/80 shadow-xs">
+                      <div className="flex flex-col min-w-0 max-w-[125px] sm:max-w-[210px]">
+                        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                          <span className="font-bold text-slate-900 text-xs truncate max-w-full">
                             {student.studentName}
                           </span>
                           {student.age && (
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-slate-400 shrink-0">
                               ({student.age} ani)
                             </span>
                           )}
                           {student.stats.hasConsecutiveAbsences && (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 shrink-0"
                               title={`Elevul are ${student.stats.maxConsecutiveAbsences} absențe consecutive`}
                             >
-                              ⚠️ {student.stats.maxConsecutiveAbsences}+ absențe
+                              ⚠️ {student.stats.maxConsecutiveAbsences}+ abs
                             </span>
                           )}
                         </div>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 min-w-0">
                           <ParentCallWidget
                             parentName={student.parentName}
                             parentPhone={student.parentPhone}
@@ -208,9 +208,9 @@ export function AttendanceMatrix({
                     </td>
 
                     {/* Attendance Rate */}
-                    <td className="py-2 px-3 text-center border-r border-slate-200/80 font-bold">
+                    <td className="py-2 px-1 sm:px-3 text-center border-r border-slate-200/80 font-bold">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                        className={`inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold ${
                           student.stats.attendanceRate >= 80
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : student.stats.attendanceRate >= 60
@@ -231,7 +231,7 @@ export function AttendanceMatrix({
                       return (
                         <td
                           key={dateStr}
-                          className="py-1.5 px-1 text-center border-r border-slate-100 last:border-r-0 relative"
+                          className="py-1.5 px-0.5 sm:px-1 text-center border-r border-slate-100 last:border-r-0 relative"
                         >
                           <button
                             type="button"
@@ -255,7 +255,7 @@ export function AttendanceMatrix({
                               }
                             }}
                             onMouseLeave={() => setHoveredComment(null)}
-                            className={`w-9 h-8 mx-auto rounded-lg font-bold flex items-center justify-center text-xs transition-colors relative group active:scale-95 hover:ring-2 hover:ring-blue-500/50 ${
+                            className={`w-8 h-7 sm:w-9 sm:h-8 mx-auto rounded-lg font-bold flex items-center justify-center text-xs transition-all relative group active:scale-90 hover:ring-2 hover:ring-blue-500/50 ${
                               status === "present"
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                                 : status === "absent"

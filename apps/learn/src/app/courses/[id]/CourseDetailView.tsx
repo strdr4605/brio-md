@@ -168,7 +168,7 @@ export function CourseDetailView({ courseId }: Props) {
       </div>
 
       {/* Course Overview Header Card */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 sm:p-8">
+      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">{course.name}</h1>
@@ -195,7 +195,7 @@ export function CourseDetailView({ courseId }: Props) {
         </p>
 
         {/* Schedule & Metadata Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-neutral-100">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-neutral-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -259,7 +259,7 @@ export function CourseDetailView({ courseId }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Study Materials Section (5 columns on large screens) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-neutral-900">Learning Materials</h2>
               <span className="text-xs font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
@@ -334,15 +334,15 @@ export function CourseDetailView({ courseId }: Props) {
 
         {/* Session Timeline Section (7 columns on large screens) */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 sm:p-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
                 <h2 className="text-lg font-bold text-neutral-900">Session Plan & Timeline</h2>
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Ordered lesson roadmap from Session 1 to {total}
                 </p>
               </div>
-              <div className="text-xs font-semibold px-3 py-1 bg-neutral-100 text-neutral-700 rounded-lg">
+              <div className="text-xs font-semibold px-3 py-1 bg-neutral-100 text-neutral-700 rounded-lg shrink-0 w-fit">
                 Status: <span className="capitalize">{course.progress?.status?.replace("_", " ") || "In Progress"}</span>
               </div>
             </div>
@@ -380,7 +380,7 @@ export function CourseDetailView({ courseId }: Props) {
 
                     {/* Session Box */}
                     <div
-                      className={`flex-1 flex items-center justify-between p-3.5 rounded-xl border transition ${
+                      className={`flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border transition ${
                         isCurrent
                           ? "border-blue-400 bg-blue-50/50 shadow-sm"
                           : isCompleted
