@@ -96,7 +96,7 @@ export default function UsersPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Utilizatori</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/80">
               {users.length} total
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function UsersPage() {
 
         <button
           onClick={handleCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
         >
           <PlusIcon className="w-4 h-4" />
           <span>Adaugă Utilizator</span>
@@ -131,7 +131,7 @@ export default function UsersPage() {
             placeholder="Caută după nume sau email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+            className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
           />
         </div>
 
@@ -139,7 +139,7 @@ export default function UsersPage() {
           <select
             value={activeFilter}
             onChange={(e) => setActiveFilter(e.target.value as any)}
-            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
           >
             <option value="all">Toate Statusurile</option>
             <option value="active">Doar Activi</option>
@@ -149,7 +149,7 @@ export default function UsersPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
           >
             <option value="all">Toate Rolurile</option>
             <option value="superadmin">Superadmin</option>
@@ -189,10 +189,10 @@ export default function UsersPage() {
 
                   const roleBadgeClass =
                     user.role === "superadmin"
-                      ? "bg-purple-50 text-purple-700 border-purple-200/80"
+                      ? "bg-slate-900 text-white border-slate-900"
                       : user.role === "admin"
-                      ? "bg-blue-50 text-blue-700 border-blue-200/80"
-                      : "bg-emerald-50 text-emerald-700 border-emerald-200/80";
+                      ? "bg-slate-100 text-slate-800 border-slate-200/80"
+                      : "bg-slate-100 text-slate-700 border-slate-200/80";
 
                   return (
                     <tr
@@ -202,7 +202,7 @@ export default function UsersPage() {
                       {/* Name & Avatar */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
                             {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                           </div>
                           <div className="min-w-0">
@@ -255,7 +255,7 @@ export default function UsersPage() {
                       <td className="px-5 py-3.5 text-right">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
                         >
                           Editează
                         </button>

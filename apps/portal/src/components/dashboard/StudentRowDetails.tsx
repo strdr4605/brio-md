@@ -132,7 +132,7 @@ export function StudentRowDetails({
     : "—";
 
   return (
-    <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/20 border-t border-slate-200/80 space-y-4 animate-fade-in-up">
+    <div className="p-5 bg-slate-50/50 border-t border-slate-200/80 space-y-4 animate-fade-in-up">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Col 1: Guardian / Contact */}
         <div className="bg-white rounded-xl p-4 border border-slate-200/70 shadow-sm space-y-2.5">
@@ -140,7 +140,7 @@ export function StudentRowDetails({
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Părinte / Tutore
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold">
               Contact Primar
             </span>
           </div>
@@ -156,7 +156,7 @@ export function StudentRowDetails({
               </span>
               <a
                 href={`tel:${student.phone}`}
-                className="block text-xs font-medium text-slate-700 hover:text-blue-600 mt-0.5"
+                className="block text-xs font-medium text-slate-700 hover:text-slate-900 mt-0.5"
               >
                 {formatPhone(student.phone)}
               </a>
@@ -205,7 +205,7 @@ export function StudentRowDetails({
               <button
                 type="button"
                 onClick={() => setShowEnrollmentDrawer(true)}
-                className="text-blue-600 hover:text-blue-700 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-slate-700 hover:text-slate-900 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>+</span>
                 <span>Înrolare Grupe</span>
@@ -266,13 +266,13 @@ export function StudentRowDetails({
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <Link
               href={`/dashboard/students/${student.id}`}
-              className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-xs transition"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold text-xs transition"
             >
               Dosar Elev →
             </Link>
             <button
               onClick={onEdit}
-              className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition"
+              className="px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold text-xs transition"
             >
               Editează Profil
             </button>
