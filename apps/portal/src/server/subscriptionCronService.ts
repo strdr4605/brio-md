@@ -14,16 +14,16 @@ import {
   generateRecurringInvoices,
 } from "./recurringBillingService";
 
-/** Параметры вызова кронжоба проверки подписок */
+/** Options for running the monthly subscription check cron */
 export type SubscriptionCheckOptions = {
-  targetMonth?: string;       // Целевой месяц аудита (YYYY-MM), по умолчанию текущий
-  schoolId?: number;          // ID школы (для фильтрации по конкретному филиалу)
-  autoCreateMissing?: boolean;// Автоматически генерировать черновики счетов, если они отсутствуют
-  markOverdue?: boolean;      // Переводить просроченные счета (dueDate < today) в статус 'overdue'
-  user?: BillingUser;         // Контекст пользователя (для проверки ролей и прав доступа)
+  targetMonth?: string;       // Target audit month (YYYY-MM), defaults to current
+  schoolId?: number;          // Filter by specific school branch
+  autoCreateMissing?: boolean;// Automatically generate draft invoices if missing
+  markOverdue?: boolean;      // Mark past-due invoices (dueDate < today) as 'overdue'
+  user?: BillingUser;         // Caller user context for PBAC role verification
 };
 
-/** Детальная информация по подписке конкретного ученика */
+/** Detailed subscription status per student */
 export type StudentSubscriptionDetail = {
   studentId: number;
   studentName: string;
@@ -47,22 +47,22 @@ export type StudentSubscriptionDetail = {
   statusComment: string;
 };
 
-/** Финансовая и количественная сводка по итогам аудита месяца */
+/** High-level financial and quantitative audit summary */
 export type SubscriptionAuditSummary = {
   targetMonth: string;
   checkedAt: string;
-  totalActiveSubscriptions: number; // Всего активных ежемесячных подписок
-  upToDateCount: number;             // Оплачено в полном объёме
-  partiallyPaidCount: number;        // Частично оплачено
-  unpaidCount: number;               // Выставлено, срок оплаты ещё не истёк
-  overdueCount: number;              // Просрочено (срок истёк, долг не закрыт)
-  missingInvoiceCount: number;       // Активные ученики без выставленного счёта на этот месяц
-  invoicesMarkedOverdue: number;     // Количество счетов, переведённых в статус 'overdue'
-  invoicesAutoCreated: number;       // Количество автоматически созданных счетов
-  totalExpectedRevenue: number;      // Ожидаемый совокупный доход по тарифам учеников
-  totalBilledAmount: number;         // Сумма по всем выставленным счетам
-  totalCollectedAmount: number;      // Фактически собранная сумма оплат
-  totalOutstandingDebt: number;      // Суммарный остаток долга
+  totalActiveSubscriptions: number; // Total active monthly subscriptions
+  upToDateCount: number;             // Paid in full
+  partiallyPaidCount: number;        // Partially paid
+  unpaidCount: number;               // Issued, not yet due
+  overdueCount: number;              // Overdue (past due date, active debt)
+  missingInvoiceCount: number;       // Active students without an invoice for target month
+  invoicesMarkedOverdue: number;     // Invoices updated to 'overdue' status
+  invoicesAutoCreated: number;       // Draft invoices automatically generated
+  totalExpectedRevenue: number;      // Total expected tariff revenue
+  totalBilledAmount: number;         // Total billed invoice amount
+  totalCollectedAmount: number;      // Total collected payments
+  totalOutstandingDebt: number;      // Total remaining outstanding balance
 };
 
 export type SubscriptionCheckResult = {
@@ -74,21 +74,21 @@ export type SubscriptionCheckResult = {
 };
 
 /**
- * Основная функция аудита абонементов:
- * Проверяет подписки учеников, выявляет должников, обновляет просроченные счета и считает баланс.
+ * Core monthly subscription audit engine:
+ * Evaluates active students, detects debtors, flags overdue invoices, and compiles balances.
  */
 export async function runMonthlySubscriptionCheck(
   dbInstance: typeof db,
   options: SubscriptionCheckOptions = {},
 ): Promise<SubscriptionCheckResult> {
-  // ШАГ 1: Инициализация временного окна (целевой месяц YYYY-MM и сегодняшняя дата)
+  // Step 1: Initialize time window (target month YYYY-MM and today)
   const now = new Date();
   const defaultMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
   const targetMonth = options.targetMonth || defaultMonth;
   const { periodStart } = parseTargetMonth(targetMonth);
   const todayStr = now.toISOString().slice(0, 10);
 
-  // Определение контекста школы с учётом прав доступа (суперадмин видит всё, админ — только свою школу)
+  // Multi-tenant school scope resolution (superadmin sees all, school admin scoped)
   const { isSuper } = getBillingRoles(options.user);
   const targetSchoolId = isSuper
     ? options.schoolId || options.user?.schoolId
@@ -97,7 +97,7 @@ export async function runMonthlySubscriptionCheck(
   const markOverdue = options.markOverdue !== false;
   const autoCreateMissing = options.autoCreateMissing === true;
 
-  // ШАГ 2: Выборка только АКТИВНЫХ учеников с типом оплаты 'subscription_monthly'
+  // Step 2: Query active enrollments with 'subscription_monthly' billing
   const enrollmentConditions = [
     eq(studentGroupEnrollments.status, "active"),
     eq(studentGroupEnrollments.billingType, "subscription_monthly"),
@@ -129,7 +129,7 @@ export async function runMonthlySubscriptionCheck(
 
   const studentIds = Array.from(new Set(activeEnrollments.map((e) => e.studentId)));
 
-  // ШАГ 3: Пакетная загрузка всех счетов за этот месяц (исключает N+1 запросов в базу)
+  // Step 3: Batch load all month invoices in a single query (0 N+1)
   const invoiceConditions = [
     eq(invoices.type, "subscription"),
     ne(invoices.status, "cancelled"),
@@ -163,7 +163,7 @@ export async function runMonthlySubscriptionCheck(
         .where(and(...invoiceConditions))
     : [];
 
-  // ШАГ 4: Автоматический перевод счетов в 'overdue', если дата оплаты (dueDate) уже прошла
+  // Step 4: Mark invoices past due date as 'overdue'
   const markedOverdueInvoiceIds: number[] = [];
   if (markOverdue && existingInvoices.length > 0) {
     const overdueCandidates = existingInvoices.filter(
@@ -183,7 +183,7 @@ export async function runMonthlySubscriptionCheck(
     }
   }
 
-  // ШАГ 5: Сопоставление каждого активного абонемента со счётом и подсчёт аналитики
+  // Step 5: Match subscriptions to invoices and compile statistics
   const studentsDetails: StudentSubscriptionDetail[] = [];
   let upToDateCount = 0;
   let partiallyPaidCount = 0;
@@ -196,11 +196,9 @@ export async function runMonthlySubscriptionCheck(
   let totalOutstandingDebt = 0;
 
   for (const enr of activeEnrollments) {
-    // Рассчитываем индивидуальную стоимость с учётом скидки ученика
     const finalPrice = calculateSubscriptionPrice(0, enr.customPrice, enr.discountPercent);
     totalExpectedRevenue += finalPrice;
 
-    // Ищем счёт по привязке к зачислению, группе или курсу
     const matchedInvoice = existingInvoices.find(
       (inv) =>
         inv.studentId === enr.studentId &&
@@ -209,7 +207,7 @@ export async function runMonthlySubscriptionCheck(
           (enr.courseId && inv.groupCourseId === enr.courseId)),
     );
 
-    // СИТУАЦИЯ А: Ученик учится, но счёт на этот месяц ему НЕ выставлен
+    // Case A: Missing invoice for active student
     if (!matchedInvoice) {
       missingInvoiceCount++;
       totalOutstandingDebt += finalPrice;
@@ -238,7 +236,7 @@ export async function runMonthlySubscriptionCheck(
       continue;
     }
 
-    // СИТУАЦИЯ Б: Счёт найден — классифицируем статус оплаты
+    // Case B: Existing invoice found — categorize payment status
     const total = matchedInvoice.totalAmount || 0;
     const paid = matchedInvoice.paidAmount || 0;
     const debt = Math.max(0, total - paid);
@@ -289,7 +287,7 @@ export async function runMonthlySubscriptionCheck(
     });
   }
 
-  // ШАГ 6: Опциональная автогенерация недостающих счетов (для каждой школы отдельно)
+  // Step 6: Optionally generate missing draft invoices per school
   const autoCreatedInvoiceIds: number[] = [];
   if (autoCreateMissing && missingInvoiceCount > 0) {
     const schoolsToProcess = targetSchoolId
@@ -315,12 +313,12 @@ export async function runMonthlySubscriptionCheck(
           }
         }
       } catch {
-        // Игнорируем ошибку генерации конкретной школы — аудит продолжается
+        // Continue processing remaining schools if one fails
       }
     }
   }
 
-  // ШАГ 7: Сборка итогового финансового отчёта
+  // Step 7: Build final audit summary report
   const summary: SubscriptionAuditSummary = {
     targetMonth,
     checkedAt: now.toISOString(),

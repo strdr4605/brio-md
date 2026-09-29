@@ -2,11 +2,11 @@ import { db } from "../lib/db";
 import { runMonthlySubscriptionCheck } from "../server/subscriptionCronService";
 
 /**
- * Точка входа для запуска кронжоба из командной строки Linux / Docker / Crontab:
- * Пример запуска: npx tsx src/scripts/cronSubscriptions.ts 2026-09 --auto-create --school-id=1
+ * CLI entry point for executing monthly subscription cron:
+ * Usage: npx tsx src/scripts/cronSubscriptions.ts [YYYY-MM] [--auto-create] [--school-id=1]
  */
 async function main() {
-  // ШАГ 1: Парсинг аргументов командной строки
+  // Step 1: Parse command-line arguments
   const args = process.argv.slice(2);
   const targetMonthArg = args.find((a) => /^\d{4}-(0[1-9]|1[0-2])$/.test(a));
   const autoCreate = args.includes("--auto-create");
@@ -19,7 +19,7 @@ async function main() {
 
   const startTime = Date.now();
 
-  // ШАГ 2: Вызов сервисного модуля аудита подписок
+  // Step 2: Run subscription audit service
   const result = await runMonthlySubscriptionCheck(db, {
     targetMonth: targetMonthArg,
     schoolId,
@@ -31,7 +31,7 @@ async function main() {
   const durationMs = Date.now() - startTime;
   const { summary } = result;
 
-  // ШАГ 3: Вывод сводного финансового и количественного отчёта в терминал
+  // Step 3: Print summary to stdout
   console.log(`\n📅 Luna auditată:         ${summary.targetMonth}`);
   console.log(`⏱️  Timp execuție:         ${durationMs}ms`);
   console.log(`👥 Total abonamente active: ${summary.totalActiveSubscriptions}`);
@@ -51,7 +51,7 @@ async function main() {
   console.log(`📉 Restanță restantă:      ${summary.totalOutstandingDebt} MDL`);
   console.log("=======================================================\n");
 
-  // ШАГ 4: Построчный вывод первых 10 учеников с цветовыми маркерами статуса
+  // Step 4: Print first 10 students
   if (result.students.length > 0) {
     console.log("📋 Detalii elevi auditați (primele 10 înregistrări):");
     result.students.slice(0, 10).forEach((s, idx) => {
@@ -69,6 +69,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("\n❌ [CRON ERROR] Ошибка при выполнении проверки абонементов:", err);
+  console.error("\n❌ [CRON ERROR] Failed to run subscription check:", err);
   process.exit(1);
 });

@@ -2,27 +2,26 @@ import { db } from "@/lib/db";
 import { runMonthlySubscriptionCheck } from "@/server/subscriptionCronService";
 
 /**
- * Проверка авторизации кронжоба через секретный токен CRON_SECRET:
- * Защищает эндпоинт от несанкционированных вызовов из публичного интернета.
+ * Validates CRON_SECRET token against incoming authorization headers.
+ * Guards endpoint from unauthorized public webhook invocations.
  */
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      return false; // Fail closed in production: never allow unauthenticated cron in production
+      return false; // Fail closed in production
     }
-    // В локальной разработке или тестовом окружении без секрета — разрешаем запуск
-    return true;
+    return true; // Permitted only in development/test environments
   }
 
-  // Способ 1: Стандартный заголовок Bearer Authorization
+  // Method 1: Bearer Authorization header
   const authHeader = req.headers.get("authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7).trim();
     if (token === secret) return true;
   }
 
-  // Способ 2: Заголовок x-cron-secret (используется Vercel Cron и облачными планировщиками)
+  // Method 2: x-cron-secret header (Vercel Cron & cloud schedulers)
   const xCronSecret = req.headers.get("x-cron-secret");
   if (xCronSecret && xCronSecret.trim() === secret) {
     return true;
@@ -32,11 +31,10 @@ function isAuthorized(req: Request): boolean {
 }
 
 /**
- * Основной обработчик GET / POST запросов:
- * Считывает параметры, запускает пайплайн проверки и возвращает результат в JSON.
+ * GET/POST handler for automated monthly subscription check.
  */
 async function handleCheck(req: Request) {
-  // ШАГ 1: Проверка прав доступа
+  // Step 1: Authorization check
   if (!isAuthorized(req)) {
     return Response.json(
       { error: "Unauthorized: Invalid or missing CRON_SECRET" },
@@ -45,20 +43,20 @@ async function handleCheck(req: Request) {
   }
 
   try {
-    // ШАГ 2: Извлечение параметров из URL query string
+    // Step 2: Extract query params
     const url = new URL(req.url);
     const targetMonthParam = url.searchParams.get("targetMonth") || undefined;
     const schoolIdParam = url.searchParams.get("schoolId");
     const autoCreateParam = url.searchParams.get("autoCreateMissing");
     const markOverdueParam = url.searchParams.get("markOverdue");
 
-    // ШАГ 3: Извлечение параметров из тела запроса (при POST запросе)
+    // Step 3: Extract body params if POST
     let bodyData: any = {};
     if (req.method === "POST") {
       try {
         bodyData = await req.json();
       } catch {
-        // Игнорируем ошибку, если тело запроса пустое
+        // Ignore empty body
       }
     }
 
@@ -67,7 +65,7 @@ async function handleCheck(req: Request) {
     const autoCreateMissing = bodyData.autoCreateMissing ?? autoCreateParam === "true";
     const markOverdue = bodyData.markOverdue ?? (markOverdueParam !== "false");
 
-    // ШАГ 4: Запуск сервисного алгоритма проверки абонементов
+    // Step 4: Run subscription check
     const result = await runMonthlySubscriptionCheck(db, {
       targetMonth,
       schoolId: isNaN(schoolId) ? undefined : schoolId,
@@ -76,7 +74,6 @@ async function handleCheck(req: Request) {
       user: { role: "superadmin", permissions: ["super"] },
     });
 
-    // ШАГ 5: Возврат успешного статуса 200 с полной структурой аналитики
     return Response.json(result, { status: 200 });
   } catch (error: any) {
     return Response.json(
