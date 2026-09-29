@@ -61,5 +61,17 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  cron:
+    image: alpine:3.20
+    container_name: brio-cron
+    restart: unless-stopped
+    depends_on:
+      - portal
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "0 0 1 * * wget -q -O- --post-data='' http://portal:3000/api/cron/check-subscriptions?autoCreateMissing=true" > /etc/crontabs/root
+        crond -f -l 2
+
 volumes:
   postgres_data:
