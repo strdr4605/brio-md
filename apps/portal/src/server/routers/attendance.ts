@@ -17,6 +17,7 @@ import {
   findTeacherActiveSession,
 } from "../attendanceService";
 import { processAttendanceBilling } from "../lessonBillingService";
+import { attachBillingInfoToStudents } from "../attendanceBillingHelper";
 import { logger } from "@/lib/logger";
 
 export {
@@ -235,6 +236,10 @@ export const attendanceRouter = router({
           parentName: students.parentName,
           parentPhone: students.parentPhone,
           age: students.age,
+          enrollmentId: studentGroupEnrollments.id,
+          billingType: studentGroupEnrollments.billingType,
+          customPrice: studentGroupEnrollments.customPrice,
+          discountPercent: studentGroupEnrollments.discountPercent,
         })
         .from(studentGroupEnrollments)
         .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
@@ -245,6 +250,15 @@ export const attendanceRouter = router({
           ),
         )
         .orderBy(asc(students.name));
+
+      const targetMonth = input.date.slice(0, 7);
+      const enrolledWithBilling = await attachBillingInfoToStudents(
+        db,
+        enrolledStudents,
+        group.schoolId,
+        targetMonth,
+        input.groupId,
+      );
 
       // 2. Fetch attendance records for this date
       const existingRecords = await db
@@ -259,7 +273,7 @@ export const attendanceRouter = router({
 
       const recordsMap = new Map(existingRecords.map((r) => [r.studentId, r]));
 
-      return enrolledStudents.map((s) => {
+      return enrolledWithBilling.map((s) => {
         const rec = recordsMap.get(s.studentId);
         return {
           studentId: s.studentId,
@@ -268,6 +282,7 @@ export const attendanceRouter = router({
           parentName: s.parentName,
           parentPhone: s.parentPhone,
           age: s.age,
+          billing: s.billing,
           status: rec?.status ?? null,
           comment: rec?.comment ?? null,
           markedByUserId: rec?.markedByUserId ?? null,
@@ -441,6 +456,10 @@ export const attendanceRouter = router({
           parentName: students.parentName,
           parentPhone: students.parentPhone,
           age: students.age,
+          enrollmentId: studentGroupEnrollments.id,
+          billingType: studentGroupEnrollments.billingType,
+          customPrice: studentGroupEnrollments.customPrice,
+          discountPercent: studentGroupEnrollments.discountPercent,
         })
         .from(studentGroupEnrollments)
         .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
@@ -451,6 +470,15 @@ export const attendanceRouter = router({
           ),
         )
         .orderBy(asc(students.name));
+
+      const matrixMonth = input.month || new Date().toISOString().slice(0, 7);
+      const enrolledWithBilling = await attachBillingInfoToStudents(
+        db,
+        enrolledStudents,
+        group.schoolId,
+        matrixMonth,
+        input.groupId,
+      );
 
       // 4. Build date range filter conditions
       const conditions = [eq(attendanceRecords.groupId, input.groupId)];
@@ -519,7 +547,7 @@ export const attendanceRouter = router({
       let groupRecordedTotal = 0;
       let atRiskCount = 0;
 
-      const studentsWithMatrix = enrolledStudents.map((s) => {
+      const studentsWithMatrix = enrolledWithBilling.map((s) => {
         const sRecords = recordsByStudent.get(s.studentId) || new Map();
         const cells: Record<string, { id?: number; status: "present" | "absent" | "late" | "excused"; comment?: string | null }> = {};
 
@@ -576,6 +604,7 @@ export const attendanceRouter = router({
           parentName: s.parentName,
           parentPhone: s.parentPhone,
           age: s.age,
+          billing: s.billing,
           cells,
           stats: {
             presentCount,

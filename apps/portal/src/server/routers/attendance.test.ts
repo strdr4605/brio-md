@@ -322,7 +322,13 @@ describe("attendanceRouter & Server-side Authorization", () => {
             }),
           }),
         })
-        // 3. Existing attendance records query
+        // 3. Invoices query for billing info
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        })
+        // 4. Existing attendance records query
         .mockReturnValueOnce({
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue([
@@ -608,6 +614,26 @@ describe("attendanceRouter & Server-side Authorization", () => {
         })
         .mockReturnValueOnce({
           from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              {
+                id: 42,
+                studentId: 101,
+                groupId: 5,
+                enrollmentId: 1,
+                invoiceNumber: "INV-2026-0042",
+                type: "subscription",
+                status: "paid",
+                totalAmount: 1200,
+                paidAmount: 1200,
+                dueDate: "2026-09-10",
+                periodStart: "2026-09-01",
+                periodEnd: "2026-09-30",
+              },
+            ]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue(mockRecords),
           }),
         });
@@ -617,6 +643,10 @@ describe("attendanceRouter & Server-side Authorization", () => {
 
       expect(result.group.id).toBe(5);
       expect(result.students).toHaveLength(1);
+      expect(result.students[0].billing).toBeDefined();
+      expect(result.students[0].billing.currentMonthStatus).toBe("paid");
+      expect(result.students[0].billing.hasDebt).toBe(false);
+      expect(result.students[0].billing.currentMonthInvoiceNumber).toBe("INV-2026-0042");
       expect(result.dates.length).toBeGreaterThan(0);
       expect(result.records["101_2026-09-02"]).toEqual({
         status: "present",
@@ -807,7 +837,29 @@ describe("attendanceRouter & Server-side Authorization", () => {
         }),
       });
 
-      // 3. Attendance records query
+      // 3. Invoices query for billing info
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            {
+              id: 99,
+              studentId: 101,
+              groupId: 1,
+              enrollmentId: 1,
+              invoiceNumber: "INV-2026-0099",
+              type: "subscription",
+              status: "overdue",
+              totalAmount: 1200,
+              paidAmount: 600,
+              dueDate: "2026-09-05",
+              periodStart: "2026-09-01",
+              periodEnd: "2026-09-30",
+            },
+          ]),
+        }),
+      });
+
+      // 4. Attendance records query
       (db.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
@@ -829,6 +881,10 @@ describe("attendanceRouter & Server-side Authorization", () => {
       expect(ana?.stats.maxConsecutiveAbsences).toBe(3);
       expect(ana?.stats.attendanceRate).toBe(25); // 1 present out of 4 sessions
       expect(ana?.cells["2026-09-01"].comment).toBe("Bolnavă");
+      expect(ana?.billing).toBeDefined();
+      expect(ana?.billing?.hasDebt).toBe(true);
+      expect(ana?.billing?.isOverdue).toBe(true);
+      expect(ana?.billing?.debtAmount).toBe(600);
 
       const bogdan = result.students.find((s) => s.studentId === 102);
       expect(bogdan?.stats.hasConsecutiveAbsences).toBe(false);

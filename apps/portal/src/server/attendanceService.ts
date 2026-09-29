@@ -8,6 +8,7 @@ import {
 } from "./attendanceUtils";
 import { processAttendanceBilling } from "./lessonBillingService";
 import { logger } from "@/lib/logger";
+import { attachBillingInfoToStudents } from "./attendanceBillingHelper";
 
 export { findTeacherActiveSession } from "./activeSessionService";
 
@@ -54,6 +55,10 @@ export async function fetchJournalData(
       parentName: students.parentName,
       parentPhone: students.parentPhone,
       age: students.age,
+      enrollmentId: studentGroupEnrollments.id,
+      billingType: studentGroupEnrollments.billingType,
+      customPrice: studentGroupEnrollments.customPrice,
+      discountPercent: studentGroupEnrollments.discountPercent,
     })
     .from(studentGroupEnrollments)
     .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
@@ -65,7 +70,16 @@ export async function fetchJournalData(
     )
     .orderBy(asc(students.name));
 
-  // 3. Fetch existing attendance records for this month
+  // 3. Attach billing info and active debt status
+  const studentsWithBilling = await attachBillingInfoToStudents(
+    db,
+    enrolledStudents,
+    group.schoolId,
+    monthStr,
+    groupId,
+  );
+
+  // 4. Fetch existing attendance records for this month
   // date starts with YYYY-MM
   const existingRecords = await db
     .select()
@@ -75,10 +89,10 @@ export async function fetchJournalData(
   const monthRecords = existingRecords.filter((r) => r.date.startsWith(monthStr));
   const recordedDates = Array.from(new Set(monthRecords.map((r) => r.date)));
 
-  // 4. Generate all session dates for this month
+  // 5. Generate all session dates for this month
   const dates = generateJournalDates(group.scheduleDays, monthStr, recordedDates);
 
-  // 5. Build records map: [studentId_date] -> record
+  // 6. Build records map: [studentId_date] -> record
   const recordsMap: Record<
     string,
     { status: "present" | "absent" | "late" | "excused"; comment: string | null }
@@ -94,7 +108,7 @@ export async function fetchJournalData(
   return {
     group,
     dates,
-    students: enrolledStudents,
+    students: studentsWithBilling,
     records: recordsMap,
   };
 }

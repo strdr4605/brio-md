@@ -26,6 +26,7 @@ import {
   generateRecurringInvoices,
 } from "../recurringBillingService";
 import { fetchBillingStatistics } from "../billingStatisticsService";
+import { runMonthlySubscriptionCheck } from "../subscriptionCronService";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const dateSchema = z
@@ -312,21 +313,31 @@ export const billingRouter = router({
 
   // 12. Get Statistics (Financial Analytics & Debtors)
   getStatistics: billingProcedure
-    .input(
-      z
-        .object({
-          schoolId: z.number().int().positive().optional(),
-          dateRange: z
-            .object({
-              from: dateSchema.optional(),
-              to: dateSchema.optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-    )
+    .input(z.object({
+      schoolId: z.number().int().positive().optional(),
+      dateRange: z.object({ from: dateSchema.optional(), to: dateSchema.optional() }).optional(),
+    }).optional())
     .query(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       return await fetchBillingStatistics(db, input, ctx.user);
+    }),
+
+  // 13. Monthly Subscription Audit & Overdue Status Check
+  checkMonthlySubscriptions: billingProcedure
+    .input(z.object({
+      targetMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+      schoolId: z.number().int().positive().optional(),
+      autoCreateMissing: z.boolean().optional(),
+      markOverdue: z.boolean().optional(),
+    }).optional())
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return await runMonthlySubscriptionCheck(db, {
+        targetMonth: input?.targetMonth,
+        schoolId: input?.schoolId,
+        autoCreateMissing: input?.autoCreateMissing,
+        markOverdue: input?.markOverdue,
+        user: ctx.user,
+      });
     }),
 });
