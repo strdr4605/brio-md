@@ -1,5 +1,6 @@
 "use client";
 
+import { MetricCard } from "@/components/dashboard/MetricCard";
 import {
   UsersIcon,
   UserCheckIcon,
@@ -20,46 +21,31 @@ export function UserKpiCards({
   adminCount,
 }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-          <UsersIcon className="w-5 h-5" />
-        </div>
-        <div>
-          <span className="text-xs text-slate-400 font-semibold uppercase">Total Utilizatori</span>
-          <p className="text-xl font-bold text-slate-900 leading-none mt-1">{totalUsers}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-          <UserCheckIcon className="w-5 h-5" />
-        </div>
-        <div>
-          <span className="text-xs text-slate-400 font-semibold uppercase">Conturi Active</span>
-          <p className="text-xl font-bold text-slate-900 leading-none mt-1">{activeCount}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-          <UsersIcon className="w-5 h-5" />
-        </div>
-        <div>
-          <span className="text-xs text-slate-400 font-semibold uppercase">Conturi Inactive</span>
-          <p className="text-xl font-bold text-slate-900 leading-none mt-1">{inactiveCount}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-          <ShieldCheckIcon className="w-5 h-5" />
-        </div>
-        <div>
-          <span className="text-xs text-slate-400 font-semibold uppercase">Administratori</span>
-          <p className="text-xl font-bold text-slate-900 leading-none mt-1">{adminCount}</p>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <MetricCard
+        title="Total Utilizatori"
+        value={totalUsers}
+        icon={<UsersIcon />}
+        footer="Conturi înregistrate"
+      />
+      <MetricCard
+        title="Conturi Active"
+        value={activeCount}
+        icon={<UserCheckIcon />}
+        footer="Acces autorizat"
+      />
+      <MetricCard
+        title="Conturi Inactive"
+        value={inactiveCount}
+        icon={<UsersIcon />}
+        footer="Acces suspendat"
+      />
+      <MetricCard
+        title="Administratori"
+        value={adminCount}
+        icon={<ShieldCheckIcon />}
+        footer="Roluri cu drepturi avansate"
+      />
     </div>
   );
 }

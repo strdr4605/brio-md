@@ -396,7 +396,7 @@ export function StudentFormDrawer({
                         }}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                           isSelected
-                            ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20"
+                            ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                             : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
                         }`}
                       >
@@ -562,7 +562,7 @@ export function StudentFormDrawer({
             type="submit"
             form="student-form"
             disabled={isPending || courseConflicts.length > 0}
-            className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 rounded-xl transition disabled:opacity-50"
+            className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-xs rounded-xl transition disabled:opacity-50"
           >
             {isPending ? "Se procesează..." : isEditing ? "Salvează Modificările" : "Creează Student"}
           </button>
