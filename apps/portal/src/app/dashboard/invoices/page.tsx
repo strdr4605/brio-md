@@ -164,7 +164,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -172,7 +172,7 @@ export default function InvoicesPage() {
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
               Registru Facturi
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
               {displayedInvoices.length} facturi
             </span>
           </div>

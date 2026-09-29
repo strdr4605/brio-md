@@ -63,19 +63,19 @@ export function InvoicesTable({
     switch (type) {
       case "subscription":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
             Abonament
           </span>
         );
       case "per_lesson":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
             Per lecție
           </span>
         );
       case "situational":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-50 text-slate-600 border border-slate-200/80">
             Situativ
           </span>
         );
@@ -152,7 +152,7 @@ export function InvoicesTable({
     return (
       <span
         data-testid="invoice-status-badge"
-        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200"
+        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80"
       >
         Emisă
       </span>
@@ -188,16 +188,13 @@ export function InvoicesTable({
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Factură</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Student</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Grupă</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Tip</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Scadență</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Total</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Achitat</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Rest de plată</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Status</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Acțiuni</th>
+              <th className="py-3 px-4">Factură</th>
+              <th className="py-3 px-4">Student</th>
+              <th className="py-3 px-4">Grupă & Tip</th>
+              <th className="py-3 px-4">Scadență</th>
+              <th className="py-3 px-4 text-right">Sumă & Sold</th>
+              <th className="py-3 px-4 text-center">Status</th>
+              <th className="py-3 px-4 text-right">Acțiuni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -206,8 +203,12 @@ export function InvoicesTable({
               const paid = inv.paidAmount ?? 0;
               const balance = Math.max(0, total - paid);
               const overdue = isOverdue(inv);
-              const canPay = inv.status !== "paid" && inv.status !== "cancelled" && balance > 0;
-              const canCancel = inv.status !== "paid" && inv.status !== "cancelled";
+              const canPay =
+                inv.status !== "paid" &&
+                inv.status !== "cancelled" &&
+                balance > 0;
+              const canCancel =
+                inv.status !== "paid" && inv.status !== "cancelled";
 
               return (
                 <tr
@@ -217,7 +218,7 @@ export function InvoicesTable({
                   }`}
                 >
                   {/* Factură */}
-                  <td className="py-3 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
                     <div>{inv.invoiceNumber || `#INV-${inv.id}`}</div>
                     <div className="text-[10px] text-slate-400 font-normal mt-0.5">
                       {formatDate(inv.createdAt)}
@@ -228,7 +229,7 @@ export function InvoicesTable({
                   <td className="py-3.5 px-4">
                     <Link
                       href={`/dashboard/students/${inv.studentId}`}
-                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors block"
+                      className="font-bold text-slate-900 hover:text-slate-600 transition-colors block"
                     >
                       {inv.studentName}
                     </Link>
@@ -239,21 +240,23 @@ export function InvoicesTable({
                     )}
                   </td>
 
-                  {/* Grupă */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    {inv.groupName ? (
-                      <span className="font-semibold text-slate-700">{inv.groupName}</span>
-                    ) : (
-                      <span className="text-slate-400 italic">General</span>
-                    )}
+                  {/* Grupă & Tip */}
+                  <td className="py-3.5 px-4">
+                    <div className="font-semibold text-slate-700 truncate max-w-[200px]">
+                      {inv.groupName || (
+                        <span className="text-slate-400 italic">General</span>
+                      )}
+                    </div>
+                    <div className="mt-1">{getTypeBadge(inv.type)}</div>
                   </td>
-
-                  {/* Tip */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">{getTypeBadge(inv.type)}</td>
 
                   {/* Scadență */}
                   <td className="py-3.5 px-4 whitespace-nowrap font-medium">
-                    <span className={overdue ? "text-rose-600 font-bold" : "text-slate-600"}>
+                    <span
+                      className={
+                        overdue ? "text-rose-600 font-bold" : "text-slate-600"
+                      }
+                    >
                       {formatDate(inv.dueDate)}
                     </span>
                     {overdue && (
@@ -263,24 +266,29 @@ export function InvoicesTable({
                     )}
                   </td>
 
-                  {/* Total */}
-                  <td className="py-3.5 px-4 text-right font-black text-slate-900 whitespace-nowrap">
-                    {formatMdl(total)}{" "}
-                    <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                  </td>
-
-                  {/* Achitat */}
-                  <td className="py-3.5 px-4 text-right font-bold text-emerald-600 whitespace-nowrap">
-                    {formatMdl(paid)}{" "}
-                    <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                  </td>
-
-                  {/* Rest de plată */}
-                  <td className="py-3.5 px-4 text-right font-black whitespace-nowrap">
-                    <span className={balance > 0 ? "text-amber-700 font-bold" : "text-slate-400"}>
-                      {formatMdl(balance)}{" "}
-                      <span className="text-[10px] font-normal text-slate-400">MDL</span>
-                    </span>
+                  {/* Sumă & Sold */}
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <div className="font-black text-slate-900 text-sm">
+                      {formatMdl(total)}{" "}
+                      <span className="text-[10px] font-normal text-slate-400">
+                        MDL
+                      </span>
+                    </div>
+                    <div className="text-[11px] mt-0.5">
+                      {balance === 0 ? (
+                        <span className="text-emerald-700 font-semibold">
+                          Achitat integral
+                        </span>
+                      ) : paid > 0 ? (
+                        <span className="text-amber-800 font-semibold">
+                          Rest: {formatMdl(balance)} MDL
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">
+                          Rest: {formatMdl(balance)} MDL
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Status */}
@@ -289,13 +297,13 @@ export function InvoicesTable({
                   </td>
 
                   {/* Acțiuni */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    <div className="flex items-center justify-start gap-1.5">
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1.5">
                       {canPay && onRecordPayment && (
                         <button
                           type="button"
                           onClick={() => onRecordPayment(inv)}
-                          className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors shrink-0"
                         >
                           Achită
                         </button>
@@ -305,7 +313,7 @@ export function InvoicesTable({
                         <button
                           type="button"
                           onClick={() => onCancelInvoice(inv)}
-                          className="px-2 py-1 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-100 rounded-lg transition-colors shrink-0"
                         >
                           Anulează
                         </button>
