@@ -327,6 +327,7 @@ export function ScheduleCalendar() {
           courseId={rosterGroup.courseId}
           courseName={rosterGroup.courseName || "Curs"}
           schoolId={rosterGroup.schoolId}
+          initialGroupId={rosterGroup.id}
         />
       )}
 
