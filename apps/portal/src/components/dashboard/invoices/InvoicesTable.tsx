@@ -63,19 +63,19 @@ export function InvoicesTable({
     switch (type) {
       case "subscription":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
             Abonament
           </span>
         );
       case "per_lesson":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
             Per lecție
           </span>
         );
       case "situational":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-50 text-slate-600 border border-slate-200/80">
             Situativ
           </span>
         );
@@ -152,7 +152,7 @@ export function InvoicesTable({
     return (
       <span
         data-testid="invoice-status-badge"
-        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200"
+        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80"
       >
         Emisă
       </span>
@@ -185,19 +185,19 @@ export function InvoicesTable({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
       <div className="overflow-x-auto scrollbar-thin">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full min-w-[1140px] text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Factură</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Student</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Grupă</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Tip</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Scadență</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Total</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Achitat</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Rest de plată</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Status</th>
-              <th className="py-2.5 sm:py-3 px-3 sm:px-4">Acțiuni</th>
+              <th className="py-3 px-3.5 whitespace-nowrap min-w-[125px]">Factură</th>
+              <th className="py-3 px-3.5 min-w-[150px]">Student</th>
+              <th className="py-3 px-3.5 min-w-[140px]">Grupă</th>
+              <th className="py-3 px-3 whitespace-nowrap min-w-[95px]">Tip</th>
+              <th className="py-3 px-3.5 whitespace-nowrap min-w-[115px]">Scadență</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[95px]">Total</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[90px]">Achitat</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap min-w-[105px]">Rest de plată</th>
+              <th className="py-3 px-3.5 text-center whitespace-nowrap min-w-[120px]">Status</th>
+              <th className="py-3 px-4 text-right whitespace-nowrap min-w-[155px]">Acțiuni</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -289,13 +289,13 @@ export function InvoicesTable({
                   </td>
 
                   {/* Acțiuni */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    <div className="flex items-center justify-start gap-1.5">
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap min-w-[155px]">
+                    <div className="flex items-center justify-end gap-1.5">
                       {canPay && onRecordPayment && (
                         <button
                           type="button"
                           onClick={() => onRecordPayment(inv)}
-                          className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors shrink-0"
                         >
                           Achită
                         </button>
@@ -305,7 +305,7 @@ export function InvoicesTable({
                         <button
                           type="button"
                           onClick={() => onCancelInvoice(inv)}
-                          className="px-2 py-1 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-100 rounded-lg transition-colors shrink-0"
                         >
                           Anulează
                         </button>
