@@ -28,3 +28,24 @@ Review the generated SQL in `packages/db/drizzle/` before committing.
 - **Before Coding:** For tasks that require decomposition, present the proposed PR sequence, explain the purpose of each PR, and identify dependencies between them. Do not write code until the plan is approved.
 
 - **After Each PR:** Verify that the affected code compiles, passes `npm run lint`, and builds successfully before considering the PR complete.
+
+# UI & Frontend Design System (Strict Compliance)
+
+All AI agents and developers modifying frontend UI in `apps/portal` and other apps MUST read and strictly adhere to `docs/DESIGN_SYSTEM.md`.
+
+### Core Non-Negotiables:
+1. **Clean Monochrome Enterprise Palette (Slate First):**
+   - Backgrounds: `bg-slate-50` (`#F8FAFC`), Card containers: `bg-white`, Borders: `border-slate-200/80` (with `hover:border-slate-300 hover:shadow-sm`).
+   - Card metric icon boxes: strictly `w-12 h-12 rounded-xl bg-slate-100 text-slate-700` with icons sized `w-6 h-6` to `w-7 h-7`.
+   - Text hierarchy: Headings `text-slate-900 font-black/extrabold`, Card titles `text-base font-semibold text-slate-800`, Subtitles/footers `text-slate-500 text-xs sm:text-sm`.
+2. **Absolute Prohibition of Rainbow Gradients & Clutter:**
+   - NEVER use colored card gradient backgrounds (no blue-purple, orange-pink gradients).
+   - NEVER use background blur glowing orbs/blobs.
+   - NEVER create redundant "quick action" blocks or decorative unclickable status pills (e.g. decorative badges in page headers).
+3. **Semantic Colors Only:**
+   - Green (`emerald-600`): positive growth, confirmed payments, operational status.
+   - Red/Rose (`rose-600`): overdue debts, active arrears, critical errors.
+   - Neutral Gray (`slate-500` / `slate-600`): general stats, counts, filters.
+4. **Component Reuse & File Budget:**
+   - Metric cards MUST use `@/components/dashboard/MetricCard`.
+   - Source files MUST NOT exceed 350 lines (break down complex screens into modular components).
