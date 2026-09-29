@@ -1,76 +1,76 @@
 # Brio Design System (Brio DS)
 
-> **Официальный стандарт оформления пользовательского интерфейса портала Brio.md**  
-> Документ является обязательным руководством для всех разработчиков и ИИ-ассистентов (Antigravity, Cursor, Copilot, Claude).  
-> **Любые отклонения от описанных ниже правил, токенов и структуры строго запрещены.**
+> **Official User Interface Design Standard for the Brio.md Portal**  
+> This document is a mandatory guide for all developers and AI assistants (Antigravity, Cursor, Copilot, Claude).  
+> **Any deviation from the rules, tokens, and structures described below is strictly prohibited.**
 
 ---
 
-## 1. Философия дизайна: Clean Monochrome Enterprise
+## 1. Design Philosophy: Clean Monochrome Enterprise
 
-Дизайн Brio.md построен на принципах швейцарской типографики, сдержанного минимализма и высокой информационной плотности без визуального мусора.
+The design of Brio.md is built upon the principles of Swiss typography, restrained minimalism, and high information density without visual clutter.
 
-### Главные догмы:
-1. **Монохромная основа (Slate First):** Основной фон — нейтральный сверхсветлый `bg-[#F8FAFC]` (`slate-50`), карточки — чистый белый `bg-white`, текст — глубокий контрастный `text-slate-900`.
-2. **Абсолютный запрет на «радугу» и градиенты:**
-   - ❌ **ЗАПРЕЩЕНО:** Градиентные карточки (сине-фиолетовые, оранжево-розовые, неоновые подложки).
-   - ❌ **ЗАПРЕЩЕНО:** Размытые светящиеся сферы (blur glow orbs) на фоне.
-   - ❌ **ЗАПРЕЩЕНО:** Разноцветные разномастные подложки иконок (одна синяя, другая розовая, третья зелёная).
-   - ✅ **РАЗРЕШЕНО:** Все подложки иконок карточек метрик строго монохромные: `bg-slate-100 text-slate-700`.
-3. **Функциональные цветовые акценты (Semantic Colors Only):**
-   Цвет используется исключительно для смысловой индикации статуса:
-   - 🟢 **Изумрудный (`emerald-600` / `bg-emerald-500`):** Положительный тренд, успешная оплата, статус «Подключено / Онлайн / Активно».
-   - 🔴 **Красный / Розовый (`rose-600` / `bg-rose-500`):** Задолженности, просроченные счета (Overdue), критические ошибки.
-   - 🟡 **Янтарный (`amber-600` / `bg-amber-500`):** Частичная оплата, предупреждения, ожидание.
-   - 🔘 **Серый (`slate-500` / `slate-600`):** Базовая статистика, количество записей, нейтральные индикаторы.
-4. **Борьба с визуальным мусором (Zero-Clutter):**
-   - Никаких некликабельных декоративных бейджей (вроде «Sistem Operațional» в заголовках).
-   - Никаких дублирующих блоков быстрых действий («Acțiuni Rapide»), если эти действия уже доступны в навигации или на страницах.
-   - Максимум свободного пространства (whitespace) и чистых геометрических отступов.
+### Core Tenets:
+1. **Monochrome Foundation (Slate First):** Primary background is neutral ultra-light `bg-[#F8FAFC]` (`slate-50`), cards are pure white `bg-white`, typography is deep contrast `text-slate-900`.
+2. **Absolute Prohibition of Gradients & Rainbow Colors:**
+   - ❌ **FORBIDDEN:** Gradient card backgrounds (blue-purple, orange-pink, neon backdrops).
+   - ❌ **FORBIDDEN:** Blurry glowing background orbs/blobs.
+   - ❌ **FORBIDDEN:** Inconsistent colored icon backgrounds (one blue, one pink, one green).
+   - ✅ **ALLOWED:** Metric card icon containers must be strictly monochrome: `bg-slate-100 text-slate-700`.
+3. **Functional Semantic Accents Only:**
+   Color is used strictly for meaningful status indication:
+   - 🟢 **Emerald (`emerald-600` / `bg-emerald-500`):** Positive trend, confirmed payment, "Connected / Online / Active" status.
+   - 🔴 **Rose (`rose-600` / `bg-rose-500`):** Arrears, overdue invoices, critical errors.
+   - 🟡 **Amber (`amber-600` / `bg-amber-500`):** Partial payment, warnings, pending.
+   - 🔘 **Slate (`slate-500` / `slate-600`):** General statistics, record counts, neutral indicators.
+4. **Zero-Clutter Policy:**
+   - No unclickable decorative status badges (e.g. "Sistem Operațional" in headers).
+   - No redundant quick-action blocks ("Acțiuni Rapide") if actions are already reachable via navigation or page controls.
+   - Maximize whitespace and clear geometric margins.
 
 ---
 
-## 2. Палитра цветов и Tailwind-токены
+## 2. Color Palette & Tailwind Tokens
 
-| Элемент | Tailwind Классы | Описание |
+| Element | Tailwind Classes | Description |
 |---|---|---|
-| **Фон страницы** | `bg-slate-50` (`#F8FAFC`) | Общая подложка рабочей области |
-| **Фон карточек** | `bg-white` | Контейнеры карточек, модалок, таблиц |
-| **Бордеры карточек** | `border border-slate-200/80` | Тонкая, едва заметная разделительная линия |
-| **Hover бордеров** | `hover:border-slate-300 hover:shadow-sm` | Деликатный отклик при наведении |
-| **Внутренние разделители** | `border-slate-100` | Линии между телом карточки и футером |
-| **Подложка иконки** | `bg-slate-100 text-slate-700` | Нейтральный фон для пиктограмм |
-| **Главные цифры (KPI)** | `text-slate-900 font-black` | Глубокий чёрный акцент для показателей |
-| **Названия метрик** | `text-slate-800 font-semibold` | Чёткий, легко читаемый заголовок |
-| **Второстепенный текст** | `text-slate-500 text-xs sm:text-sm` | Пояснения, даты, футеры карточек |
-| **Хедер / Аватар** | `bg-slate-900 text-white` | Монохромный контрастный аватар |
+| **Page Background** | `bg-slate-50` (`#F8FAFC`) | Global backdrop for the workspace |
+| **Card Background** | `bg-white` | Containers for cards, modals, tables |
+| **Card Borders** | `border border-slate-200/80` | Subtle hairline boundary |
+| **Border Hover** | `hover:border-slate-300 hover:shadow-sm` | Deliberate hover feedback |
+| **Dividers** | `border-slate-100` | Division between card body and footer |
+| **Icon Container** | `bg-slate-100 text-slate-700` | Neutral backdrop for pictograms |
+| **Primary KPI Numbers** | `text-slate-900 font-black` | Deep contrast accent for key indicators |
+| **Metric Titles** | `text-slate-800 font-semibold` | Crisp, legible header |
+| **Secondary Text** | `text-slate-500 text-xs sm:text-sm` | Explanations, dates, card footers |
+| **Header / Avatar** | `bg-slate-900 text-white` | Monochrome high-contrast avatar |
 
 ---
 
-## 3. Типографическая шкала (Font Hierarchy)
+## 3. Font Hierarchy
 
-Строгая иерархия шрифтов обеспечивает мгновенное считывание информации:
+Strict typography ensures instantaneous scannability:
 
-- **H1 (Главный заголовок страницы):**
+- **H1 (Page Title):**
   `text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900`
-- **Подзаголовок / описание страницы:**
+- **Page Subtitle / Description:**
   `text-xs sm:text-sm text-slate-500 mt-1`
-- **H2 (Заголовок группы / секции):**
+- **H2 (Section Header):**
   `text-base sm:text-lg font-bold text-slate-900 uppercase tracking-wide`
-- **Ссылка перехода в секции («Vezi orar complet >»):**
+- **Section Action Link ("Vezi orar complet >"):**
   `text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition flex items-center gap-1`
-- **Название метрики в карточке:**
+- **Card Metric Title:**
   `text-base font-semibold text-slate-800`
-- **Крупная цифра KPI:**
+- **KPI Value:**
   `text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-3`
-- **Футер карточки (контекст / тренд):**
-  `text-xs sm:text-sm text-slate-500` с иконкой тренда `w-4 h-4` или `w-5 h-5`
+- **Card Footer (Context / Trend):**
+  `text-xs sm:text-sm text-slate-500` with trend icon `w-4 h-4` or `w-5 h-5`
 
 ---
 
-## 4. Эталонный компонент: `MetricCard`
+## 4. Benchmark Component: `MetricCard`
 
-Каждая карточка метрики на портале должна использовать единый компонент [`MetricCard.tsx`](file:///D:/Project_Internship/brio-md/apps/portal/src/components/dashboard/MetricCard.tsx):
+Every metric card on the portal must use the shared component `MetricCard.tsx`:
 
 ```tsx
 import Link from "next/link";
@@ -118,15 +118,15 @@ export function MetricCard({ title, value, icon, footer, href }: MetricCardProps
 }
 ```
 
-### Требования к размерам иконки:
-- Контейнер иконки: строго `w-12 h-12 rounded-xl bg-slate-100 text-slate-700`.
-- Сама SVG-иконка: строго `w-6 h-6` (24px) до `w-7 h-7` (28px). Никогда не использовать крошечные `w-4 h-4` (16px) внутри карточек первого уровня!
+### Icon Sizing Rules:
+- Icon container: strictly `w-12 h-12 rounded-xl bg-slate-100 text-slate-700`.
+- SVG icon: strictly `w-6 h-6` (24px) to `w-7 h-7` (28px). Never use tiny `w-4 h-4` (16px) inside primary level cards!
 
 ---
 
-## 5. Структура Дашборда (4-Секционная Модель)
+## 5. Dashboard Structure (4-Section Model)
 
-Главная страница делит аналитику на 4 логические секции по 3 карточки в сетке (3×1 на десктопе, 2×2 на планшете, 1 на мобильном):
+The main dashboard organizes analytics into 4 logical sections with 3 cards per row (3×1 on desktop, 2×2 on tablet, 1 on mobile):
 
 ```tsx
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -136,52 +136,52 @@ export function MetricCard({ title, value, icon, footer, href }: MetricCardProps
 </div>
 ```
 
-1. **Секция 1: Analitică Utilizatori & Elevi**
-   - Карточка 1: `Total Utilizatori` (`UsersIcon`, число активных аккаунтов).
-   - Карточка 2: `Studenți Înregistrați` (`StudentsIcon`, охват курсов).
-   - Карточка 3: `Personal & Profesori` (`UserCheckIcon`, статус доступа).
+1. **Section 1: Analitică Utilizatori & Elevi**
+   - Card 1: `Total Utilizatori` (`UsersIcon`, count of active accounts).
+   - Card 2: `Studenți Înregistrați` (`StudentsIcon`, course reach).
+   - Card 3: `Personal & Profesori` (`UserCheckIcon`, access status).
 
-2. **Секция 2: Activitate Academică & Orar**
-   - Карточка 1: `Cursuri & Programe` (`BookOpenIcon`, куррикулум).
-   - Карточка 2: `Grupe de Studiu` (`CalendarIcon`, расписание залов).
-   - Карточка 3: `Prezență & Frecvență` (`SchoolIcon`, процент зачисления/посещаемости).
+2. **Section 2: Activitate Academică & Orar**
+   - Card 1: `Cursuri & Programe` (`BookOpenIcon`, curriculum count).
+   - Card 2: `Grupe de Studiu` (`CalendarIcon`, room schedules).
+   - Card 3: `Prezență & Frecvență` (`SchoolIcon`, enrollment/attendance rate).
 
-3. **Секция 3: Finanțe & Abonamente**
-   - Карточка 1: `Încasări Confirmate` (`CheckCircleIcon`, собранные средства в MDL).
-   - Карточка 2: `Facturat Total (Abonamente)` (`BarChartIcon`, объём выставленных счетов).
-   - Карточка 3: `Restanțe Active (Datorii)` (`AlertTriangleIcon`, просроченная задолженность с переходом в `tab=overdue`).
+3. **Section 3: Finanțe & Abonamente**
+   - Card 1: `Încasări Confirmate` (`CheckCircleIcon`, collected revenue in MDL).
+   - Card 2: `Facturat Total (Abonamente)` (`BarChartIcon`, total billed volume).
+   - Card 3: `Restanțe Active (Datorii)` (`AlertTriangleIcon`, overdue debt with navigation to `tab=overdue`).
 
-4. **Секция 4: Stare Sistem & Securitate (Split Grid 2 колонки)**
-   - Колонка 1: База данных PostgreSQL (Drizzle ORM) + Мультиарендная изоляция.
-   - Колонка 2: Контроль периметра (Tasmota Smart Door) + Авторизация PBAC NextAuth.
+4. **Section 4: Stare Sistem & Securitate (Split Grid 2 Columns)**
+   - Column 1: PostgreSQL Database (Drizzle ORM) + Multi-tenant isolation.
+   - Column 2: Perimeter control (Tasmota Smart Door) + PBAC NextAuth authorization.
 
 ---
 
-## 6. Верхний Хедер (`TopHeader.tsx`)
+## 6. Top Header (`TopHeader.tsx`)
 
-Хедер должен оставаться максимально чистым и лаконичным:
-- **Кликабельные хлебные крошки (Breadcrumbs):**
+Header remains clean and minimal:
+- **Clickable Breadcrumbs:**
   `Brio Portal > Prezentare > Panou Principal`
-- **Глобальный поиск (`GlobalSearch`):**
-  По центру, скругление `rounded-lg` или `rounded-full`, хоткей `CTRL + K`.
-- **Профиль пользователя:**
-  Монохромная таблетка с аватаром `bg-slate-900 text-white font-bold`, отображением имени и роли.
-- ❌ **Запрещено:** Размещать внешние ссылки («Portal Cursuri»), кнопки выбора школы («Toate Școlile»), если они не нужны для текущей роли, и декоративные бейджи в хедере.
+- **Global Search (`GlobalSearch`):**
+  Centered, `rounded-lg` or `rounded-full`, hotkey `CTRL + K`.
+- **User Profile:**
+  Monochrome pill with avatar `bg-slate-900 text-white font-bold`, showing name and role.
+- ❌ **Forbidden:** External links ("Portal Cursuri"), school selector buttons ("Toate Școlile") if not required for the active role, and decorative badges in the header.
 
 ---
 
-## 7. Правила для ИИ-Ассистентов (AI Agent Directives)
+## 7. AI Agent Directives
 
-При генерации или модификации любого UI-кода в этом репозитории ИИ **ОБЯЗАН** соблюдать:
+When generating or modifying any UI code in this repository, AI agents **MUST** follow:
 
-1. **Strict File Budget (<350 строк):**
-   Любой компонент или страница, превышающие 350 строк, бракуются. Сложные интерфейсы разделяются на атомарные подкомпоненты (как `MetricCard.tsx`).
-2. **Никаких самовольных градиентов:**
-   Никогда не добавлять классы `bg-gradient-to-*`, `from-blue-*`, `via-purple-*`, `to-pink-*` к фону карточек или секций.
-3. **Строгая типизация иконок:**
-   Все иконки импортируются строго из `@/components/ui/icons`. Запрещено импортировать непроверенные внешние пакеты иконок (lucide-react, heroicons), если они не согласованы.
-4. **Интерактивные состояния (Hover & Transitions):**
-   Все интерактивные элементы должны иметь деликатный hover:
+1. **Strict File Budget (<350 lines):**
+   Any component or page exceeding 350 lines must be rejected. Complex interfaces must be broken down into atomic subcomponents (like `MetricCard.tsx`).
+2. **No Arbitrary Gradients:**
+   Never add `bg-gradient-to-*`, `from-blue-*`, `via-purple-*`, `to-pink-*` classes to card backgrounds or sections.
+3. **Strict Icon Typing:**
+   All icons must be imported from `@/components/ui/icons`. Do not import unverified external icon packages (lucide-react, heroicons) without approval.
+4. **Interactive States (Hover & Transitions):**
+   All interactive elements must feature subtle hover effects:
    `transition-all hover:border-slate-300 hover:shadow-sm active:scale-[0.99]`
-5. **Адаптивность (Mobile-First):**
-   Всегда проверять поведение на экранах `xs`, `sm`, `md`, `lg`, `xl`. Сетки карточек всегда используют `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
+5. **Mobile-First Responsiveness:**
+   Always test behavior on `xs`, `sm`, `md`, `lg`, and `xl` viewports. Card grids must consistently use `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
