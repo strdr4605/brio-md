@@ -171,7 +171,7 @@ export default function StudentiPage() {
         setCourseFilter={setCourseFilter}
       />
 
-      {/* Main Table with Smart Expandable Rows ("Умная раскрывашка") */}
+      {/* Main Table with Smart Expandable Rows */}
       {isLoading ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
           <p className="text-sm text-slate-500">Se încarcă catalogul...</p>
@@ -306,7 +306,7 @@ export default function StudentiPage() {
                         </td>
                       </tr>
 
-                      {/* Smart Expandable Detail Row ("Умная раскрывашка") */}
+                      {/* Smart Expandable Detail Row */}
                       {isExpanded && (
                         <tr>
                           <td colSpan={6} className="p-0">

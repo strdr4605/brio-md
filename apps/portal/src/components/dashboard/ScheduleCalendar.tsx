@@ -101,14 +101,14 @@ export function ScheduleCalendar() {
   return (
     <div className="space-y-4">
       {/* Top Filter & Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm space-y-3">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* View Mode Toggle: Matrice Grupe, Săli, Săptămânal */}
-          <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setViewMode("matrix")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                viewMode === "matrix" ? "bg-white text-blue-700 shadow-sm border border-neutral-200" : "text-neutral-600 hover:text-neutral-900"
+                viewMode === "matrix" ? "bg-white text-slate-900 shadow-xs border border-slate-200/80" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>🏛️</span>
@@ -116,16 +116,16 @@ export function ScheduleCalendar() {
             </button>
             <button
               onClick={() => setViewMode("rooms")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                viewMode === "rooms" ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-900"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                viewMode === "rooms" ? "bg-white text-slate-900 shadow-xs border border-slate-200/80" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Distribuție Săli
             </button>
             <button
               onClick={() => setViewMode("week")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                viewMode === "week" ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-900"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                viewMode === "week" ? "bg-white text-slate-900 shadow-xs border border-slate-200/80" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Săptămânal
@@ -135,12 +135,12 @@ export function ScheduleCalendar() {
           {/* Group Sorting, Hide Empty Toggle & Day Picker */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Group Sorting Selector */}
-            <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1.5 rounded-xl border border-neutral-200 text-xs">
-              <span className="text-neutral-400 font-semibold">Grupe:</span>
+            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80 text-xs">
+              <span className="text-slate-400 font-semibold">Grupe:</span>
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as SortMode)}
-                className="bg-transparent font-semibold text-neutral-800 outline-none cursor-pointer"
+                className="bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
               >
                 <option value="name_asc">A &rarr; Z (Ordine)</option>
                 <option value="name_desc">Z &rarr; A</option>
@@ -153,10 +153,10 @@ export function ScheduleCalendar() {
             <button
               type="button"
               onClick={() => setHideEmptySlots((v) => !v)}
-              className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 ${
                 hideEmptySlots
-                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-2xs"
-                  : "bg-neutral-50 border-neutral-200 text-neutral-600 hover:bg-neutral-100"
+                  ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                  : "bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100"
               }`}
               title="Comută între afișarea doar a orelor ocupate sau a tuturor orelor"
             >
@@ -168,10 +168,10 @@ export function ScheduleCalendar() {
               <button
                 type="button"
                 onClick={() => setSelectedDay("all")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   selectedDay === "all"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                 }`}
               >
                 Toate Zilele
@@ -181,10 +181,10 @@ export function ScheduleCalendar() {
                   key={day.key}
                   type="button"
                   onClick={() => setSelectedDay(day.key)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                     selectedDay === day.key
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                   }`}
                 >
                   {day.label}
@@ -195,14 +195,13 @@ export function ScheduleCalendar() {
         </div>
 
         {/* Filters row */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-neutral-100 text-xs">
-          {/* Group Filter */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100 text-xs">
           <div className="flex items-center gap-1.5">
-            <UsersIcon className="w-4 h-4 text-neutral-400" />
+            <UsersIcon className="w-4 h-4 text-slate-400" />
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-700 outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium"
             >
               <option value="all">Toate Grupele ({scheduledGroups.length})</option>
               {scheduledGroups.map((g) => (
@@ -212,11 +211,11 @@ export function ScheduleCalendar() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <DoorIcon className="w-4 h-4 text-neutral-400" />
+            <DoorIcon className="w-4 h-4 text-slate-400" />
             <select
               value={selectedRoom}
               onChange={(e) => setSelectedRoom(e.target.value)}
-              className="px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-700 outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium"
             >
               <option value="all">Toate Sălile ({rooms.length})</option>
               {rooms.map((r) => (
@@ -226,11 +225,11 @@ export function ScheduleCalendar() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <FilterIcon className="w-4 h-4 text-neutral-400" />
+            <FilterIcon className="w-4 h-4 text-slate-400" />
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
-              className="px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-700 outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium"
             >
               <option value="all">Toate Cursurile ({courses.length})</option>
               {courses.map((c) => (
@@ -240,25 +239,25 @@ export function ScheduleCalendar() {
           </div>
 
           {currentUserId && (
-            <label className="flex items-center gap-1.5 cursor-pointer bg-neutral-50 px-2.5 py-1.5 rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-100 transition font-medium">
+            <label className="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition font-medium">
               <input
                 type="checkbox"
                 checked={onlyMyGroups}
                 onChange={(e) => setOnlyMyGroups(e.target.checked)}
-                className="w-3.5 h-3.5 text-blue-600 rounded"
+                className="w-3.5 h-3.5 text-slate-900 border-slate-300 rounded focus:ring-slate-900/20"
               />
               <span>Doar grupele mele</span>
             </label>
           )}
 
           <div className="relative flex-1 min-w-[160px]">
-            <SearchIcon className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Caută grupă, curs, sală, profesor..."
-              className="w-full pl-8 pr-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             />
           </div>
         </div>
@@ -266,9 +265,9 @@ export function ScheduleCalendar() {
 
       {/* Main View Display */}
       {isLoading ? (
-        <div className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm space-y-4 animate-pulse">
-          <div className="h-8 bg-neutral-200 rounded-lg w-1/4" />
-          <div className="h-72 bg-neutral-100 rounded-xl" />
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs space-y-4 animate-pulse">
+          <div className="h-8 bg-slate-200 rounded-lg w-1/4" />
+          <div className="h-72 bg-slate-100 rounded-xl" />
         </div>
       ) : viewMode === "matrix" ? (
         <ScheduleMatrixView
@@ -328,6 +327,7 @@ export function ScheduleCalendar() {
           courseId={rosterGroup.courseId}
           courseName={rosterGroup.courseName || "Curs"}
           schoolId={rosterGroup.schoolId}
+          initialGroupId={rosterGroup.id}
         />
       )}
 
