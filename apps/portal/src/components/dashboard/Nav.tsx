@@ -5,22 +5,9 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import {
-  DashboardIcon,
-  UsersIcon,
-  StudentsIcon,
-  BookOpenIcon,
-  CalendarIcon,
-  KeyIcon,
-  DoorIcon,
-  SettingsIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  LogOutIcon,
-  XIcon,
-  UserCheckIcon,
-  BarChartIcon,
-  InvoiceIcon,
+  DashboardIcon, UsersIcon, StudentsIcon, BookOpenIcon, CalendarIcon,
+  KeyIcon, DoorIcon, SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
+  ChevronRightIcon, LogOutIcon, XIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { trpc } from "@/lib/trpc";
@@ -47,8 +34,7 @@ export function Nav({
   const pathname = usePathname();
   const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
   const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
-  const isBillingAllowed =
-    permissions?.includes("manage_billing") || isSuperOrAdmin;
+  const isBillingAllowed = permissions?.includes("manage_billing") || isSuperOrAdmin;
   const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
   const canAccessDoor = permissions?.includes("open-front-door") || isSuperOrAdmin;
 
@@ -57,7 +43,6 @@ export function Nav({
     { enabled: isBillingAllowed, staleTime: 60_000 },
   );
 
-  // Smart Accordions
   const [academicOpen, setAcademicOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(true);
 
@@ -82,20 +67,18 @@ export function Nav({
           onClick={onCloseMobile}
           className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group relative ${
             active
-              ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm shadow-blue-500/25"
+              ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm"
               : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.08]"
           }`}
           title={label}
         >
           <IconComponent
-            className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${
-              active ? "text-blue-400" : ""
-            }`}
+            className={`w-6 h-6 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-blue-400" : ""}`}
           />
           {Boolean(badgeCount && badgeCount > 0) && (
             <span
               data-testid="overdue-badge-collapsed"
-              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0c0e14]"
+              className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-[#0c0e14]"
             />
           )}
         </Link>
@@ -106,21 +89,21 @@ export function Nav({
       <Link
         href={href}
         onClick={onCloseMobile}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 ${
+        className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl transition-all duration-150 ${
           active
-            ? "bg-gradient-to-r from-blue-600/25 to-indigo-600/15 text-white font-semibold border-l-2 border-blue-500 shadow-sm"
-            : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+            ? "bg-white/10 text-white font-semibold border-l-2 border-blue-500 shadow-sm"
+            : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.05]"
         }`}
         title={label}
       >
         <IconComponent
-          className={`w-5 h-5 shrink-0 ${active ? "text-blue-400" : ""}`}
+          className={`w-6 h-6 shrink-0 ${active ? "text-blue-400" : "text-slate-400"}`}
         />
-        <span className="text-sm font-medium flex-1 truncate">{label}</span>
+        <span className="text-[15px] font-semibold flex-1 truncate">{label}</span>
         {Boolean(badgeCount && badgeCount > 0) && (
           <span
             data-testid="overdue-badge"
-            className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0"
+            className="px-2 py-0.5 text-xs font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0"
           >
             {badgeCount}
           </span>
@@ -151,15 +134,15 @@ export function Nav({
           </button>
         ) : (
           <>
-            <Link href="/dashboard" className="flex items-center gap-2.5 group overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 transition">
+            <Link href="/dashboard" className="flex items-center gap-3 group overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 transition">
                 B
               </div>
               <div className="flex flex-col">
-                <span className="text-white font-bold text-base tracking-tight leading-none">
+                <span className="text-white font-extrabold text-lg tracking-tight leading-none">
                   Brio<span className="text-blue-500">.md</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
+                <span className="text-xs uppercase font-bold tracking-wider text-slate-400 mt-1">
                   Portal Management
                 </span>
               </div>
@@ -187,18 +170,18 @@ export function Nav({
       </div>
 
       {/* Navigation List */}
-      <nav className={`flex-1 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin ${isCollapsed ? "px-2" : "px-2.5"}`}>
+      <nav className={`flex-1 py-4 space-y-3.5 overflow-y-auto overflow-x-hidden scrollbar-thin ${isCollapsed ? "px-2" : "px-3"}`}>
         {/* Principal / Overview */}
         <div className="space-y-1">
           {!isCollapsed && (
-            <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+            <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
               Prezentare
             </div>
           )}
           {renderNavLink("/dashboard", "Panou Principal", DashboardIcon)}
         </div>
 
-        {/* Group: Gestiune Academică (Smart Accordion) */}
+        {/* Group: Gestiune Academică */}
         {(isSuperOrAdmin || canManageStudents) && (
           <div className="space-y-1">
             {isCollapsed ? (
@@ -207,11 +190,11 @@ export function Nav({
               <button
                 type="button"
                 onClick={() => setAcademicOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
+                className="w-full flex items-center justify-between px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
               >
                 <span>Gestiune Academică</span>
                 <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  className={`w-4 h-4 transition-transform duration-200 ${
                     academicOpen ? "rotate-0" : "-rotate-90"
                   }`}
                 />
@@ -232,7 +215,7 @@ export function Nav({
           </div>
         )}
 
-        {/* Group: Securitate & Control (Smart Accordion) */}
+        {/* Group: Securitate & Control */}
         {(canAccessDoor || isSuperAdmin) && (
           <div className="space-y-1">
             {isCollapsed ? (
@@ -241,11 +224,11 @@ export function Nav({
               <button
                 type="button"
                 onClick={() => setSecurityOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
+                className="w-full flex items-center justify-between px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
               >
                 <span>Control & Acces</span>
                 <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  className={`w-4 h-4 transition-transform duration-200 ${
                     securityOpen ? "rotate-0" : "-rotate-90"
                   }`}
                 />
@@ -266,7 +249,7 @@ export function Nav({
           {isCollapsed ? (
             <div className="border-t border-white/[0.08] my-2 mx-1" />
           ) : (
-            <div className="px-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+            <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
               Sistem
             </div>
           )}
@@ -275,12 +258,12 @@ export function Nav({
       </nav>
 
       {/* User Profile & Sign Out Footer */}
-      <div className={`border-t border-white/[0.08] bg-black/25 shrink-0 ${isCollapsed ? "p-2.5" : "p-3"}`}>
+      <div className={`border-t border-white/[0.08] bg-black/30 shrink-0 ${isCollapsed ? "p-2.5" : "p-3.5"}`}>
         {isCollapsed ? (
           <div className="flex flex-col items-center gap-2">
             <Link
               href="/dashboard/settings"
-              className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center ring-2 ring-white/10 hover:scale-105 transition"
+              className="w-10 h-10 rounded-xl bg-slate-800 text-white font-bold text-xs flex items-center justify-center ring-1 ring-white/10 hover:scale-105 transition"
               title={`Profil: ${userName || "Utilizator"}`}
             >
               {userName ? userName.charAt(0).toUpperCase() : "U"}
@@ -291,24 +274,24 @@ export function Nav({
               title="Deconectare"
               aria-label="Deconectare"
             >
-              <LogOutIcon className="w-4 h-4" />
+              <LogOutIcon className="w-5 h-5" />
             </button>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center justify-between gap-3">
             <Link
               href="/dashboard/settings"
-              className="flex items-center gap-2.5 min-w-0 group"
+              className="flex items-center gap-3 min-w-0 group"
               title="Setări cont"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-2 ring-white/10 group-hover:scale-105 transition">
+              <div className="w-9 h-9 rounded-full bg-slate-800 text-white font-bold text-sm flex items-center justify-center shrink-0 ring-1 ring-white/20 group-hover:scale-105 transition">
                 {userName ? userName.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="min-w-0 flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-200 truncate leading-tight group-hover:text-blue-400 transition-colors">
+                <span className="text-sm font-semibold text-slate-100 truncate leading-tight group-hover:text-blue-400 transition-colors">
                   {userName || "Utilizator"}
                 </span>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">
+                <span className="text-xs text-slate-400 uppercase font-bold tracking-wider truncate mt-0.5">
                   {role || "Staff"}
                 </span>
               </div>
@@ -316,11 +299,11 @@ export function Nav({
 
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 active:scale-95"
+              className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 active:scale-95"
               title="Deconectare"
               aria-label="Deconectare"
             >
-              <LogOutIcon className="w-4 h-4" />
+              <LogOutIcon className="w-5 h-5" />
             </button>
           </div>
         )}
@@ -333,7 +316,7 @@ export function Nav({
       {/* Desktop Sidebar */}
       <aside
         className={`hidden md:flex fixed left-0 top-0 bottom-0 bg-[#0c0e14] border-r border-white/[0.08] z-30 transition-all duration-300 ease-in-out overflow-hidden ${
-          isCollapsed ? "w-[72px]" : "w-[260px]"
+          isCollapsed ? "w-[72px]" : "w-[270px]"
         }`}
       >
         {navContent}
