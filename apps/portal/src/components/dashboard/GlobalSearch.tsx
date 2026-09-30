@@ -205,11 +205,11 @@ export function GlobalSearch() {
                           onMouseEnter={() => setSelectedIndex(idx)}
                           className={`p-3 rounded-xl cursor-pointer transition flex items-start gap-3 ${
                             isSelected
-                              ? "bg-blue-50/80 border border-blue-200/80 shadow-xs"
+                              ? "bg-slate-100 border border-slate-300 shadow-xs"
                               : "hover:bg-slate-50 border border-transparent"
                           }`}
                         >
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                          <div className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs mt-0.5">
                             {student.name.charAt(0).toUpperCase()}
                           </div>
 

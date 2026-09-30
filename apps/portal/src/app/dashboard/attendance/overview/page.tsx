@@ -86,7 +86,7 @@ export default function AttendanceOverviewPage() {
         <div className="mt-4">
           <Link
             href="/dashboard/schedule"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm transition hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-xs transition hover:bg-slate-800 active:scale-95"
           >
             <CalendarIcon className="w-4 h-4" />
             <span>Mergi la Orar pentru a nota prezența</span>
@@ -118,7 +118,7 @@ export default function AttendanceOverviewPage() {
             >
               Catalog Jurnal
             </Link>
-            <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-xs">
+            <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs border border-slate-200/60">
               Matrice & Istoric
             </span>
           </div>
@@ -126,9 +126,9 @@ export default function AttendanceOverviewPage() {
           {/* Quick Link to Orar */}
           <Link
             href="/dashboard/schedule"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 font-bold text-xs transition active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 font-bold text-xs transition active:scale-95"
           >
-            <CalendarIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <CalendarIcon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>Notează în Orar →</span>
           </Link>
         </div>
@@ -145,7 +145,7 @@ export default function AttendanceOverviewPage() {
               setSelectedCourseId(val);
               setSelectedGroupId(null);
             }}
-            className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+            className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
           >
             <option value="">Toate cursurile</option>
             {coursesList.map((c) => (
@@ -163,7 +163,7 @@ export default function AttendanceOverviewPage() {
             value={currentGroupId || ""}
             onChange={(e) => setSelectedGroupId(Number(e.target.value))}
             disabled={isGroupsLoading || groupsList.length === 0}
-            className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition disabled:opacity-50"
+            className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition disabled:opacity-50"
           >
             {groupsList.length === 0 ? (
               <option value="">Nicio grupă disponibilă</option>
@@ -184,7 +184,7 @@ export default function AttendanceOverviewPage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full sm:w-auto pl-8 pr-3 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+            className="w-full sm:w-auto pl-8 pr-3 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
           />
           <CalendarIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
         </div>
@@ -193,57 +193,57 @@ export default function AttendanceOverviewPage() {
       {/* Analytics Summary KPI Cards */}
       {matrixData && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <UsersIcon className="w-6 h-6" />
             </div>
             <div className="min-w-0">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block truncate">
                 Elevi Înrolați
               </span>
-              <p className="text-lg sm:text-xl font-black text-slate-900 leading-none mt-1">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none mt-1">
                 {matrixData.summary.totalStudents}
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <CalendarIcon className="w-6 h-6" />
             </div>
             <div className="min-w-0">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block truncate">
                 Sesiuni Desfășurate
               </span>
-              <p className="text-lg sm:text-xl font-black text-slate-900 leading-none mt-1">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none mt-1">
                 {matrixData.summary.totalDates}
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <TrendingUpIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <TrendingUpIcon className="w-6 h-6" />
             </div>
             <div className="min-w-0">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block truncate">
                 Prezență Medie
               </span>
-              <p className="text-lg sm:text-xl font-black text-slate-900 leading-none mt-1">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none mt-1">
                 {matrixData.summary.groupAttendanceRate}%
               </p>
             </div>
           </div>
 
           <div
-            className={`bg-white rounded-xl p-3 sm:p-4 border shadow-xs flex items-center gap-3 ${
+            className={`bg-white rounded-2xl p-4 border shadow-xs flex items-center gap-3 ${
               matrixData.summary.atRiskCount > 0
                 ? "border-rose-200 bg-rose-50/20"
                 : "border-slate-200/80"
             }`}
           >
             <div
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 text-sm ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-base ${
                 matrixData.summary.atRiskCount > 0
                   ? "bg-rose-100 text-rose-700"
                   : "bg-slate-100 text-slate-600"
@@ -256,7 +256,7 @@ export default function AttendanceOverviewPage() {
                 Elevi în Risc (3+)
               </span>
               <p
-                className={`text-lg sm:text-xl font-black leading-none mt-1 ${
+                className={`text-xl sm:text-2xl font-black leading-none mt-1 ${
                   matrixData.summary.atRiskCount > 0 ? "text-rose-600" : "text-slate-900"
                 }`}
               >

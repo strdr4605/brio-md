@@ -33,12 +33,7 @@ export default function SetariPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Setări Sistem & Cont</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              Configurare
-            </span>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Setări Sistem & Cont</h1>
           <p className="text-xs text-slate-500 mt-1">
             Vizualizează configurația tenant-ului, parametrii de rețea și statutul contului tău.
           </p>
@@ -46,7 +41,7 @@ export default function SetariPage() {
 
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition active:scale-95"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition active:scale-95 self-start sm:self-auto"
         >
           <span>← Înapoi la Panou</span>
         </Link>
@@ -55,16 +50,16 @@ export default function SetariPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Account Profile Details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-md shadow-blue-500/25">
+              <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white font-black text-xl flex items-center justify-center shadow-xs">
                 {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U"}
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900">{session?.user?.name || "Utilizator"}</h2>
                 <p className="text-xs text-slate-500">{session?.user?.email || "Fără adresă de email"}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200/80">
                     {role || "Staff"}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600">
@@ -78,7 +73,7 @@ export default function SetariPage() {
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                 <span className="text-slate-400 uppercase font-semibold">Campus Școlar Asignat</span>
                 <p className="font-bold text-slate-800 text-sm mt-1 flex items-center gap-1.5">
-                  <SchoolIcon className="w-4 h-4 text-blue-500 shrink-0" />
+                  <SchoolIcon className="w-4 h-4 text-slate-600 shrink-0" />
                   <span>{currentSchool?.name || (session?.user?.schoolId ? `Școala #${session.user.schoolId}` : "Toate Școlile (Global)")}</span>
                 </p>
               </div>
@@ -100,9 +95,9 @@ export default function SetariPage() {
                   permissions.map((perm) => (
                     <span
                       key={perm}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80"
                     >
-                      <ShieldCheckIcon className="w-3.5 h-3.5 text-blue-500" />
+                      <ShieldCheckIcon className="w-3.5 h-3.5 text-slate-500" />
                       {perm}
                     </span>
                   ))
@@ -114,7 +109,7 @@ export default function SetariPage() {
           </div>
 
           {/* Quick Access Links */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
             <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
               <SettingsIcon className="w-4 h-4 text-slate-500" />
               Scurtături Rapide de Navigare
@@ -122,10 +117,10 @@ export default function SetariPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Link
                 href="/dashboard/students"
-                className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-emerald-300 hover:bg-emerald-50/30 transition group active:scale-95"
+                className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95"
               >
-                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-emerald-700">
-                  <StudentsIcon className="w-4 h-4 text-emerald-600" />
+                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
+                  <StudentsIcon className="w-4 h-4 text-slate-600" />
                   <span>Catalog Studenți</span>
                 </div>
                 <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
@@ -134,10 +129,10 @@ export default function SetariPage() {
               {isSuperOrAdmin && (
                 <Link
                   href="/dashboard/users"
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-blue-300 hover:bg-blue-50/30 transition group active:scale-95"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95"
                 >
-                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-blue-700">
-                    <UsersIcon className="w-4 h-4 text-blue-600" />
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
+                    <UsersIcon className="w-4 h-4 text-slate-600" />
                     <span>Gestiune Utilizatori</span>
                   </div>
                   <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
@@ -147,10 +142,10 @@ export default function SetariPage() {
               {canAccessDoor && (
                 <Link
                   href="/dashboard/roller-door"
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-amber-300 hover:bg-amber-50/30 transition group active:scale-95"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95"
                 >
-                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-amber-700">
-                    <DoorIcon className="w-4 h-4 text-amber-600" />
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
+                    <DoorIcon className="w-4 h-4 text-slate-600" />
                     <span>Roletă Intrare</span>
                   </div>
                   <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />

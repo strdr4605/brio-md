@@ -97,7 +97,7 @@ export default function FinancialStatisticsPage() {
   if (sessionStatus === "loading") {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-slate-900 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -105,7 +105,7 @@ export default function FinancialStatisticsPage() {
   if (!isSuperOrAdmin) {
     return (
       <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs max-w-lg mx-auto mt-8">
-        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
+        <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-3">
           <InvoiceIcon className="w-6 h-6" />
         </div>
         <h2 className="text-base font-bold text-slate-900">Acces Restricționat</h2>
@@ -124,14 +124,9 @@ export default function FinancialStatisticsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Statistici Financiare & Restanțieri
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              Live Dashboard
-            </span>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Statistici Financiare & Restanțieri
+          </h1>
           <p className="text-xs text-slate-500 mt-1">
             Monitorizează indicatorii de încasare, veniturile recurente și gestionează restanțele elevilor.
           </p>
@@ -148,7 +143,7 @@ export default function FinancialStatisticsPage() {
           </Link>
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-xs transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition-all"
           >
             <BarChartIcon className="w-3.5 h-3.5" />
             <span>Statistici & Restanțieri</span>

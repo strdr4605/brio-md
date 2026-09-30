@@ -30,7 +30,7 @@ export function StudentFiltersBar({
           placeholder="Caută după nume, telefon..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+          className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
         />
       </div>
 
@@ -41,7 +41,7 @@ export function StudentFiltersBar({
             onChange={(e) =>
               setSelectedSchoolId(e.target.value === "all" ? "all" : Number(e.target.value))
             }
-            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
           >
             <option value="all">Toate Școlile</option>
             {schools.map((s) => (
@@ -55,7 +55,7 @@ export function StudentFiltersBar({
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value as any)}
-          className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+          className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
         >
           <option value="all">Toate Cursurile</option>
           <option value="enrolled">Doar Înrolați</option>

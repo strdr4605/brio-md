@@ -32,17 +32,15 @@ export const ACADEMIC_PAIRS: AcademicPair[] = [
   { index: 7, label: "18:45 - 20:15", startMinutes: 18 * 60 + 45, endMinutes: 20 * 60 + 15 },
 ];
 
-export const COLOR_PALETTES = [
-  { bg: "bg-blue-50 hover:bg-blue-100/90", border: "border-blue-200", text: "text-blue-900" },
-  { bg: "bg-emerald-50 hover:bg-emerald-100/90", border: "border-emerald-200", text: "text-emerald-900" },
-  { bg: "bg-purple-50 hover:bg-purple-100/90", border: "border-purple-200", text: "text-purple-900" },
-  { bg: "bg-amber-50 hover:bg-amber-100/90", border: "border-amber-200", text: "text-amber-900" },
-  { bg: "bg-rose-50 hover:bg-rose-100/90", border: "border-rose-200", text: "text-rose-900" },
-  { bg: "bg-indigo-50 hover:bg-indigo-100/90", border: "border-indigo-200", text: "text-indigo-900" },
-];
+// Clean Monochrome Enterprise styling tokens for schedule cards
+export const SCHEDULE_CARD_THEME = {
+  bg: "bg-white hover:bg-slate-50",
+  border: "border-slate-200/90 hover:border-slate-300",
+  text: "text-slate-900",
+};
 
-export function getCourseColor(courseId: number) {
-  return COLOR_PALETTES[courseId % COLOR_PALETTES.length];
+export function getCourseColor(_courseId: number) {
+  return SCHEDULE_CARD_THEME;
 }
 
 export function parseStartHour(timeStr: string | null | undefined): string {

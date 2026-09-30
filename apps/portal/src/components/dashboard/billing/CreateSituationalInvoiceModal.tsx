@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { XIcon, PlusIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/icons";
+import { SituationalInvoiceRow, type SituationalLineItem } from "./SituationalInvoiceRow";
 
 export type GroupOption = {
   id: number;
@@ -18,13 +19,6 @@ export type CreateSituationalInvoiceModalProps = {
   studentName: string;
   groups: GroupOption[];
   onSuccess: () => void;
-};
-
-type LineItem = {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
 };
 
 const PRESET_CATEGORIES = [
@@ -53,7 +47,7 @@ export function CreateSituationalInvoiceModal({
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const [items, setItems] = useState<LineItem[]>([
+  const [items, setItems] = useState<SituationalLineItem[]>([
     {
       id: "item-1",
       description: "Materiale didactice curs",
@@ -104,7 +98,7 @@ export function CreateSituationalInvoiceModal({
 
   const handleItemChange = (
     id: string,
-    field: keyof Omit<LineItem, "id">,
+    field: "description" | "quantity" | "unitPrice",
     value: string | number,
   ) => {
     setItems((prev) =>
@@ -216,7 +210,7 @@ export function CreateSituationalInvoiceModal({
                     key={preset.label}
                     type="button"
                     onClick={() => handleApplyPreset(preset)}
-                    className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 rounded-lg border border-slate-200 transition"
+                    className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200/80 transition active:scale-95"
                   >
                     + {preset.label} ({preset.price} MDL)
                   </button>
@@ -235,7 +229,7 @@ export function CreateSituationalInvoiceModal({
                   onChange={(e) =>
                     setSelectedGroupId(e.target.value ? Number(e.target.value) : null)
                   }
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 font-medium text-slate-800"
                 >
                   <option value="">Fără asociere directă</option>
                   {groups.map((g) => (
@@ -254,7 +248,7 @@ export function CreateSituationalInvoiceModal({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800"
                   required
                 />
               </div>
@@ -269,7 +263,7 @@ export function CreateSituationalInvoiceModal({
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 hover:text-slate-700 hover:underline"
                 >
                   <PlusIcon className="w-3.5 h-3.5" />
                   <span>Adaugă poziție</span>
@@ -278,84 +272,22 @@ export function CreateSituationalInvoiceModal({
 
               <div className="space-y-2">
                 {items.map((it) => (
-                  <div
+                  <SituationalInvoiceRow
                     key={it.id}
-                    className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
-                  >
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        placeholder="Descriere poziție..."
-                        value={it.description}
-                        onChange={(e) => handleItemChange(it.id, "description", e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                        required
-                      />
-                    </div>
-
-                    <div className="w-20">
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Cant."
-                        value={it.quantity}
-                        onChange={(e) =>
-                          handleItemChange(it.id, "quantity", parseInt(e.target.value, 10) || 1)
-                        }
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-center text-slate-800"
-                        title="Cantitate"
-                        required
-                      />
-                    </div>
-
-                    <div className="w-28">
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Preț"
-                          value={it.unitPrice}
-                          onChange={(e) =>
-                            handleItemChange(
-                              it.id,
-                              "unitPrice",
-                              parseInt(e.target.value, 10) || 0,
-                            )
-                          }
-                          className="w-full pr-7 pl-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-right font-medium text-slate-800"
-                          title="Preț unitar (MDL)"
-                          required
-                        />
-                        <span className="absolute right-2 top-2 text-[10px] text-slate-400">
-                          MDL
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="w-24 text-right font-bold text-xs text-slate-900 pr-1 shrink-0 flex items-center justify-end">
-                      {it.quantity * it.unitPrice} MDL
-                    </div>
-
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveItem(it.id)}
-                        className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition shrink-0"
-                        title="Șterge poziție"
-                      >
-                        <XIcon className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                    item={it}
+                    onChange={handleItemChange}
+                    onRemove={handleRemoveItem}
+                    canRemove={items.length > 1}
+                  />
                 ))}
               </div>
 
               {/* Total Summary */}
-              <div className="flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl">
-                <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">
+              <div className="flex items-center justify-between p-3.5 bg-slate-900 text-white rounded-xl shadow-xs">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   Total De Plată
                 </span>
-                <span className="text-base font-extrabold text-blue-700">
+                <span className="text-lg font-black text-white">
                   {totalAmount} MDL
                 </span>
               </div>
@@ -371,7 +303,7 @@ export function CreateSituationalInvoiceModal({
                 placeholder="Observații vizibile pentru elev/părinte..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 resize-none"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 text-slate-800 resize-none"
               />
             </div>
           </div>
@@ -388,7 +320,7 @@ export function CreateSituationalInvoiceModal({
             <button
               type="submit"
               disabled={createInvoiceMutation.isPending || totalAmount <= 0}
-              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-4 h-4" />
               <span>

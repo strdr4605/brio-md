@@ -54,7 +54,7 @@ export function DashboardShell({
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isCollapsed ? "md:ml-[72px]" : "md:ml-[260px]"
+          isCollapsed ? "md:ml-[72px]" : "md:ml-[270px]"
         }`}
       >
         {/* Top Sticky Header */}

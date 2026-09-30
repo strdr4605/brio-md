@@ -1,6 +1,12 @@
 "use client";
 
-import { TrendingUpIcon, AlertTriangleIcon, CheckCircleIcon, InvoiceIcon } from "@/components/ui/icons";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import {
+  TrendingUpIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  InvoiceIcon,
+} from "@/components/ui/icons";
 
 export type InvoiceKpiCardsProps = {
   totalInvoiced: number;
@@ -39,113 +45,74 @@ export function InvoiceKpiCards({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {/* 1. Total Facturat */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Total Facturat
-          </span>
-          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <InvoiceIcon className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="mt-3">
+      <MetricCard
+        title="Total Facturat"
+        value={
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-slate-900 tracking-tight">
-              {formatMdl(totalInvoiced)}
-            </span>
+            <span>{formatMdl(totalInvoiced)}</span>
             <span className="text-xs font-semibold text-slate-500">MDL</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-0.5">Volum total facturi emise</p>
-        </div>
-      </div>
+        }
+        icon={<InvoiceIcon />}
+        footer="Volum total facturi emise"
+      />
 
       {/* 2. Total Încasat */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Total Încasat
-          </span>
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircleIcon className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="mt-3">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-emerald-700 tracking-tight">
-              {formatMdl(totalCollected)}
-            </span>
+      <MetricCard
+        title="Total Încasat"
+        value={
+          <div className="flex items-baseline gap-1.5 text-emerald-600">
+            <span>{formatMdl(totalCollected)}</span>
             <span className="text-xs font-semibold text-slate-500">MDL</span>
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <TrendingUpIcon className="w-3.5 h-3.5 text-emerald-600" />
-            <p className="text-[11px] font-semibold text-emerald-600">
-              Rată colectare: {collectionRate}%
-            </p>
-          </div>
-        </div>
-      </div>
+        }
+        icon={<CheckCircleIcon />}
+        footer={
+          <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+            <TrendingUpIcon className="w-3.5 h-3.5" />
+            Rată colectare: {collectionRate}%
+          </span>
+        }
+      />
 
       {/* 3. Datorii Active */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Datorii Active
-          </span>
-          <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <AlertTriangleIcon className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="mt-3">
+      <MetricCard
+        title="Datorii Active"
+        value={
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-amber-700 tracking-tight">
+            <span className={activeDebt > 0 ? "text-rose-600" : "text-slate-900"}>
               {formatMdl(activeDebt)}
             </span>
             <span className="text-xs font-semibold text-slate-500">MDL</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-0.5">Restanțe neachitate în curs</p>
-        </div>
-      </div>
+        }
+        icon={<AlertTriangleIcon />}
+        footer="Restanțe neachitate în curs"
+      />
 
       {/* 4. Facturi Restante (Overdue) */}
-      <div
-        className={`rounded-2xl p-4 sm:p-5 border shadow-xs flex flex-col justify-between transition-colors ${
-          overdueCount > 0
-            ? "bg-rose-50/40 border-rose-200 hover:border-rose-300"
-            : "bg-white border-slate-200/80 hover:border-slate-300"
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Facturi Restante
-          </span>
-          <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              overdueCount > 0
-                ? "bg-rose-100 text-rose-600 font-bold"
-                : "bg-slate-100 text-slate-500"
-            }`}
-          >
-            {overdueCount > 0 ? "!" : "0"}
-          </div>
-        </div>
-        <div className="mt-3">
+      <MetricCard
+        title="Facturi Restante"
+        value={
           <div className="flex items-baseline gap-1.5">
-            <span
-              className={`text-2xl font-black tracking-tight ${
-                overdueCount > 0 ? "text-rose-700" : "text-slate-900"
-              }`}
-            >
+            <span className={overdueCount > 0 ? "text-rose-600" : "text-slate-900"}>
               {overdueCount}
             </span>
             <span className="text-xs font-semibold text-slate-500">
               {overdueCount === 1 ? "factură" : "facturi"}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            {overdueCount > 0 ? "Termen de plată depășit" : "Nicio factură restantă"}
-          </p>
-        </div>
-      </div>
+        }
+        icon={<AlertTriangleIcon className={overdueCount > 0 ? "text-rose-600" : ""} />}
+        footer={
+          overdueCount > 0 ? (
+            <span className="text-rose-600 font-medium">Termen de plată depășit</span>
+          ) : (
+            "Nicio factură restantă"
+          )
+        }
+        href="/dashboard/invoices?tab=overdue"
+      />
     </div>
   );
 }

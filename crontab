@@ -1,0 +1,19 @@
+# =============================================================================
+# BRIO.MD - SUBSCRIPTION BILLING CRON SCHEDULE
+# =============================================================================
+# Runs on the 1st of each month at 02:00 UTC
+#
+# Operations:
+# 1. Scans all active students with monthly subscriptions (subscription_monthly).
+# 2. Generates missing monthly invoices in "draft" status.
+# 3. Transitions past-due unpaid invoices to "overdue" status.
+#
+# -----------------------------------------------------------------------------
+# Option 1: Direct execution via Node / TSX on server
+0 0 1 * * cd /var/www/brio-md/apps/portal && npm run cron:subscriptions -- --auto-create >> /var/log/brio-cron.log 2>&1
+
+# Option 2: Execution inside Docker container (Kamal / Docker Compose)
+0 2 1 * * docker exec -w /app/apps/portal brio-md-portal-1 npx tsx src/scripts/cronSubscriptions.ts --auto-create >> /var/log/brio-cron.log 2>&1
+
+# Option 3: Execution via HTTP webhook endpoint (cron-job.org / Cloudflare Workers / curl)
+0 2 1 * * curl -s -X POST "https://in.brio.md/api/cron/check-subscriptions?autoCreateMissing=true" -H "Authorization: Bearer $CRON_SECRET" >> /var/log/brio-cron-api.log 2>&1

@@ -12,6 +12,7 @@ import {
   BookOpenIcon,
   ShieldCheckIcon,
   UserCheckIcon,
+  AlertTriangleIcon,
 } from "@/components/ui/icons";
 
 type ScheduleEventModalProps = {
@@ -73,32 +74,32 @@ export function ScheduleEventModal({
   const canManage = isSuperOrAdmin || isAssignedTeacher;
 
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
       <div
-        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden flex flex-col"
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col animate-scale-up"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-neutral-100 bg-neutral-50/70">
+        <div className="flex items-start justify-between p-5 border-b border-slate-100 bg-white">
           <div className="space-y-1 pr-6">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
                 {group.courseName || "Curs"}
               </span>
               {isAssignedTeacher && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/50 flex items-center gap-1">
                   <ShieldCheckIcon className="w-3 h-3" />
                   Grupa Ta
                 </span>
               )}
             </div>
-            <h2 className="text-lg font-bold text-neutral-900">{group.name}</h2>
+            <h2 className="text-lg font-black text-slate-900">{group.name}</h2>
           </div>
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-200 transition"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
             aria-label="Închide"
           >
             <XIcon className="w-5 h-5" />
@@ -106,26 +107,26 @@ export function ScheduleEventModal({
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4 text-sm text-neutral-700">
+        <div className="p-5 space-y-4 text-sm text-slate-700">
           {/* Conflict Alert if any */}
           {hasConflict && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-              <span className="text-base leading-none">⚠️</span>
+            <div className="p-3 bg-rose-50 border border-rose-200/80 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+              <AlertTriangleIcon className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold block">Atenție: Suprapunere în sală!</span>
-                <span>{conflictDetails || "Această sală este programată concomitent pentru alt curs."}</span>
+                <span className="font-bold block text-rose-900">Atenție: Suprapunere în sală!</span>
+                <span className="text-rose-700">{conflictDetails || "Această sală este programată concomitent pentru alt curs."}</span>
               </div>
             </div>
           )}
 
           {/* Details list */}
-          <div className="space-y-3 bg-neutral-50 p-4 rounded-xl border border-neutral-100">
+          <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
             {/* Schedule */}
             <div className="flex items-center gap-3">
-              <CalendarIcon className="w-4 h-4 text-neutral-400 shrink-0" />
+              <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-neutral-400 font-semibold uppercase">Orar & Zile</div>
-                <div className="font-medium text-neutral-900">
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Orar & Zile</div>
+                <div className="font-semibold text-slate-900">
                   {formatSchedule(group.scheduleDays, group.scheduleTime)}
                 </div>
               </div>
@@ -133,34 +134,34 @@ export function ScheduleEventModal({
 
             {/* Room */}
             <div className="flex items-center gap-3">
-              <DoorIcon className="w-4 h-4 text-neutral-400 shrink-0" />
+              <DoorIcon className="w-4 h-4 text-slate-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-neutral-400 font-semibold uppercase">Sală / Cabinet</div>
-                <div className="font-medium text-neutral-900">
-                  {group.room || <span className="text-neutral-400 italic">Sală nespecificată</span>}
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Sală / Cabinet</div>
+                <div className="font-semibold text-slate-900">
+                  {group.room || <span className="text-slate-400 italic font-normal">Sală nespecificată</span>}
                 </div>
               </div>
             </div>
 
             {/* Teacher */}
             <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+              <div className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
                 P
               </div>
               <div>
-                <div className="text-[11px] text-neutral-400 font-semibold uppercase">Profesor Asignat</div>
-                <div className="font-medium text-neutral-900">
-                  {group.teacherName || <span className="text-neutral-400 italic">Neasignat</span>}
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Profesor Asignat</div>
+                <div className="font-semibold text-slate-900">
+                  {group.teacherName || <span className="text-slate-400 italic font-normal">Neasignat</span>}
                 </div>
               </div>
             </div>
 
             {/* Student Count */}
             <div className="flex items-center gap-3">
-              <UsersIcon className="w-4 h-4 text-blue-500 shrink-0" />
+              <UsersIcon className="w-4 h-4 text-slate-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-neutral-400 font-semibold uppercase">Înscrieri Active</div>
-                <div className="font-semibold text-blue-700">
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Înscrieri Active</div>
+                <div className="font-bold text-slate-900">
                   {group.studentCount ?? 0} elevi înscriși
                 </div>
               </div>
@@ -169,14 +170,14 @@ export function ScheduleEventModal({
 
           {/* Permission Notice */}
           {!canManage && (
-            <div className="p-3 bg-neutral-100 rounded-xl text-xs text-neutral-600">
+            <div className="p-3 bg-slate-100 rounded-xl text-xs text-slate-600 font-medium">
               ℹ️ Mod vizualizare. Doar profesorul asignat acestei grupe sau administratorii au acces la modificarea setărilor.
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-neutral-100 bg-neutral-50/50 flex flex-col gap-2">
+        <div className="p-4 border-t border-slate-100 bg-slate-50/70 flex flex-col gap-2">
           {canManage && (
             <>
               <button
@@ -185,7 +186,7 @@ export function ScheduleEventModal({
                   onOpenAttendance?.(group);
                   onClose();
                 }}
-                className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shadow-emerald-500/20 transition flex items-center justify-center gap-2 active:scale-95"
+                className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 active:scale-95"
               >
                 <UserCheckIcon className="w-4 h-4" />
                 <span>Verifică / Notează Prezența</span>
@@ -198,33 +199,33 @@ export function ScheduleEventModal({
                     onOpenEdit?.(group);
                     onClose();
                   }}
-                  className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition text-center"
+                  className="flex-1 py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold text-xs rounded-xl shadow-2xs transition text-center"
                 >
-                  Editează Grupa / Setări
+                  Editează Grupa
                 </button>
-                  {onOpenRoster && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onOpenRoster(group);
-                        onClose();
-                      }}
-                      className="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl transition flex items-center gap-1.5"
-                    >
-                      <UsersIcon className="w-4 h-4" />
-                      <span>Elevi</span>
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+                {onOpenRoster && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenRoster(group);
+                      onClose();
+                    }}
+                    className="py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5"
+                  >
+                    <UsersIcon className="w-4 h-4 text-slate-500" />
+                    <span>Elevi</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
           <Link
             href={`/dashboard/courses/${group.courseId}`}
             onClick={onClose}
-            className="w-full py-2 px-3 border border-neutral-300 hover:bg-neutral-100 text-neutral-700 font-medium text-xs rounded-xl transition text-center flex items-center justify-center gap-1.5"
+            className="w-full py-2 px-3 border border-slate-200/80 hover:bg-white text-slate-700 font-semibold text-xs rounded-xl transition text-center flex items-center justify-center gap-1.5"
           >
-            <BookOpenIcon className="w-4 h-4" />
+            <BookOpenIcon className="w-4 h-4 text-slate-500" />
             <span>Vezi Pagina Cursului</span>
           </Link>
         </div>

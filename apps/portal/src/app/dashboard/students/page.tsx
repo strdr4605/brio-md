@@ -132,7 +132,7 @@ export default function StudentiPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Catalog Studenți</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/80">
               {students.length} total
             </span>
           </div>
@@ -145,7 +145,7 @@ export default function StudentiPage() {
           type="button"
           data-testid="add-student-button"
           onClick={handleCreate}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
         >
           <PlusIcon className="w-4 h-4" />
           <span>Adaugă Student</span>
@@ -171,7 +171,7 @@ export default function StudentiPage() {
         setCourseFilter={setCourseFilter}
       />
 
-      {/* Main Table with Smart Expandable Rows ("Умная раскрывашка") */}
+      {/* Main Table with Smart Expandable Rows */}
       {isLoading ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
           <p className="text-sm text-slate-500">Se încarcă catalogul...</p>
@@ -211,18 +211,18 @@ export default function StudentiPage() {
                       <tr
                         onClick={() => toggleExpand(student.id)}
                         className={`group cursor-pointer transition-colors duration-150 ${
-                          isExpanded ? "bg-blue-50/40" : "hover:bg-slate-50/80"
+                          isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/80"
                         }`}
                       >
                         <td className="px-4 py-3.5 text-center">
                           <button
                             type="button"
-                            className="p-1 rounded-lg text-slate-400 group-hover:text-blue-600 transition"
+                            className="p-1 rounded-lg text-slate-400 group-hover:text-slate-900 transition"
                             aria-label={isExpanded ? "Restrânge detalii" : "Extinde detalii"}
                           >
                             <ChevronDownIcon
                               className={`w-4 h-4 transition-transform duration-200 ${
-                                isExpanded ? "rotate-0 text-blue-600" : "-rotate-90"
+                                isExpanded ? "rotate-0 text-slate-900" : "-rotate-90"
                               }`}
                             />
                           </button>
@@ -230,14 +230,14 @@ export default function StudentiPage() {
 
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
                               {student.name ? student.name.charAt(0).toUpperCase() : "S"}
                             </div>
                             <div>
                               <Link
                                 href={`/dashboard/students/${student.id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="font-bold text-slate-900 text-sm block hover:text-blue-600 hover:underline transition"
+                                className="font-bold text-slate-900 text-sm block hover:text-slate-700 hover:underline transition"
                               >
                                 {student.name}
                               </Link>
@@ -253,7 +253,7 @@ export default function StudentiPage() {
                             <a
                               href={`tel:${displayPhone}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="font-medium text-slate-700 hover:text-blue-600 inline-flex items-center gap-1"
+                              className="font-medium text-slate-700 hover:text-slate-900 inline-flex items-center gap-1"
                             >
                               {formatPhone(displayPhone)}
                               {!student.phone && student.parentPhone && (
@@ -285,13 +285,13 @@ export default function StudentiPage() {
                           <div className="inline-flex items-center gap-2">
                             <Link
                               href={`/dashboard/students/${student.id}`}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition"
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
                             >
                               Profil
                             </Link>
                             <button
                               onClick={() => handleEdit(student)}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
                             >
                               Editează
                             </button>
@@ -306,7 +306,7 @@ export default function StudentiPage() {
                         </td>
                       </tr>
 
-                      {/* Smart Expandable Detail Row ("Умная раскрывашка") */}
+                      {/* Smart Expandable Detail Row */}
                       {isExpanded && (
                         <tr>
                           <td colSpan={6} className="p-0">

@@ -2754,4 +2754,39 @@ const sampleStudentSchool1 = {
       expect(db.select).toHaveBeenCalledTimes(3);
     });
   });
+
+  describe("checkMonthlySubscriptions Procedure", () => {
+    it("successfully runs monthly subscription audit for superadmin", async () => {
+      (db.select as any)
+        .mockReturnValueOnce(createQueryChain([]))
+        .mockReturnValueOnce(createQueryChain([]));
+
+      const caller = billingRouter.createCaller({ user: superUser });
+      const result = await caller.checkMonthlySubscriptions({
+        targetMonth: "2026-09",
+        markOverdue: false,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.summary.targetMonth).toBe("2026-09");
+      expect(result.summary.totalActiveSubscriptions).toBe(0);
+    });
+
+    it("rejects unauthorized access when user has no billing access", async () => {
+      const unauthorizedUser = {
+        id: "99",
+        email: "guest@example.com",
+        name: "Guest",
+        role: "guest",
+        permissions: [],
+        courseIds: [],
+        schoolId: null,
+      };
+
+      const caller = billingRouter.createCaller({ user: unauthorizedUser });
+      await expect(
+        caller.checkMonthlySubscriptions({ targetMonth: "2026-09" }),
+      ).rejects.toThrowError(TRPCError);
+    });
+  });
 });
