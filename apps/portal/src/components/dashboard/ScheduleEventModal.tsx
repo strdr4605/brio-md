@@ -12,6 +12,7 @@ import {
   BookOpenIcon,
   ShieldCheckIcon,
   UserCheckIcon,
+  AlertTriangleIcon,
 } from "@/components/ui/icons";
 
 type ScheduleEventModalProps = {
@@ -109,11 +110,11 @@ export function ScheduleEventModal({
         <div className="p-5 space-y-4 text-sm text-slate-700">
           {/* Conflict Alert if any */}
           {hasConflict && (
-            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-              <span className="text-base leading-none text-amber-600">⚠️</span>
+            <div className="p-3 bg-rose-50 border border-rose-200/80 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+              <AlertTriangleIcon className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold block">Atenție: Suprapunere în sală!</span>
-                <span>{conflictDetails || "Această sală este programată concomitent pentru alt curs."}</span>
+                <span className="font-bold block text-rose-900">Atenție: Suprapunere în sală!</span>
+                <span className="text-rose-700">{conflictDetails || "Această sală este programată concomitent pentru alt curs."}</span>
               </div>
             </div>
           )}
