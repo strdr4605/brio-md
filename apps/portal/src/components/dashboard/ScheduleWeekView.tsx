@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { GroupItem } from "./GroupFormModal";
-import { DAYS_OF_WEEK, HOURS, getCourseColor, parseStartHour, getOccupiedHoursForDay } from "./scheduleTypes";
+import { DAYS_OF_WEEK, HOURS, parseStartHour, getOccupiedHoursForDay } from "./scheduleTypes";
 
 type ScheduleWeekViewProps = {
   filteredGroups: GroupItem[];
@@ -33,20 +33,20 @@ export function ScheduleWeekView({
   }, [hideEmptySlots, filteredGroups, selectedDay]);
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-x-auto">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto">
       <div className="min-w-[840px]">
         {/* Days Header */}
         <div
-          className="grid border-b border-neutral-200 bg-neutral-50/80 sticky top-0 z-10"
-          style={{ gridTemplateColumns: `80px repeat(${daysToShow.length}, 1fr)` }}
+          className="grid border-b border-slate-200 bg-slate-50/90 sticky top-0 z-10"
+          style={{ gridTemplateColumns: `85px repeat(${daysToShow.length}, 1fr)` }}
         >
-          <div className="p-3 text-xs font-bold text-neutral-400 uppercase text-center border-r border-neutral-200">
+          <div className="p-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-r border-slate-200">
             Oră
           </div>
           {daysToShow.map((day) => (
             <div
               key={day.key}
-              className="p-3 text-xs font-bold text-neutral-800 border-r border-neutral-200 last:border-r-0 text-center"
+              className="p-3 text-xs font-bold text-slate-800 border-r border-slate-200 last:border-r-0 text-center"
             >
               {day.label}
             </div>
@@ -54,14 +54,14 @@ export function ScheduleWeekView({
         </div>
 
         {/* Time Rows */}
-        <div className="divide-y divide-neutral-100">
+        <div className="divide-y divide-slate-100">
           {hoursToShow.map((hour) => (
             <div
               key={hour}
-              className="grid min-h-[64px]"
-              style={{ gridTemplateColumns: `80px repeat(${daysToShow.length}, 1fr)` }}
+              className="grid min-h-[70px]"
+              style={{ gridTemplateColumns: `85px repeat(${daysToShow.length}, 1fr)` }}
             >
-              <div className="p-2 text-xs font-medium text-neutral-400 text-center border-r border-neutral-100 flex items-start justify-center pt-3 bg-neutral-50/40">
+              <div className="p-2 text-xs font-bold text-slate-500 text-center border-r border-slate-100 flex items-start justify-center pt-3 bg-slate-50/50">
                 {hour}
               </div>
 
@@ -77,22 +77,31 @@ export function ScheduleWeekView({
                 return (
                   <div
                     key={day.key}
-                    className="p-1.5 border-r border-neutral-100 last:border-r-0 flex flex-col gap-1.5 hover:bg-neutral-50/60 transition"
+                    className="p-2 border-r border-slate-100 last:border-r-0 flex flex-col gap-2 hover:bg-slate-50/40 transition"
                   >
                     {cellEvents.map((ev) => {
-                      const palette = getCourseColor(ev.courseId);
                       return (
                         <div
                           key={ev.id}
                           onClick={() => onSelectEvent(ev)}
-                          className={`p-2 rounded-xl border cursor-pointer shadow-xs transition hover:scale-[1.02] hover:shadow-md ${palette.bg} ${palette.border} ${palette.text}`}
+                          className="p-2.5 rounded-xl border border-slate-200/90 bg-white cursor-pointer shadow-2xs transition-all hover:border-slate-400 hover:shadow-xs"
                         >
-                          <div className="text-[10px] font-bold truncate mb-0.5">{ev.name}</div>
-                          <div className="text-[10px] opacity-75 truncate">
-                            {ev.room || "Fără sală"}
+                          <div className="text-[10px] font-bold text-slate-500 truncate mb-0.5">
+                            {ev.scheduleTime || hour}
                           </div>
-                          <div className="text-[9px] font-medium opacity-85 mt-0.5">
-                            {ev.scheduleTime}
+                          <div className="font-bold text-xs text-slate-900 leading-tight truncate">
+                            {ev.name}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {ev.courseName}
+                          </div>
+                          <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-600 pt-1.5 border-t border-slate-100">
+                            <span className="font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[9px] truncate max-w-[60%]">
+                              {ev.room || "Fără sală"}
+                            </span>
+                            <span className="font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[9px]">
+                              {ev.studentCount ?? 0} el.
+                            </span>
                           </div>
                         </div>
                       );
