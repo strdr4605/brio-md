@@ -230,15 +230,13 @@ function AttendanceContent() {
         </div>
 
         {/* View Switchers & Links */}
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <div className={`w-full sm:w-auto grid ${isSuperOrAdmin ? "grid-cols-3" : "grid-cols-2"} sm:inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80`}>
             <button
               type="button"
               onClick={() => setActiveTab("journal")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
-                activeTab === "journal"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-2.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition active:scale-95 text-center truncate ${
+                activeTab === "journal" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Catalog Jurnal
@@ -246,10 +244,8 @@ function AttendanceContent() {
             <button
               type="button"
               onClick={() => setActiveTab("take")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
-                activeTab === "take"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-2.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition active:scale-95 text-center truncate ${
+                activeTab === "take" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Catalog Rapid
@@ -258,20 +254,18 @@ function AttendanceContent() {
               <button
                 type="button"
                 onClick={() => setActiveTab("matrix")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
-                  activeTab === "matrix"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
+                className={`py-2 px-2.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition active:scale-95 text-center truncate ${
+                  activeTab === "matrix" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Matrice & Analitică
+                Matrice
               </button>
             )}
           </div>
 
           <Link
             href="/dashboard/schedule"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/80 font-bold text-xs transition active:scale-95 shadow-xs shrink-0"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/80 font-bold text-xs transition active:scale-95 shadow-xs shrink-0"
           >
             <CalendarIcon className="w-4 h-4 text-slate-600" />
             <span>Orar →</span>

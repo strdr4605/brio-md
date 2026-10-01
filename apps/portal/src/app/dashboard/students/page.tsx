@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect, Fragment } from "react";
-import Link from "next/link";
+import { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
-import { StudentCoursesCell } from "@/components/dashboard/StudentCoursesCell";
-import { StudentRowDetails } from "@/components/dashboard/StudentRowDetails";
 import { StudentKpiCards } from "@/components/dashboard/StudentKpiCards";
 import { StudentFiltersBar } from "@/components/dashboard/StudentFiltersBar";
-import { formatPhone } from "@/lib/phone";
+import { StudentMobileCard } from "@/components/dashboard/StudentMobileCard";
+import { StudentDesktopTable } from "@/components/dashboard/StudentDesktopTable";
 import {
   StudentsIcon,
   PlusIcon,
-  ChevronDownIcon,
 } from "@/components/ui/icons";
 
 export default function StudentiPage() {
@@ -184,148 +181,38 @@ export default function StudentiPage() {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto scrollbar-thin">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="w-10 px-4 py-3.5 text-center"></th>
-                  <th className="px-4 py-3.5">Student</th>
-                  <th className="px-4 py-3.5">Telefon Contact</th>
-                  <th className="px-4 py-3.5">Școală</th>
-                  <th className="px-4 py-3.5">Cursuri Asignate</th>
-                  <th className="px-4 py-3.5 text-right">Acțiuni</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredStudents.map((student) => {
-                  const school = schools.find((s) => s.id === student.schoolId);
-                  const isExpanded = expandedStudentId === student.id;
-                  const displayPhone = student.phone || student.parentPhone;
-                  const studentAvailableCourses = courses.filter(
-                    (c) => !c.schoolId || !student.schoolId || c.schoolId === student.schoolId,
-                  );
+          {/* Mobile Card List (Thumb-friendly touch view) */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {filteredStudents.map((student) => {
+              const school = schools.find((s) => s.id === student.schoolId);
+              return (
+                <StudentMobileCard
+                  key={student.id}
+                  student={student}
+                  school={school}
+                  courses={courses}
+                  isExpanded={expandedStudentId === student.id}
+                  onToggleExpand={() => toggleExpand(student.id)}
+                  onEdit={() => handleEdit(student)}
+                  onDelete={() => handleDelete(student.id)}
+                  deletePending={deleteMutation.isPending}
+                />
+              );
+            })}
+          </div>
 
-                  return (
-                    <Fragment key={student.id}>
-                      {/* Main Summary Row */}
-                      <tr
-                        onClick={() => toggleExpand(student.id)}
-                        className={`group cursor-pointer transition-colors duration-150 ${
-                          isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/80"
-                        }`}
-                      >
-                        <td className="px-4 py-3.5 text-center">
-                          <button
-                            type="button"
-                            className="p-1 rounded-lg text-slate-400 group-hover:text-slate-900 transition"
-                            aria-label={isExpanded ? "Restrânge detalii" : "Extinde detalii"}
-                          >
-                            <ChevronDownIcon
-                              className={`w-4 h-4 transition-transform duration-200 ${
-                                isExpanded ? "rotate-0 text-slate-900" : "-rotate-90"
-                              }`}
-                            />
-                          </button>
-                        </td>
-
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                              {student.name ? student.name.charAt(0).toUpperCase() : "S"}
-                            </div>
-                            <div>
-                              <Link
-                                href={`/dashboard/students/${student.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="font-bold text-slate-900 text-sm block hover:text-slate-700 hover:underline transition"
-                              >
-                                {student.name}
-                              </Link>
-                              <span className="text-xs text-slate-400">
-                                {student.age ? `${student.age} ani` : "Vârstă N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-3.5 text-xs text-slate-600">
-                          {displayPhone ? (
-                            <a
-                              href={`tel:${displayPhone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="font-medium text-slate-700 hover:text-slate-900 inline-flex items-center gap-1"
-                            >
-                              {formatPhone(displayPhone)}
-                              {!student.phone && student.parentPhone && (
-                                <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                  părinte
-                                </span>
-                              )}
-                            </a>
-                          ) : (
-                            <span className="text-slate-300">—</span>
-                          )}
-                        </td>
-
-                        <td className="px-4 py-3.5">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
-                            {school?.name || "Campus Principal"}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-3.5 min-w-[220px]" onClick={(e) => e.stopPropagation()}>
-                          <StudentCoursesCell
-                            studentId={student.id}
-                            currentCourses={(student as any).courses || []}
-                            availableCourses={studentAvailableCourses}
-                          />
-                        </td>
-
-                        <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="inline-flex items-center gap-2">
-                            <Link
-                              href={`/dashboard/students/${student.id}`}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
-                            >
-                              Profil
-                            </Link>
-                            <button
-                              onClick={() => handleEdit(student)}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
-                            >
-                              Editează
-                            </button>
-                            <button
-                              onClick={() => handleDelete(student.id)}
-                              disabled={deleteMutation.isPending}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition disabled:opacity-50"
-                            >
-                              Șterge
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* Smart Expandable Detail Row */}
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={6} className="p-0">
-                            <StudentRowDetails
-                              student={student}
-                              schoolName={school?.name}
-                              availableCourses={studentAvailableCourses}
-                              onEdit={() => handleEdit(student)}
-                              onDelete={() => handleDelete(student.id)}
-                              deletePending={deleteMutation.isPending}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <StudentDesktopTable
+              students={filteredStudents}
+              schools={schools}
+              courses={courses}
+              expandedStudentId={expandedStudentId}
+              onToggleExpand={toggleExpand}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              deletePending={deleteMutation.isPending}
+            />
           </div>
         </div>
       )}
