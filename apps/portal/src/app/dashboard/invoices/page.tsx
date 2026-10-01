@@ -191,7 +191,7 @@ export default function InvoicesPage() {
               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : feedbackMessage.type === "error"
               ? "bg-rose-50 text-rose-800 border-rose-200"
-              : "bg-blue-50 text-blue-800 border-blue-200"
+              : "bg-slate-100 text-slate-800 border-slate-200"
           }`}
         >
           <span>{feedbackMessage.text}</span>

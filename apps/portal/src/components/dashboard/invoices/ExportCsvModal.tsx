@@ -188,7 +188,7 @@ export function ExportCsvModal({
       >
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
               <DownloadIcon className="w-4 h-4" />
             </div>
             <div>
@@ -216,10 +216,10 @@ export function ExportCsvModal({
           <button
             type="button"
             onClick={exportInvoicesCsv}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 text-left transition group"
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-left transition group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:scale-105 transition">
                 <InvoiceIcon className="w-4 h-4" />
               </div>
               <div>
@@ -231,7 +231,7 @@ export function ExportCsvModal({
                 </p>
               </div>
             </div>
-            <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+            <DownloadIcon className="w-4 h-4 text-slate-400 group-hover:text-slate-800 transition" />
           </button>
 
           {/* 2. Încasări */}

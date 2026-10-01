@@ -176,7 +176,7 @@ export function AttendanceSheet({
             type="button"
             onClick={handleSaveAll}
             disabled={isSaving}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs shadow-blue-500/20 transition active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs transition active:scale-95 disabled:opacity-50"
           >
             <CheckCircleIcon className="w-3.5 h-3.5" />
             <span>{isSaving ? "Se salvează..." : "Salvează prezența"}</span>
@@ -290,7 +290,7 @@ export function AttendanceSheet({
                       onClick={() => handleStatusChange(student.studentId, "excused")}
                       className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md text-xs font-semibold transition active:scale-95 ${
                         current.status === "excused"
-                          ? "bg-blue-600 text-white shadow-2xs"
+                          ? "bg-slate-700 text-white shadow-2xs"
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >

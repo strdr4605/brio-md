@@ -68,13 +68,13 @@ export function Nav({
           onClick={onCloseMobile}
           className={`w-11 h-11 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 group relative ${
             active
-              ? "bg-blue-600/30 text-blue-400 border border-blue-500/60 shadow-sm"
+              ? "bg-white/10 text-white border border-white/20 shadow-xs"
               : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.08]"
           }`}
           title={label}
         >
           <IconComponent
-            className={`w-6 h-6 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-blue-400" : ""}`}
+            className={`w-6 h-6 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-white" : ""}`}
           />
           {Boolean(badgeCount && badgeCount > 0) && (
             <span
@@ -92,13 +92,13 @@ export function Nav({
         onClick={onCloseMobile}
         className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl transition-all duration-150 ${
           active
-            ? "bg-white/10 text-white font-semibold border-l-2 border-blue-500 shadow-sm"
+            ? "bg-white/10 text-white font-semibold border-l-2 border-white shadow-xs"
             : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.05]"
         }`}
         title={label}
       >
         <IconComponent
-          className={`w-6 h-6 shrink-0 ${active ? "text-blue-400" : "text-slate-400"}`}
+          className={`w-6 h-6 shrink-0 ${active ? "text-white" : "text-slate-400"}`}
         />
         <span className="text-[15px] font-semibold flex-1 truncate">{label}</span>
         {Boolean(badgeCount && badgeCount > 0) && (
