@@ -213,8 +213,10 @@ export function InvoicesTable({
               return (
                 <tr
                   key={inv.id}
-                  className={`hover:bg-slate-50/80 transition-colors ${
-                    overdue ? "bg-rose-50/20" : ""
+                  className={`transition-colors ${
+                    overdue
+                      ? "bg-rose-100/80 hover:bg-rose-100"
+                      : "hover:bg-slate-50/80"
                   }`}
                 >
                   {/* Factură */}

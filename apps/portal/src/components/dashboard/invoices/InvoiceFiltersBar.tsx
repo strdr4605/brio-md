@@ -98,7 +98,7 @@ export function InvoiceFiltersBar({
           onChange={(e) => setTypeFilter(e.target.value)}
           className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto"
         >
-          <option value="all">Toate tipurile</option>
+          <option value="all">Toate tipurile de plată</option>
           <option value="subscription">Abonament lunar</option>
           <option value="per_lesson">Plată per lecție</option>
           <option value="situational">Situativ / Ad-hoc</option>
