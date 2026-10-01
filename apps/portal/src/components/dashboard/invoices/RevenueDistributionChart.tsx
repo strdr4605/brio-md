@@ -176,10 +176,10 @@ export function RevenueDistributionChart({
               {modelDistribution.map((m) => {
                 const colorBg =
                   m.type === "subscription"
-                    ? "bg-blue-600"
+                    ? "bg-slate-900"
                     : m.type === "per_lesson"
-                      ? "bg-emerald-500"
-                      : "bg-purple-500";
+                      ? "bg-emerald-600"
+                      : "bg-slate-400";
 
                 return (
                   <div key={m.type} className="space-y-1.5">

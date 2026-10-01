@@ -215,13 +215,13 @@ export function AttendanceJournalHeader({
               <span className="text-slate-400">🖱️ Dreapta: Notă</span>
             </span>
             {canEditAnyDate ? (
-              <span className="ml-1 pl-2 border-l border-slate-200 text-indigo-700 font-extrabold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+              <span className="ml-1 pl-2 border-l border-slate-200 text-slate-800 font-extrabold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                 <span>Admin: Toate datele editabile</span>
               </span>
             ) : (
-              <span className="ml-1 pl-2 border-l border-slate-200 text-blue-700 font-extrabold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+              <span className="ml-1 pl-2 border-l border-slate-200 text-slate-600 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse" />
                 <span>Doar ziua curentă</span>
               </span>
             )}
@@ -248,7 +248,7 @@ export function AttendanceJournalHeader({
             onClick={onToggleFullscreen}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 ${
               isFullscreen
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 ring-2 ring-blue-400/30"
+                ? "bg-slate-800 hover:bg-slate-700 text-white shadow-xs ring-2 ring-slate-400/30"
                 : "bg-slate-900 hover:bg-slate-800 text-white shadow-xs"
             }`}
             title={isFullscreen ? "Ieși din ecran complet (tasta ESC)" : "Deschide pe tot ecranul"}

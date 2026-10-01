@@ -38,19 +38,19 @@ function getInvoiceTypeBadge(type: string | null | undefined) {
   switch (type) {
     case "subscription":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
           Abonament
         </span>
       );
     case "per_lesson":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
           Per lecție
         </span>
       );
     case "situational":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
           Situativ
         </span>
       );
@@ -94,7 +94,7 @@ function getInvoiceStatusBadge(status: string, dueDate?: string | null) {
       );
     case "issued":
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
           Emis
         </span>
       );
@@ -353,13 +353,13 @@ export function StudentBillingTab({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                         {plan.courseName || "Curs"}
                       </span>
                       <h4 className="text-sm font-bold text-slate-900 mt-0.5">{plan.groupName}</h4>
                     </div>
 
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200 shrink-0">
                       {formatBillingType(plan.billingType)}
                     </span>
                   </div>
@@ -395,7 +395,7 @@ export function StudentBillingTab({
                           });
                         }
                       }}
-                      className="px-3 py-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
                     >
                       Editează tarif
                     </button>

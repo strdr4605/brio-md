@@ -160,19 +160,19 @@ export function GroupFormModal({
   if (!isOpen || !mounted) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
       <div
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[90vh]"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-900">
+            <h2 className="text-lg font-bold text-slate-900">
               {groupToEdit ? "Editează Grupa" : "Creează o nouă grupă"}
             </h2>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-slate-500">
               Configurează programul, sala și profesorul grupei
             </p>
           </div>

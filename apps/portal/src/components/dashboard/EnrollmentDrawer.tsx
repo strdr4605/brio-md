@@ -253,7 +253,7 @@ export function EnrollmentDrawer({
               placeholder={isStudentMode ? "Caută curs sau grupă..." : "Caută student după nume sau telefon..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
             />
           </div>
         </div>
@@ -288,12 +288,12 @@ export function EnrollmentDrawer({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                      Model facturare
+                       Model facturare
                     </label>
                     <select
                       value={billingType}
                       onChange={(e) => setBillingType(e.target.value as any)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium text-slate-800"
                     >
                       <option value="subscription_monthly">Abonament lunar</option>
                       <option value="per_lesson">Plată per lecție</option>
@@ -312,7 +312,7 @@ export function EnrollmentDrawer({
                       placeholder="Preț implicit curs"
                       value={customPrice}
                       onChange={(e) => setCustomPrice(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800"
                     />
                   </div>
 
@@ -327,7 +327,7 @@ export function EnrollmentDrawer({
                       placeholder="0%"
                       value={discountPercent}
                       onChange={(e) => setDiscountPercent(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800"
                     />
                   </div>
                 </div>
@@ -360,14 +360,14 @@ export function EnrollmentDrawer({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onCloseAction} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 rounded-lg transition">
+            <button type="button" onClick={onCloseAction} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 rounded-xl transition">
               Anulează
             </button>
             <button
               type="button"
               onClick={isStudentMode ? handleSaveStudentEnrollments : handleSaveGroupEnrollments}
               disabled={isSaving || (isStudentMode && studentGroupConflicts.length > 0) || (isGroupMode && groupModeHasConflict)}
-              className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-3.5 h-3.5" />
               <span>{isSaving ? "Se salvează..." : "Salvează Înscrierile"}</span>

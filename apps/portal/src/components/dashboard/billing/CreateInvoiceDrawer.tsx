@@ -362,7 +362,7 @@ export function CreateInvoiceDrawer({
               {studentId && studentName && !isSearchingStudents ? (
                 <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
                       {studentName.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -378,7 +378,7 @@ export function CreateInvoiceDrawer({
                         setStudentName("");
                         setIsSearchingStudents(true);
                       }}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900"
                     >
                       Schimbă
                     </button>
@@ -395,7 +395,7 @@ export function CreateInvoiceDrawer({
                       setStudentSearch(e.target.value);
                       setIsSearchingStudents(true);
                     }}
-                    className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium"
                     autoFocus={!initialStudentId}
                   />
 
@@ -435,7 +435,7 @@ export function CreateInvoiceDrawer({
                 <select
                   value={selectedGroupId || ""}
                   onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium text-slate-800"
                 >
                   <option value="">Fără grupă specifică / General</option>
                   {availableGroups.map((grp) => (
@@ -458,7 +458,7 @@ export function CreateInvoiceDrawer({
                   onClick={() => handleTypeChange("subscription")}
                   className={`py-2 px-3 text-xs font-bold rounded-xl border text-center transition ${
                     invoiceType === "subscription"
-                      ? "bg-blue-50 border-blue-300 text-blue-700 shadow-xs"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -469,7 +469,7 @@ export function CreateInvoiceDrawer({
                   onClick={() => handleTypeChange("per_lesson")}
                   className={`py-2 px-3 text-xs font-bold rounded-xl border text-center transition ${
                     invoiceType === "per_lesson"
-                      ? "bg-purple-50 border-purple-300 text-purple-700 shadow-xs"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -480,7 +480,7 @@ export function CreateInvoiceDrawer({
                   onClick={() => handleTypeChange("situational")}
                   className={`py-2 px-3 text-xs font-bold rounded-xl border text-center transition ${
                     invoiceType === "situational"
-                      ? "bg-amber-50 border-amber-300 text-amber-800 shadow-xs"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -501,7 +501,7 @@ export function CreateInvoiceDrawer({
                       key={cat.label}
                       type="button"
                       onClick={() => handleAddItem(cat.label, cat.price)}
-                      className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border border-slate-200 rounded-lg text-slate-700 transition flex items-center gap-1"
+                      className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 rounded-lg text-slate-700 transition flex items-center gap-1"
                     >
                       <PlusIcon className="w-3 h-3" />
                       <span>{cat.label} ({cat.price} MDL)</span>
@@ -520,7 +520,7 @@ export function CreateInvoiceDrawer({
                 <button
                   type="button"
                   onClick={() => handleAddItem("", 100)}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  className="text-xs font-bold text-slate-900 hover:text-slate-700 flex items-center gap-1"
                 >
                   <PlusIcon className="w-3.5 h-3.5" />
                   <span>Adaugă rând</span>
@@ -558,7 +558,7 @@ export function CreateInvoiceDrawer({
                             placeholder="Descriere articol..."
                             value={item.description}
                             onChange={(e) => handleUpdateItem(item.id, "description", e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
                             required
                           />
                         </div>
@@ -570,7 +570,7 @@ export function CreateInvoiceDrawer({
                             placeholder="Cant."
                             value={item.quantity}
                             onChange={(e) => handleUpdateItem(item.id, "quantity", e.target.value)}
-                            className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-center font-medium"
+                            className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-center font-medium"
                             required
                             title="Cantitate"
                           />
@@ -583,7 +583,7 @@ export function CreateInvoiceDrawer({
                             placeholder="Preț"
                             value={item.unitPrice}
                             onChange={(e) => handleUpdateItem(item.id, "unitPrice", e.target.value)}
-                            className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-right font-medium"
+                            className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-right font-medium"
                             required
                             title="Preț unitar (MDL)"
                           />
@@ -613,7 +613,7 @@ export function CreateInvoiceDrawer({
                   max="100"
                   value={discountPercent}
                   onChange={(e) => setDiscountPercent(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-bold text-slate-800"
                 />
               </div>
 
@@ -625,7 +625,7 @@ export function CreateInvoiceDrawer({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800"
                   required
                 />
               </div>
@@ -637,7 +637,7 @@ export function CreateInvoiceDrawer({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as "draft" | "issued")}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium text-slate-800"
                 >
                   <option value="issued">Emisă (Issued)</option>
                   <option value="draft">Ciornă (Draft)</option>
@@ -655,7 +655,7 @@ export function CreateInvoiceDrawer({
                 placeholder="Detalii adiționale vizibile pe factură..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 resize-none"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800 resize-none"
               />
             </div>
 
@@ -694,7 +694,7 @@ export function CreateInvoiceDrawer({
             <button
               type="submit"
               disabled={createInvoiceMutation.isPending || !studentId || items.length === 0}
-              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <CheckCircleIcon className="w-4 h-4" />
               <span>{createInvoiceMutation.isPending ? "Se emite..." : "Emite Factură"}</span>
