@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import type {
   MonthlyTrendItem,
   BillingModelDistributionItem,
   CourseRevenueItem,
   GroupRevenueItem,
 } from "@/server/billingStatisticsService";
-import { BookOpenIcon, UsersIcon, BarChartIcon } from "@/components/ui/icons";
+import { BarChartIcon } from "@/components/ui/icons";
+import { CourseGroupBreakdown } from "@/components/dashboard/invoices/CourseGroupBreakdown";
 
 export type RevenueDistributionChartProps = {
   trends: MonthlyTrendItem[];
@@ -24,8 +24,6 @@ export function RevenueDistributionChart({
   groupBreakdown,
   isLoading = false,
 }: RevenueDistributionChartProps) {
-  const [activeTab, setActiveTab] = useState<"courses" | "groups">("courses");
-
   const formatMdl = (val: number) => {
     return new Intl.NumberFormat("ro-MD", {
       maximumFractionDigits: 0,
@@ -34,9 +32,12 @@ export function RevenueDistributionChart({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
-        <div className="lg:col-span-2 h-80 bg-slate-100 rounded-2xl border border-slate-200/70" />
-        <div className="h-80 bg-slate-100 rounded-2xl border border-slate-200/70" />
+      <div className="space-y-6 animate-pulse">
+        <div className="h-64 bg-slate-100 rounded-2xl border border-slate-200/70" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-80 bg-slate-100 rounded-2xl border border-slate-200/70" />
+          <div className="h-80 bg-slate-100 rounded-2xl border border-slate-200/70" />
+        </div>
       </div>
     );
   }
@@ -49,9 +50,16 @@ export function RevenueDistributionChart({
 
   return (
     <div className="space-y-6">
-      {/* Top Row: Monthly Trend (2 cols) & Model Distribution (1 col) */}
+      {/* 1. Top Section: Course & Group Breakdown Table */}
+      <CourseGroupBreakdown
+        courseBreakdown={courseBreakdown}
+        groupBreakdown={groupBreakdown}
+        formatMdl={formatMdl}
+      />
+
+      {/* 2. Bottom Row: Monthly Trend (2 cols) & Model Distribution (1 col) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 1. Monthly Revenue Trend */}
+        {/* Monthly Revenue Trend */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
@@ -88,16 +96,25 @@ export function RevenueDistributionChart({
             <div className="flex items-end justify-between gap-2 sm:gap-4 h-56 pt-6 pb-2 border-b border-slate-100 overflow-x-auto">
               {trends.map((t) => {
                 const billedHeight =
-                  t.billed > 0 ? Math.max(6, Math.round((t.billed / maxMonthlyVal) * 100)) : 0;
+                  t.billed > 0
+                    ? Math.max(6, Math.round((t.billed / maxMonthlyVal) * 100))
+                    : 0;
                 const collectedHeight =
-                  t.collected > 0 ? Math.max(6, Math.round((t.collected / maxMonthlyVal) * 100)) : 0;
+                  t.collected > 0
+                    ? Math.max(6, Math.round((t.collected / maxMonthlyVal) * 100))
+                    : 0;
 
                 return (
-                  <div key={t.month} className="flex-1 flex flex-col items-center min-w-[50px] group">
+                  <div
+                    key={t.month}
+                    className="flex-1 flex flex-col items-center min-w-[50px] group"
+                  >
                     {/* Tooltip on hover */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -translate-y-12 bg-slate-900 text-white text-[10px] rounded-lg py-1 px-2 pointer-events-none shadow-md whitespace-nowrap z-20">
                       <div>Facturat: {formatMdl(t.billed)} MDL</div>
-                      <div>Încasat: {formatMdl(t.collected)} MDL ({t.collectionRate}%)</div>
+                      <div>
+                        Încasat: {formatMdl(t.collected)} MDL ({t.collectionRate}%)
+                      </div>
                     </div>
 
                     {/* Bars pair */}
@@ -109,7 +126,9 @@ export function RevenueDistributionChart({
                             ? "bg-slate-400 hover:bg-slate-500"
                             : "bg-slate-200/60 h-1 rounded-full"
                         }`}
-                        style={{ height: t.billed > 0 ? `${billedHeight}%` : undefined }}
+                        style={{
+                          height: t.billed > 0 ? `${billedHeight}%` : undefined,
+                        }}
                         title={`Facturat: ${formatMdl(t.billed)} MDL`}
                       />
                       {/* Collected bar */}
@@ -119,7 +138,10 @@ export function RevenueDistributionChart({
                             ? "bg-emerald-600 hover:bg-emerald-500"
                             : "bg-slate-200/60 h-1 rounded-full"
                         }`}
-                        style={{ height: t.collected > 0 ? `${collectedHeight}%` : undefined }}
+                        style={{
+                          height:
+                            t.collected > 0 ? `${collectedHeight}%` : undefined,
+                        }}
                         title={`Încasat: ${formatMdl(t.collected)} MDL`}
                       />
                     </div>
@@ -140,7 +162,7 @@ export function RevenueDistributionChart({
           )}
         </div>
 
-        {/* 2. Revenue Distribution by Billing Model */}
+        {/* Revenue Distribution by Billing Model */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900">
@@ -197,152 +219,6 @@ export function RevenueDistributionChart({
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Section: Course & Group Breakdown Table */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Analiză Venituri pe Cursuri & Grupe
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Venituri facturate, încasate și datorii per curs sau grupă
-            </p>
-          </div>
-
-          {/* Toggle Tab */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("courses")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "courses"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <BookOpenIcon className="w-3.5 h-3.5" />
-              <span>Cursuri ({courseBreakdown.length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("groups")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "groups"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <UsersIcon className="w-3.5 h-3.5" />
-              <span>Grupe ({groupBreakdown.length})</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Courses Table View */}
-        {activeTab === "courses" && (
-          <div className="overflow-x-auto">
-            {courseBreakdown.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                Nu există facturi asociate vreunui curs în perioada selectată.
-              </div>
-            ) : (
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-                    <th className="py-2.5 px-3">Curs</th>
-                    <th className="py-2.5 px-3 text-center">Elevi</th>
-                    <th className="py-2.5 px-3 text-right">Facturat</th>
-                    <th className="py-2.5 px-3 text-right">Încasat</th>
-                    <th className="py-2.5 px-3 text-right">Restant</th>
-                    <th className="py-2.5 px-3 text-right">Rată Colectare</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {courseBreakdown.map((c) => (
-                    <tr key={c.courseId} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-3 font-bold text-slate-900">
-                        {c.courseName}
-                      </td>
-                      <td className="py-3 px-3 text-center text-slate-600">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 font-semibold text-slate-700">
-                          {c.studentCount}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-right font-semibold text-slate-900">
-                        {formatMdl(c.billed)} MDL
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-emerald-700">
-                        {formatMdl(c.collected)} MDL
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-amber-700">
-                        {c.debt > 0 ? `${formatMdl(c.debt)} MDL` : "—"}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <div className="inline-flex items-center gap-1.5">
-                          <div className="w-12 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="h-full bg-emerald-500 rounded-full"
-                              style={{ width: `${c.collectionRate}%` }}
-                            />
-                          </div>
-                          <span className="font-bold text-slate-800 min-w-[28px] text-right">
-                            {c.collectionRate}%
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-
-        {/* Groups Table View */}
-        {activeTab === "groups" && (
-          <div className="overflow-x-auto">
-            {groupBreakdown.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                Nu există facturi asociate vreunei grupe în perioada selectată.
-              </div>
-            ) : (
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-                    <th className="py-2.5 px-3">Grupă</th>
-                    <th className="py-2.5 px-3">Curs</th>
-                    <th className="py-2.5 px-3 text-right">Facturat</th>
-                    <th className="py-2.5 px-3 text-right">Încasat</th>
-                    <th className="py-2.5 px-3 text-right">Datorie</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {groupBreakdown.map((g) => (
-                    <tr key={g.groupId} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-3 font-bold text-slate-900">
-                        {g.groupName}
-                      </td>
-                      <td className="py-3 px-3 text-slate-500">
-                        {g.courseName}
-                      </td>
-                      <td className="py-3 px-3 text-right font-semibold text-slate-900">
-                        {formatMdl(g.billed)} MDL
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-emerald-700">
-                        {formatMdl(g.collected)} MDL
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-amber-700">
-                        {g.debt > 0 ? `${formatMdl(g.debt)} MDL` : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
