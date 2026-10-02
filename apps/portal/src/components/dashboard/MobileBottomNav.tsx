@@ -38,20 +38,13 @@ export function MobileBottomNav({
     return pathname.startsWith(href);
   };
 
-  // Determine slot 4 contextual destination
+  // Determine contextual destination (Facturi if billing allowed, or Panou/Roletă/Utilizatori)
   const fourthItem = isBillingAllowed
     ? {
         href: "/dashboard/invoices",
         label: "Facturi",
         Icon: InvoiceIcon,
         badge: overdueCount > 0 ? overdueCount : undefined,
-      }
-    : isSuperOrAdmin
-    ? {
-        href: "/dashboard/users",
-        label: "Utilizatori",
-        Icon: UsersIcon,
-        badge: undefined,
       }
     : canAccessDoor
     ? {
@@ -60,10 +53,17 @@ export function MobileBottomNav({
         Icon: DoorIcon,
         badge: undefined,
       }
+    : isSuperOrAdmin
+    ? {
+        href: "/dashboard/users",
+        label: "Utilizatori",
+        Icon: UsersIcon,
+        badge: undefined,
+      }
     : {
-        href: "/dashboard/schedule",
-        label: "Orar",
-        Icon: CalendarIcon,
+        href: "/dashboard",
+        label: "Panou",
+        Icon: DashboardIcon,
         badge: undefined,
       };
 
@@ -73,20 +73,7 @@ export function MobileBottomNav({
       className="fixed bottom-0 left-0 right-0 bg-[#0c0e14]/95 backdrop-blur-xl border-t border-white/[0.08] md:hidden z-40 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-1"
     >
       <div className="flex items-center justify-around px-1 max-w-md mx-auto">
-        {/* Tab 1: Panou */}
-        <Link
-          href="/dashboard"
-          className={`flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl transition-all active:scale-95 ${
-            isRouteActive("/dashboard")
-              ? "text-white font-bold bg-white/[0.08] shadow-xs"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <DashboardIcon className="w-5 h-5 shrink-0" />
-          <span className="text-[10px] tracking-tight leading-none">Panou</span>
-        </Link>
-
-        {/* Tab 2: Prezență or Orar */}
+        {/* Tab 1: Prezență (Most frequent action) */}
         {canManageStudents ? (
           <Link
             href="/dashboard/attendance"
@@ -113,7 +100,34 @@ export function MobileBottomNav({
           </Link>
         )}
 
-        {/* Tab 3: Studenți */}
+        {/* Tab 2: Orar (Second most frequent daily routine) */}
+        {canManageStudents ? (
+          <Link
+            href="/dashboard/schedule"
+            className={`flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl transition-all active:scale-95 ${
+              isRouteActive("/dashboard/schedule")
+                ? "text-white font-bold bg-white/[0.08] shadow-xs"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <CalendarIcon className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] tracking-tight leading-none">Orar</span>
+          </Link>
+        ) : (
+          <Link
+            href="/dashboard"
+            className={`flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl transition-all active:scale-95 ${
+              isRouteActive("/dashboard")
+                ? "text-white font-bold bg-white/[0.08] shadow-xs"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <DashboardIcon className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] tracking-tight leading-none">Panou</span>
+          </Link>
+        )}
+
+        {/* Tab 3: Studenți (Catalog / Directoriu) */}
         {canManageStudents && (
           <Link
             href="/dashboard/students"
@@ -128,7 +142,7 @@ export function MobileBottomNav({
           </Link>
         )}
 
-        {/* Tab 4: Contextual (Facturi / Utilizatori / Roletă / Orar) */}
+        {/* Tab 4: Contextual (Facturi / Panou / Roletă / Utilizatori) */}
         <Link
           href={fourthItem.href}
           className={`relative flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl transition-all active:scale-95 ${
@@ -153,7 +167,7 @@ export function MobileBottomNav({
         <button
           type="button"
           onClick={onOpenMobile}
-          className="flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl text-slate-400 hover:text-slate-200 active:text-white transition-all active:scale-95"
+          className="flex flex-col items-center justify-center gap-1 min-w-[54px] py-1.5 px-2 rounded-xl text-slate-400 hover:text-slate-200 active:text-white transition-all active:scale-95 cursor-pointer"
           aria-label="Deschide meniul complet"
         >
           <MenuIcon className="w-5 h-5 shrink-0" />

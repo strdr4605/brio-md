@@ -26,16 +26,16 @@ export function ScheduleKpiCards({
 }: ScheduleKpiCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-pulse">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 animate-pulse">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 bg-slate-100 rounded-2xl border border-slate-200/70" />
+          <div key={i} className="h-24 sm:h-28 bg-slate-100 rounded-2xl border border-slate-200/70" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {/* 1. Grupe în Orar */}
       <MetricCard
         title="Grupe în Orar"
