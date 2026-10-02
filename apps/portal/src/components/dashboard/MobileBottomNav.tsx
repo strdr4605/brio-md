@@ -131,13 +131,13 @@ export function MobileBottomNav({
         <button
           type="button"
           onClick={onOpenMobile}
-          className="relative -mt-5 flex flex-col items-center justify-center gap-0.5 min-w-[54px] h-[52px] w-[52px] rounded-full bg-slate-900 border-2 border-white/20 text-white shadow-2xl transition-all active:scale-90 hover:scale-105 hover:border-white/40 cursor-pointer group shrink-0 ring-4 ring-[#0c0e14]"
+          className="flex flex-col items-center justify-center min-w-[56px] -mt-5 group transition-transform active:scale-90 cursor-pointer shrink-0"
           aria-label="Deschide meniul rapid"
         >
-          <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-            <MenuIcon className="w-4 h-4 text-white" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 border border-white/25 text-white shadow-xl shadow-blue-600/30 ring-4 ring-[#0c0e14] flex items-center justify-center group-hover:scale-105 transition-all">
+            <MenuIcon className="w-5 h-5 text-white" />
           </div>
-          <span className="text-[8px] font-black tracking-tight leading-none text-slate-300">
+          <span className="text-[10px] font-bold text-slate-300 group-hover:text-white tracking-tight leading-none mt-1">
             Meniu
           </span>
         </button>

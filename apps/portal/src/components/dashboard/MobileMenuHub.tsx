@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   DashboardIcon,
   BookOpenIcon,
@@ -38,6 +39,11 @@ export function MobileMenuHub({
   isBillingAllowed = false,
 }: MobileMenuHubProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on Escape key
   useEffect(() => {
@@ -59,7 +65,7 @@ export function MobileMenuHub({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
   const roleLabel =
     role === "superadmin"
@@ -118,7 +124,7 @@ export function MobileMenuHub({
     },
   ].filter((a) => a.visible);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -132,7 +138,7 @@ export function MobileMenuHub({
       />
 
       {/* Hub Modal Content */}
-      <div className="relative z-10 w-full max-w-md mx-auto px-5 pb-6 pt-4 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-200">
+      <div className="relative z-10 w-full max-w-md mx-auto px-5 pb-6 pt-4 flex flex-col items-center animate-fade-in-up">
         {/* User Profile Pill */}
         <div className="w-full bg-white/[0.07] border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-3.5 mb-6 shadow-2xl flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
@@ -214,6 +220,7 @@ export function MobileMenuHub({
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
