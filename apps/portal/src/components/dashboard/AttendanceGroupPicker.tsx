@@ -164,7 +164,7 @@ export function AttendanceGroupPicker({
               <select
                 value={selectedTeacherId}
                 onChange={(e) => setSelectedTeacherId(e.target.value)}
-                className="appearance-none pl-3 pr-7 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-2xs"
+                className="appearance-none pl-3 pr-7 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition shadow-2xs"
               >
                 <option value="all">Toți profesorii ({uniqueTeachers.length})</option>
                 {uniqueTeachers.map((t) => (
@@ -183,7 +183,7 @@ export function AttendanceGroupPicker({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Caută grupă, sală, profesor..."
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-2xs"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition shadow-2xs"
             />
             {search && (
               <button
@@ -216,8 +216,8 @@ export function AttendanceGroupPicker({
 
       {/* Empty State */}
       {!isLoading && filteredGroups.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3 border border-blue-100">
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-3">
             <UsersIcon className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-slate-900 mb-1">
@@ -244,16 +244,16 @@ export function AttendanceGroupPicker({
               <div
                 key={group.id}
                 onClick={() => onSelectGroup(group.id)}
-                className={`group bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] ${
+                className={`group bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm active:scale-[0.99] ${
                   hasToday
                     ? "border-emerald-200/90 hover:border-emerald-400"
-                    : "border-slate-200/80 hover:border-blue-400"
+                    : "border-slate-200/80 hover:border-slate-300"
                 }`}
               >
                 <div className="space-y-3">
                   {/* Top line: Course & Today indicator */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-block text-[10px] font-bold text-blue-900 bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 rounded-lg truncate max-w-[65%]">
+                    <span className="inline-block text-[10px] font-bold text-slate-800 bg-slate-100 border border-slate-200/80 px-2.5 py-0.5 rounded-lg truncate max-w-[65%]">
                       {group.courseName || "Curs"}
                     </span>
                     {hasToday ? (

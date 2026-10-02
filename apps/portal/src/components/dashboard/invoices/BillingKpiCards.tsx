@@ -115,6 +115,7 @@ export function BillingKpiCards({
       {/* 3. Total Active Debt */}
       <MetricCard
         title="Datorie Totală Activă"
+        href="?tab=debtors"
         value={
           <div className="flex items-baseline gap-1.5">
             <span className={totalActiveDebt > 0 ? "text-rose-600" : "text-slate-900"}>

@@ -38,7 +38,7 @@ type Props = {
   currentUserSchoolId?: number;
 };
 
-const inputCls = "w-full px-3.5 py-2.5 text-sm bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition";
+const inputCls = "w-full px-3.5 py-2.5 text-sm bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition";
 const labelCls = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5";
 
 export function StudentFormDrawer({
@@ -472,7 +472,7 @@ export function StudentFormDrawer({
                                     [courseId]: val,
                                   }));
                                 }}
-                                className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-slate-700 font-medium"
+                                className="w-full px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-700 font-medium"
                               >
                                 <option value="">Fără grupă (doar înscriere la curs)</option>
                                 {availableForCourse.map((g) => {
@@ -522,7 +522,7 @@ export function StudentFormDrawer({
                   type="checkbox"
                   checked={formData.active}
                   onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                  className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
+                  className="w-4 h-4 rounded text-slate-900 border-slate-300 focus:ring-slate-900/20"
                 />
                 <span className="text-sm font-semibold text-slate-700">Cont elev activ</span>
               </label>

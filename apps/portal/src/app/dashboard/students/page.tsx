@@ -4,14 +4,10 @@ import { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
+import { StudentsTable } from "@/components/dashboard/StudentsTable";
 import { StudentKpiCards } from "@/components/dashboard/StudentKpiCards";
 import { StudentFiltersBar } from "@/components/dashboard/StudentFiltersBar";
-import { StudentMobileCard } from "@/components/dashboard/StudentMobileCard";
-import { StudentDesktopTable } from "@/components/dashboard/StudentDesktopTable";
-import {
-  StudentsIcon,
-  PlusIcon,
-} from "@/components/ui/icons";
+import { StudentsIcon, PlusIcon } from "@/components/ui/icons";
 
 export default function StudentiPage() {
   const { data: session, status } = useSession();
@@ -23,7 +19,6 @@ export default function StudentiPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
-  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -53,7 +48,6 @@ export default function StudentiPage() {
   const handleDelete = (id: number) => {
     if (confirm("Sigur doriți să ștergeți acest student?")) {
       deleteMutation.mutate({ id });
-      if (expandedStudentId === id) setExpandedStudentId(null);
     }
   };
 
@@ -114,12 +108,9 @@ export default function StudentiPage() {
     setShowForm(true);
   };
 
-  const toggleExpand = (id: number) => {
-    setExpandedStudentId((prev) => (prev === id ? null : id));
-  };
-
-  const enrolledCount = students.filter((s: any) => s.courses && s.courses.length > 0).length;
-  const unenrolledCount = students.length - enrolledCount;
+  const unenrolledCount = students.filter(
+    (s: any) => !s.courses || s.courses.length === 0,
+  ).length;
 
   return (
     <>
@@ -152,9 +143,7 @@ export default function StudentiPage() {
       {/* KPI Stats Bar */}
       <StudentKpiCards
         totalStudents={students.length}
-        enrolledCount={enrolledCount}
         unenrolledCount={unenrolledCount}
-        schoolsCount={schools.length || 1}
       />
 
       {/* Filters Toolbar */}
@@ -169,53 +158,16 @@ export default function StudentiPage() {
       />
 
       {/* Main Table with Smart Expandable Rows */}
-      {isLoading ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
-          <p className="text-sm text-slate-500">Se încarcă catalogul...</p>
-        </div>
-      ) : filteredStudents.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm">
-          <StudentsIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-bold text-slate-700">Niciun student găsit</p>
-          <p className="text-xs text-slate-400 mt-1">Încearcă să ajustezi filtrele sau căutarea.</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          {/* Mobile Card List (Thumb-friendly touch view) */}
-          <div className="block md:hidden divide-y divide-slate-100">
-            {filteredStudents.map((student) => {
-              const school = schools.find((s) => s.id === student.schoolId);
-              return (
-                <StudentMobileCard
-                  key={student.id}
-                  student={student}
-                  school={school}
-                  courses={courses}
-                  isExpanded={expandedStudentId === student.id}
-                  onToggleExpand={() => toggleExpand(student.id)}
-                  onEdit={() => handleEdit(student)}
-                  onDelete={() => handleDelete(student.id)}
-                  deletePending={deleteMutation.isPending}
-                />
-              );
-            })}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block">
-            <StudentDesktopTable
-              students={filteredStudents}
-              schools={schools}
-              courses={courses}
-              expandedStudentId={expandedStudentId}
-              onToggleExpand={toggleExpand}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              deletePending={deleteMutation.isPending}
-            />
-          </div>
-        </div>
-      )}
+      {/* Main Table with Smart Expandable Rows */}
+      <StudentsTable
+        students={filteredStudents}
+        schools={schools}
+        courses={courses}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        deletePending={deleteMutation.isPending}
+      />
       </div>
 
       {/* Edit / Create Drawer */}

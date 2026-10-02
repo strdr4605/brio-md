@@ -71,7 +71,7 @@ export function InvoiceFiltersBar({
             placeholder="Caută student sau # factură..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 placeholder:text-slate-400"
+            className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all text-slate-900 placeholder:text-slate-400"
           />
           {search && (
             <button
@@ -96,9 +96,9 @@ export function InvoiceFiltersBar({
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto"
+          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 w-full sm:w-auto"
         >
-          <option value="all">Toate tipurile</option>
+          <option value="all">Toate tipurile de plată</option>
           <option value="subscription">Abonament lunar</option>
           <option value="per_lesson">Plată per lecție</option>
           <option value="situational">Situativ / Ad-hoc</option>
@@ -108,7 +108,7 @@ export function InvoiceFiltersBar({
         <select
           value={groupIdFilter}
           onChange={(e) => setGroupIdFilter(e.target.value)}
-          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto sm:max-w-[200px] truncate"
+          className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 w-full sm:w-auto sm:max-w-[200px] truncate"
         >
           <option value="all">Toate grupele</option>
           {groups.map((g) => (

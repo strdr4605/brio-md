@@ -263,40 +263,40 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
               {/* Informații Generale */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Informații Generale
                 </h3>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nume curs *</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nume curs *</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ex: Robotică & Programare A1"
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Descriere</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Descriere</label>
                   <textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Descrierea cursului și obiectivele de învățare..."
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nivel dificultate *</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nivel dificultate *</label>
                   <select
                     value={level}
                     onChange={(e) =>
                       setLevel(e.target.value as "beginner" | "intermediate" | "advanced")
                     }
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   >
                     <option value="beginner">Începător (Beginner)</option>
                     <option value="intermediate">Mediu (Intermediate)</option>
@@ -307,30 +307,30 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
               {/* Sesiuni & Durată */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Sesiuni & Durată
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Total sesiuni *</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Total sesiuni *</label>
                     <input
                       type="number"
                       min={1}
                       required
                       value={totalSessions}
                       onChange={(e) => setTotalSessions(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Durată sesiune (min) *</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Durată sesiune (min) *</label>
                     <input
                       type="number"
                       min={1}
                       required
                       value={sessionDurationMinutes}
                       onChange={(e) => setSessionDurationMinutes(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                 </div>
@@ -338,19 +338,19 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
               {/* Orar / Program */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Program & Orar
                 </h3>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Zile din săptămână</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Zile din săptămână</label>
                   <div className="grid grid-cols-4 gap-2">
                     {DAYS_OF_WEEK.map((day) => (
                       <label
                         key={day.id}
-                        className={`flex items-center justify-center px-2 py-1.5 border rounded-lg text-sm cursor-pointer transition ${
+                        className={`flex items-center justify-center px-2 py-2 border rounded-xl text-xs font-bold cursor-pointer transition ${
                           scheduleDays.includes(day.id)
-                            ? "bg-blue-50 border-blue-500 text-blue-700 font-medium"
-                            : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                            ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-100"
                         }`}
                       >
                         <input
@@ -367,21 +367,21 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Ora început</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ora început</label>
                     <input
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Ora sfârșit</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ora sfârșit</label>
                     <input
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
               {/* Profesor / Instructor */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Profesor Asignat
                 </h3>
                 <div>
@@ -398,7 +398,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     onChange={(e) =>
                       setTeacherId(e.target.value ? Number(e.target.value) : null)
                     }
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   >
                     <option value="">-- Fără profesor asignat --</option>
                     {teachers.map((t) => (
@@ -413,20 +413,20 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
               {/* Materiale Didactice */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                     Materiale Didactice
                   </h3>
                   <button
                     type="button"
                     onClick={addMaterial}
-                    className="text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 font-medium"
+                    className="text-xs px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 font-semibold transition"
                   >
                     + Adaugă material
                   </button>
                 </div>
 
                 {materials.length === 0 ? (
-                  <p className="text-xs text-neutral-500 italic">
+                  <p className="text-xs text-slate-400 italic">
                     Nu au fost adăugate materiale didactice.
                   </p>
                 ) : (
@@ -434,7 +434,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     {materials.map((m, idx) => (
                       <div
                         key={idx}
-                        className="p-3 border border-neutral-200 rounded-lg bg-neutral-50 space-y-2"
+                        className="p-3.5 border border-slate-200/80 rounded-xl bg-slate-50 space-y-2.5"
                       >
                         <div className="flex gap-2">
                           <input
@@ -442,7 +442,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                             placeholder="Titlu material (ex: Ghid Laborator)"
                             value={m.title}
                             onChange={(e) => updateMaterial(idx, "title", e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-white border border-neutral-300 rounded text-sm outline-none"
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                           />
                           <select
                             value={m.type}
@@ -453,7 +453,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                                 e.target.value as CourseMaterialItem["type"],
                               )
                             }
-                            className="w-32 px-2.5 py-1.5 bg-white border border-neutral-300 rounded text-sm outline-none"
+                            className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                           >
                             <option value="manual">Manual</option>
                             <option value="textbook">Manual școlar</option>
@@ -463,7 +463,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                           <button
                             type="button"
                             onClick={() => removeMaterial(idx)}
-                            className="text-red-500 hover:text-red-700 px-2 text-sm"
+                            className="text-rose-600 hover:text-rose-700 px-2 text-sm transition"
                             title="Șterge"
                           >
                             🗑
@@ -474,7 +474,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                           placeholder="https://example.com/material.pdf"
                           value={m.url}
                           onChange={(e) => updateMaterial(idx, "url", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded text-sm outline-none"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                         />
                       </div>
                     ))}
@@ -484,14 +484,14 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
               {/* Status Activ */}
               <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={active}
                     onChange={(e) => setActive(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    className="rounded-md text-slate-900 focus:ring-slate-900/20 h-4 w-4 border-slate-300 transition"
                   />
-                  <span className="text-sm font-medium text-neutral-800">
+                  <span className="text-sm font-semibold text-slate-800">
                     Curs activ (vizibil pentru elevi și profesori)
                   </span>
                 </label>

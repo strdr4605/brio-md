@@ -132,7 +132,7 @@ export function AttendanceCell({
               : status === "late"
                 ? `bg-amber-500 text-white shadow-xs ${canEdit ? "hover:bg-amber-600 active:scale-95" : ""}`
                 : status === "excused"
-                  ? `bg-blue-600 text-white shadow-xs ${canEdit ? "hover:bg-blue-700 active:scale-95" : ""}`
+                  ? `bg-slate-700 text-white shadow-xs ${canEdit ? "hover:bg-slate-800 active:scale-95" : ""}`
                   : canEdit
                     ? "text-slate-300 hover:text-slate-700 hover:bg-slate-100/90 active:scale-95 font-medium"
                     : "text-slate-200 font-medium"
@@ -234,8 +234,8 @@ export function AttendanceCell({
                     onClick={() => setSelectedStatus("excused")}
                     className={`py-1.5 text-xs font-bold rounded-xl transition ${
                       selectedStatus === "excused"
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        ? "bg-slate-800 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     }`}
                   >
                     Motivat
@@ -260,7 +260,7 @@ export function AttendanceCell({
                     }
                   }}
                   placeholder="Ex: Bolnav, învoit de părinți, concurs..."
-                  className="w-full p-2.5 text-xs font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none placeholder:text-slate-400"
+                  className="w-full p-2.5 text-xs font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition resize-none placeholder:text-slate-400"
                 />
                 <p className="text-[10px] text-slate-400 text-right">
                   Apasă <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] font-mono">Ctrl+Enter</kbd> pentru salvare
@@ -290,7 +290,7 @@ export function AttendanceCell({
                   <button
                     type="button"
                     onClick={handleSaveNote}
-                    className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition active:scale-95"
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs transition active:scale-95"
                   >
                     Salvează
                   </button>

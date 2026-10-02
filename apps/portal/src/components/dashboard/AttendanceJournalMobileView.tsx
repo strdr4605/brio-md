@@ -11,6 +11,8 @@ import { StudentCheckinCard } from "./StudentCheckinCard";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  CalendarIcon,
+  DashboardIcon,
 } from "@/components/ui/icons";
 
 export type AttendanceJournalMobileViewProps = {
@@ -119,24 +121,26 @@ export function AttendanceJournalMobileView({
           <button
             type="button"
             onClick={() => setViewMode("cards")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewMode === "cards"
                 ? "bg-white text-slate-900 shadow-2xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            📱 Listă Zi
+            <CalendarIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>Listă Zi</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode("matrix")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewMode === "matrix"
                 ? "bg-white text-slate-900 shadow-2xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            ▦ Tabel Matrice
+            <DashboardIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>Tabel Matrice</span>
           </button>
         </div>
 
@@ -265,7 +269,7 @@ export function AttendanceJournalMobileView({
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">
-                      🔒 Arhivă
+                      Arhivă
                     </span>
                   )}
                 </div>
