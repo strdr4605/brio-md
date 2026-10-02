@@ -119,7 +119,7 @@ export default function StudentiPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Catalog Studenți</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Gestiune Elevi</h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/80">
               {students.length} total
             </span>
@@ -136,7 +136,7 @@ export default function StudentiPage() {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
         >
           <PlusIcon className="w-4 h-4" />
-          <span>Adaugă Student</span>
+          <span>Înregistrează Elev Nou</span>
         </button>
       </div>
 

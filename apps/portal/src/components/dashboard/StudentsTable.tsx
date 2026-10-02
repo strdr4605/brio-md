@@ -2,8 +2,10 @@
 
 import { useState, Fragment } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatPhone } from "@/lib/phone";
-import { ChevronDownIcon, StudentsIcon } from "@/components/ui/icons";
+import { ChevronDownIcon } from "@/components/ui/icons";
+import { Card, CardHeader, StatusDot, EmptyState } from "@brio-md/ui";
 import { StudentCoursesCell } from "./StudentCoursesCell";
 import { StudentRowDetails } from "./StudentRowDetails";
 
@@ -40,6 +42,7 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
   onDelete,
   deletePending = false,
 }: StudentsTableProps<T>) {
+  const router = useRouter();
   const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
 
   const toggleExpand = (id: number) => {
@@ -48,37 +51,48 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm">
+      <Card className="p-12 text-center">
         <p className="text-sm text-slate-500">Se încarcă catalogul...</p>
-      </div>
+      </Card>
     );
   }
 
   if (students.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm">
-        <StudentsIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-        <p className="text-sm font-bold text-slate-700">Niciun student găsit</p>
-        <p className="text-xs text-slate-400 mt-1">Încearcă să ajustezi filtrele sau căutarea.</p>
-      </div>
+      <Card>
+        <CardHeader
+          title="Gestiune Elevi"
+          description="Registru și dosare elevi"
+        />
+        <EmptyState
+          title="Nu au fost găsiți elevi"
+          description="Încercați să modificați termenii de căutare"
+        />
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto scrollbar-thin">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              <th className="w-12 px-4 py-3.5 text-center"></th>
-              <th className="px-4 py-3.5">Student</th>
-              <th className="px-4 py-3.5">Telefon Contact</th>
-              <th className="px-4 py-3.5">Școală</th>
-              <th className="px-4 py-3.5">Cursuri Asignate</th>
-              <th className="px-4 py-3.5 text-right">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+    <Card className="overflow-hidden">
+      <CardHeader
+        title="Gestiune Elevi"
+        description={`${students.length} ${students.length === 1 ? "elev înregistrat" : "elevi înregistrați"}`}
+      />
+      <div className="relative">
+        <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full text-left border-collapse min-w-[760px]">
+            <thead>
+              <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="w-12 px-4 py-3.5 text-center"></th>
+                <th className="px-4 py-3.5">Student</th>
+                <th className="px-4 py-3.5">Statut</th>
+                <th className="px-4 py-3.5">Telefon Contact</th>
+                <th className="px-4 py-3.5">Școală</th>
+                <th className="px-4 py-3.5">Cursuri Asignate</th>
+                <th className="px-4 py-3.5 text-right">Acțiuni</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
             {students.map((student) => {
               const school = schools.find((s) => s.id === student.schoolId);
               const isExpanded = expandedStudentId === student.id;
@@ -92,7 +106,7 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
                 <Fragment key={student.id}>
                   {/* Summary Row */}
                   <tr
-                    onClick={() => toggleExpand(student.id)}
+                    onClick={() => router.push(`/dashboard/students/${student.id}`)}
                     className={`group cursor-pointer transition-colors duration-150 ${
                       isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/80"
                     }`}
@@ -144,6 +158,15 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
                           </span>
                         </div>
                       </div>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                      <StatusDot
+                        status={student.active !== false ? "active" : "inactive"}
+                        label={student.active !== false ? "Activ" : "Inactiv"}
+                        pill
+                      />
                     </td>
 
                     {/* Contact Phone */}
@@ -213,7 +236,7 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
                   {/* Expandable Details Row */}
                   {isExpanded && (
                     <tr>
-                      <td colSpan={6} className="p-0">
+                      <td colSpan={7} className="p-0">
                         <StudentRowDetails
                           student={student}
                           schoolName={school?.name}
@@ -228,6 +251,9 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
           </tbody>
         </table>
       </div>
+      {/* Mobile touch swipe gradient indicator */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent sm:hidden" />
     </div>
+  </Card>
   );
 }
