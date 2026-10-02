@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { EmptyState, ACADEMIC_LABELS } from "@brio-md/ui";
 import { trpc } from "@/lib/trpc";
 import { CourseFormDrawer } from "@/components/dashboard/CourseForm";
 import { CourseGroupsDrawer } from "@/components/dashboard/CourseGroupsDrawer";
-import { CourseListTable } from "@/components/dashboard/CourseListTable";
+import { CourseCardGrid } from "@/components/dashboard/CourseCardGrid";
 import {
   PlusIcon,
   SearchIcon,
-  BookOpenIcon,
   DoorIcon,
 } from "@/components/ui/icons";
 
@@ -35,19 +35,30 @@ export default function CoursesPage() {
 
   const {
     data: courses = [],
-    isLoading,
+    isLoading: isLoadingCourses,
     error,
   } = trpc.course.list.useQuery(
     { search: search.trim() || undefined },
     { enabled: isSuperOrAdmin },
   );
 
+  const { data: groups = [] } = trpc.group.list.useQuery(
+    { schoolId: session?.user?.schoolId || undefined, allSchoolGroups: true },
+    { enabled: isSuperOrAdmin },
+  );
+
   const toggleMutation = trpc.course.toggleActive.useMutation({
-    onSuccess: () => utils.course.list.invalidate(),
+    onSuccess: () => {
+      utils.course.list.invalidate();
+      utils.group.list.invalidate();
+    },
   });
 
   const deleteMutation = trpc.course.delete.useMutation({
-    onSuccess: () => utils.course.list.invalidate(),
+    onSuccess: () => {
+      utils.course.list.invalidate();
+      utils.group.list.invalidate();
+    },
   });
 
   if (authStatus === "loading") {
@@ -55,15 +66,19 @@ export default function CoursesPage() {
       <div className="space-y-6 animate-pulse max-w-7xl mx-auto p-4 sm:p-6">
         <div className="h-8 w-48 bg-slate-200/80 rounded-lg" />
         <div className="h-14 bg-slate-200/80 rounded-2xl" />
-        <div className="h-96 bg-slate-200/80 rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="h-64 bg-slate-200/80 rounded-2xl" />
+          <div className="h-64 bg-slate-200/80 rounded-2xl" />
+          <div className="h-64 bg-slate-200/80 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
   if (!isSuperOrAdmin) {
     return (
-      <div className="max-w-2xl mx-auto mt-12 bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm">
-        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
+      <div className="max-w-2xl mx-auto mt-12 bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs">
+        <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
           <DoorIcon className="w-6 h-6" />
         </div>
         <h2 className="text-base font-bold text-slate-900">Acces Restricționat</h2>
@@ -101,14 +116,14 @@ export default function CoursesPage() {
   return (
     <>
       <div className="space-y-6 animate-fade-in-up pb-12">
-        {/* Header */}
+        {/* Header with Title and Action Trigger */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Management Cursuri
+              {ACADEMIC_LABELS.courses.title}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Administrează cursurile, orarele, profesorii și materialele didactice
+              Administrează cursurile, orarele, sălile și capacitatea grupelor
             </p>
           </div>
           <button
@@ -117,7 +132,7 @@ export default function CoursesPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition"
           >
             <PlusIcon className="w-4 h-4" />
-            <span>Adaugă Curs</span>
+            <span>{ACADEMIC_LABELS.courses.newCourse}</span>
           </button>
         </div>
 
@@ -152,49 +167,50 @@ export default function CoursesPage() {
         )}
 
         {/* Skeletons Loading State */}
-        {isLoading ? (
-          <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6 space-y-4">
-            {[1, 2, 3, 4].map((i) => (
+        {isLoadingCourses ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="animate-pulse flex items-center justify-between py-3 border-b border-slate-100"
+                className="animate-pulse bg-white border border-slate-200/80 rounded-2xl p-5 h-64 flex flex-col justify-between"
               >
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-slate-200 rounded w-1/3" />
-                  <div className="h-3 bg-slate-100 rounded w-1/4" />
+                <div className="space-y-3">
+                  <div className="h-5 bg-slate-200 rounded-md w-2/3" />
+                  <div className="h-4 bg-slate-100 rounded-md w-1/3" />
                 </div>
-                <div className="h-6 bg-slate-200 rounded w-20" />
+                <div className="h-10 bg-slate-100 rounded-md w-full" />
               </div>
             ))}
           </div>
         ) : courses.length === 0 ? (
-          /* Empty State */
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-12 text-center">
-            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-3">
-              <BookOpenIcon className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">
-              Nu există cursuri
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 mb-6 max-w-sm mx-auto">
-              {search
-                ? "Nu a fost găsit niciun curs care să corespundă căutării."
-                : "Începe prin a crea primul curs pentru școala ta."}
-            </p>
-            {!search && (
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-                <span>Adaugă primul curs</span>
-              </button>
-            )}
+          /* Empty State using shared EmptyState primitive */
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+            <EmptyState
+              title={ACADEMIC_LABELS.courses.emptyTitle}
+              description={
+                search
+                  ? "Nu a fost găsit niciun curs care să corespundă termenilor căutării."
+                  : ACADEMIC_LABELS.courses.emptyDescription
+              }
+              action={
+                !search ? (
+                  <button
+                    type="button"
+                    onClick={handleCreate}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5" />
+                    <span>{ACADEMIC_LABELS.courses.newCourse}</span>
+                  </button>
+                ) : undefined
+              }
+            />
           </div>
         ) : (
-          <CourseListTable
+          /* Modern Card Grid with Capacity, Room, Teacher */
+          <CourseCardGrid
             courses={courses}
+            groups={groups as any}
             onEdit={handleEdit}
             onToggleActive={handleToggleActive}
             onDelete={handleDelete}
@@ -203,7 +219,7 @@ export default function CoursesPage() {
         )}
       </div>
 
-      {/* Drawer */}
+      {/* Course Edit / Create Drawer Modal */}
       {showDrawer && (
         <CourseFormDrawer
           courseId={selectedCourseId}
