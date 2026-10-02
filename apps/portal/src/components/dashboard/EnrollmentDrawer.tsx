@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { Drawer, ACADEMIC_LABELS } from "@brio-md/ui";
 import { trpc } from "@/lib/trpc";
-import { SearchIcon, XIcon, CheckCircleIcon } from "@/components/ui/icons";
+import { SearchIcon, CheckCircleIcon } from "@/components/ui/icons";
 import {
   detectStudentGroupScheduleConflicts,
   findGroupConflictWithSelected,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/scheduleConflicts";
 import { StudentEnrollmentView } from "./StudentEnrollmentView";
 import { GroupEnrollmentView } from "./GroupEnrollmentView";
+import { EnrollmentBillingConfig } from "./EnrollmentBillingConfig";
 
 type Props = {
   isOpen: boolean;
@@ -37,8 +38,8 @@ export function EnrollmentDrawer({
   courseName,
   schoolId,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<number | "all">("all");
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,6 @@ export function EnrollmentDrawer({
   const [discountPercent, setDiscountPercent] = useState<string>("0");
 
   const utils = trpc.useUtils();
-  useEffect(() => setMounted(true), []);
 
   const isStudentMode = Boolean(studentId);
   const isGroupMode = Boolean(groupId);
@@ -124,8 +124,6 @@ export function EnrollmentDrawer({
       return s ? findStudentConflictWithTargetGroup({ targetGroup, studentActiveGroups: s.groups || [] }).hasConflict : false;
     });
   }, [isGroupMode, targetGroup, selectedStudentIds, allStudents, existingGroupMembers]);
-
-  if (!mounted || !isOpen) return null;
 
   const handleToggleGroup = (gId: number) => {
     setSelectedGroupIds((prev) => {
@@ -225,157 +223,151 @@ export function EnrollmentDrawer({
 
   const isSaving = enrollMutation.isPending || updateStatusMutation.isPending;
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex justify-end">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onCloseAction} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-xl bg-white h-full shadow-2xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              {isStudentMode ? `Înrolare Grupe – ${studentName || "Student"}` : `Înrolare Studenți – ${groupName || "Grupă"}`}
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {isStudentMode ? "Caută un curs și selectează grupele pentru înrolare" : `Afișează doar studenții înscriși la cursul ${courseName || ""}`}
-            </p>
-          </div>
-          <button onClick={onCloseAction} type="button" className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" aria-label="Închide">
-            <XIcon className="w-5 h-5" />
-          </button>
-        </div>
+  const drawerTitle = isStudentMode
+    ? `Înrolare Grupe – ${studentName || "Student"}`
+    : `Înrolare Studenți – ${groupName || "Grupă"}`;
 
-        {/* Search */}
-        <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/70 shrink-0">
-          <div className="relative">
-            <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder={isStudentMode ? "Caută curs sau grupă..." : "Caută student după nume sau telefon..."}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
-            />
-          </div>
-        </div>
+  const drawerDescription = isStudentMode
+    ? "Selectează cursul și intervalul orar pentru înscrierea în grupă"
+    : `Afișează doar studenții înscriși la cursul ${courseName || ""}`;
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
-          {error && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">{error}</div>}
-
-          {isStudentMode && (
-            <>
-              <StudentEnrollmentView
-                isLoading={isLoadingCourses || isLoadingGroups || isLoadingEnrollments}
-                search={search}
-                studentCourses={studentCourses}
-                availableCourses={availableCourses}
-                allGroups={allGroups}
-                selectedGroupIds={selectedGroupIds}
-                currentEnrollments={currentEnrollments}
-                onToggleGroup={handleToggleGroup}
-                onUpdateStatus={(enrollmentId, status) => updateStatusMutation.mutate({ enrollmentId, status })}
-                isUpdatingStatus={updateStatusMutation.isPending}
-              />
-
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>Configurare Facturare & Tarif</span>
-                  </h3>
-                  <span className="text-[11px] text-slate-500 font-medium">pentru noile înrolări</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                       Model facturare
-                    </label>
-                    <select
-                      value={billingType}
-                      onChange={(e) => setBillingType(e.target.value as any)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-medium text-slate-800"
-                    >
-                      <option value="subscription_monthly">Abonament lunar</option>
-                      <option value="per_lesson">Plată per lecție</option>
-                      <option value="subscription_course">Abonament curs complet</option>
-                      <option value="custom">Personalizat</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                      Preț personalizat (MDL)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="Preț implicit curs"
-                      value={customPrice}
-                      onChange={(e) => setCustomPrice(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                      Reducere (%)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="0%"
-                      value={discountPercent}
-                      onChange={(e) => setDiscountPercent(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800"
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {isGroupMode && (
-            <GroupEnrollmentView
-              isLoadingStudents={isLoadingStudents}
-              search={search}
-              allStudents={allStudents}
-              courseId={courseId}
-              courseName={courseName}
-              selectedStudentIds={selectedStudentIds}
-              existingGroupMembers={existingGroupMembers}
-              targetGroup={targetGroup}
-              onToggleStudent={handleToggleStudent}
-            />
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200/80 bg-slate-50/80 shrink-0 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
+  return (
+    <Drawer
+      isOpen={isOpen}
+      onClose={onCloseAction}
+      title={drawerTitle}
+      description={drawerDescription}
+      widthClassName="w-full sm:max-w-xl"
+      bodyClassName="p-0 flex flex-col h-full overflow-hidden"
+      footer={
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
+          <div className="text-xs text-slate-500 order-2 sm:order-1">
             {isStudentMode ? (
               <span>{selectedGroupIds.length} {selectedGroupIds.length === 1 ? "grupă selectată" : "grupe selectate"}</span>
             ) : (
               <span>{selectedStudentIds.length} {selectedStudentIds.length === 1 ? "student selectat" : "studenți selectați"}</span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onCloseAction} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 rounded-xl transition">
-              Anulează
+          <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
+            <button
+              type="button"
+              onClick={onCloseAction}
+              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-[36px] px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+            >
+              {ACADEMIC_LABELS.drawer.cancel}
             </button>
             <button
               type="button"
               onClick={isStudentMode ? handleSaveStudentEnrollments : handleSaveGroupEnrollments}
               disabled={isSaving || (isStudentMode && studentGroupConflicts.length > 0) || (isGroupMode && groupModeHasConflict)}
-              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
+              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-[36px] px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               <CheckCircleIcon className="w-3.5 h-3.5" />
-              <span>{isSaving ? "Se salvează..." : "Salvează Înscrierile"}</span>
+              <span>{isSaving ? "Se salvează..." : ACADEMIC_LABELS.drawer.saveEnrollment}</span>
             </button>
           </div>
         </div>
+      }
+    >
+      {/* Search & Course Filter Dropdown Header */}
+      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 shrink-0 space-y-2">
+        <div className="relative">
+          <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder={isStudentMode ? "Caută curs sau grupă..." : "Caută student după nume sau telefon..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+          />
+        </div>
+
+        {isStudentMode && availableCourses.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-[11px] font-semibold text-slate-500 shrink-0">Filtru Curs:</label>
+            <select
+              value={selectedCourseFilter}
+              onChange={(e) => setSelectedCourseFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+              className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-md outline-none text-slate-700"
+            >
+              <option value="all">Toate cursurile disponibile</option>
+              {availableCourses.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
-    </div>,
-    document.body,
+
+      {/* Body Content Container */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        {/* Error Notice */}
+        {error && (
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
+            {error}
+          </div>
+        )}
+
+        {/* Conflict Warning Banner */}
+        {isStudentMode && studentGroupConflicts.length > 0 && (
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl space-y-1">
+            <div className="font-bold flex items-center gap-1.5">
+              <span>⚠️ Conflict de orar detectat</span>
+            </div>
+            {studentGroupConflicts.map((c, idx) => (
+              <p key={idx} className="text-[11px] text-amber-700">{c.message}</p>
+            ))}
+          </div>
+        )}
+
+        {isStudentMode && (
+          <>
+            <StudentEnrollmentView
+              isLoading={isLoadingCourses || isLoadingGroups || isLoadingEnrollments}
+              search={search}
+              studentCourses={
+                selectedCourseFilter === "all"
+                  ? studentCourses
+                  : studentCourses.filter((c) => c.id === selectedCourseFilter)
+              }
+              availableCourses={
+                selectedCourseFilter === "all"
+                  ? availableCourses
+                  : availableCourses.filter((c) => c.id === selectedCourseFilter)
+              }
+              allGroups={allGroups}
+              selectedGroupIds={selectedGroupIds}
+              currentEnrollments={currentEnrollments}
+              onToggleGroup={handleToggleGroup}
+              onUpdateStatus={(enrollmentId, status) => updateStatusMutation.mutate({ enrollmentId, status })}
+              isUpdatingStatus={updateStatusMutation.isPending}
+            />
+
+            <EnrollmentBillingConfig
+              billingType={billingType}
+              setBillingType={setBillingType}
+              customPrice={customPrice}
+              setCustomPrice={setCustomPrice}
+              discountPercent={discountPercent}
+              setDiscountPercent={setDiscountPercent}
+            />
+          </>
+        )}
+
+        {isGroupMode && (
+          <GroupEnrollmentView
+            isLoadingStudents={isLoadingStudents}
+            search={search}
+            allStudents={allStudents}
+            courseId={courseId}
+            courseName={courseName}
+            selectedStudentIds={selectedStudentIds}
+            existingGroupMembers={existingGroupMembers}
+            targetGroup={targetGroup}
+            onToggleStudent={handleToggleStudent}
+          />
+        )}
+      </div>
+    </Drawer>
   );
 }
