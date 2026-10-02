@@ -118,41 +118,41 @@ export function AttendanceGroupPicker({
       {/* Control & Filter Deck */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Filter Segmented Control */}
-        <div className="inline-flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shrink-0">
+        <div className="grid grid-cols-2 sm:inline-flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 w-full md:w-auto">
           <button
             type="button"
             onClick={() => setFilterTab("all")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs transition cursor-pointer font-bold ${
+            className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-xs transition cursor-pointer font-bold text-center ${
               filterTab === "all"
                 ? "bg-white text-slate-900 shadow-xs border border-slate-200/90"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Toate Grupele ({groups.length})
+            Toate ({groups.length})
           </button>
           <button
             type="button"
             onClick={() => setFilterTab("today")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs transition cursor-pointer font-bold flex items-center gap-1.5 ${
+            className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-xs transition cursor-pointer font-bold flex items-center justify-center gap-1.5 text-center ${
               filterTab === "today"
                 ? "bg-white text-slate-900 shadow-xs border border-slate-200/90"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Lecție Azi ({todayCount})</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span>Azi ({todayCount})</span>
           </button>
           {Boolean(currentUserId) && (
             <button
               type="button"
               onClick={() => setFilterTab("my")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs transition cursor-pointer font-bold ${
+              className={`col-span-2 sm:col-span-1 px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-xs transition cursor-pointer font-bold text-center ${
                 filterTab === "my"
                   ? "bg-white text-slate-900 shadow-xs border border-slate-200/90"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Grupele Mele ({myCount})
+              Ale Mele ({myCount})
             </button>
           )}
         </div>
@@ -244,7 +244,7 @@ export function AttendanceGroupPicker({
               <div
                 key={group.id}
                 onClick={() => onSelectGroup(group.id)}
-                className={`group bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden p-5 flex flex-col justify-between hover:shadow-sm hover:border-slate-300 ${
+                className={`group bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm active:scale-[0.99] ${
                   hasToday
                     ? "border-emerald-200/90 hover:border-emerald-400"
                     : "border-slate-200/80 hover:border-slate-300"

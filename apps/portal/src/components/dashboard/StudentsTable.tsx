@@ -6,6 +6,7 @@ import { formatPhone } from "@/lib/phone";
 import { ChevronDownIcon, StudentsIcon } from "@/components/ui/icons";
 import { StudentCoursesCell } from "./StudentCoursesCell";
 import { StudentRowDetails } from "./StudentRowDetails";
+import { StudentMobileCard } from "./StudentMobileCard";
 
 export type StudentTableItem = {
   id: number;
@@ -66,7 +67,28 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto scrollbar-thin">
+      {/* Mobile Card List (Thumb-friendly touch view) */}
+      <div className="block md:hidden divide-y divide-slate-100">
+        {students.map((student) => {
+          const school = schools.find((s) => s.id === student.schoolId);
+          return (
+            <StudentMobileCard
+              key={student.id}
+              student={student}
+              school={school}
+              courses={courses}
+              isExpanded={expandedStudentId === student.id}
+              onToggleExpand={() => toggleExpand(student.id)}
+              onEdit={() => onEdit(student)}
+              onDelete={() => onDelete(student.id)}
+              deletePending={deletePending}
+            />
+          );
+        })}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto scrollbar-thin">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">

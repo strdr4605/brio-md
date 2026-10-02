@@ -65,17 +65,17 @@ export function ScheduleMatrixView({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col">
+    <div className="bg-white -mx-3 sm:mx-0 rounded-none sm:rounded-2xl border-y sm:border border-slate-200/80 shadow-xs overflow-hidden flex flex-col">
       {/* Main Table with Sticky Headers & Sticky Time Column */}
       <div className="overflow-x-auto max-h-[80vh] scrollbar-thin">
-        <table className="w-full text-left border-collapse text-xs select-none min-w-[900px]">
+        <table className="w-full text-left border-collapse text-xs select-none min-w-[800px] sm:min-w-[900px]">
           {/* Header row: Groups */}
           <thead className="sticky top-0 z-30 bg-slate-50 shadow-2xs border-b border-slate-200">
             <tr>
-              <th className="sticky left-0 z-40 bg-slate-100/95 backdrop-blur-xs w-[44px] min-w-[44px] p-2.5 font-bold text-slate-800 border-r border-slate-200 text-center uppercase tracking-wider text-[11px]">
+              <th className="sticky left-0 z-40 bg-slate-100/95 backdrop-blur-xs w-[36px] sm:w-[44px] min-w-[36px] sm:min-w-[44px] p-1.5 sm:p-2.5 font-bold text-slate-800 border-r border-slate-200 text-center uppercase tracking-wider text-[10px] sm:text-[11px]">
                 Zi
               </th>
-              <th className="sticky left-[44px] z-40 bg-slate-100/95 backdrop-blur-xs w-[115px] min-w-[115px] px-2 py-3 font-bold text-slate-800 border-r border-slate-200 text-center uppercase tracking-wider text-[11px]">
+              <th className="sticky left-[36px] sm:left-[44px] z-40 bg-slate-100/95 backdrop-blur-xs w-[95px] sm:w-[115px] min-w-[95px] sm:min-w-[115px] px-1.5 sm:px-2 py-2 sm:py-3 font-bold text-slate-800 border-r border-slate-200 text-center uppercase tracking-wider text-[10px] sm:text-[11px]">
                 Orele
               </th>
               {displayGroups.map((group) => {
@@ -83,7 +83,7 @@ export function ScheduleMatrixView({
                 return (
                   <th
                     key={group.id}
-                    className={`px-3.5 py-3 font-bold text-slate-900 border-r border-slate-200 last:border-r-0 min-w-[180px] max-w-[220px] transition ${
+                    className={`px-3 py-2.5 sm:px-3.5 sm:py-3 font-bold text-slate-900 border-r border-slate-200 last:border-r-0 min-w-[160px] sm:min-w-[180px] max-w-[220px] transition ${
                       isMine ? "bg-slate-100/80" : "bg-slate-50 hover:bg-slate-100/60"
                     }`}
                   >
@@ -132,7 +132,7 @@ export function ScheduleMatrixView({
                       {pairIdx === 0 && (
                         <td
                           rowSpan={pairsForDay.length}
-                          className="sticky left-0 z-20 bg-slate-50 font-extrabold text-slate-800 text-center border-r border-slate-200 p-2 uppercase tracking-widest text-xs align-middle w-[44px] min-w-[44px]"
+                          className="sticky left-0 z-20 bg-slate-50 font-extrabold text-slate-800 text-center border-r border-slate-200 p-1.5 sm:p-2 uppercase tracking-widest text-[11px] sm:text-xs align-middle w-[36px] sm:w-[44px] min-w-[36px] sm:min-w-[44px]"
                           style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
                         >
                           <div className="py-2 rotate-180 flex items-center justify-center font-black tracking-wider text-slate-900">
@@ -142,7 +142,7 @@ export function ScheduleMatrixView({
                       )}
 
                       {/* Pair Time Cell (sticky next to Day column) */}
-                      <td className="sticky left-[44px] z-10 bg-white/95 backdrop-blur-xs px-2 py-2 text-center font-semibold text-slate-700 border-r border-slate-200 min-w-[115px] w-[115px]">
+                      <td className="sticky left-[36px] sm:left-[44px] z-10 bg-white/95 backdrop-blur-xs px-1.5 sm:px-2 py-2 text-center font-semibold text-slate-700 border-r border-slate-200 min-w-[95px] sm:min-w-[115px] w-[95px] sm:w-[115px]">
                         <div className="text-[11px] font-extrabold text-slate-900">{pair.label}</div>
                         <div className="text-[9px] text-slate-400 uppercase font-bold mt-0.5">
                           Perechea {pair.index}

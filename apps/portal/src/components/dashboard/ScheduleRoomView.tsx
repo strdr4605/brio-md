@@ -32,8 +32,8 @@ export function ScheduleRoomView({
   }, [hideEmptySlots, filteredGroups, selectedDay]);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto">
-      <div className="min-w-[760px]">
+    <div className="bg-white -mx-3 sm:mx-0 rounded-none sm:rounded-2xl border-y sm:border border-slate-200/80 shadow-xs overflow-x-auto scrollbar-thin">
+      <div className="min-w-[680px] sm:min-w-[760px]">
         {/* Header: Rooms */}
         <div
           className="grid border-b border-slate-200 bg-slate-50/90 sticky top-0 z-10"

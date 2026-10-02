@@ -84,52 +84,55 @@ export function ScheduleFilters({
       {/* Row 1: View mode tabs & Day selector & Empty slots toggle */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+        <div className="w-full sm:w-auto grid grid-cols-3 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
           <button
             type="button"
             onClick={() => onViewModeChange("matrix")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 ${
               viewMode === "matrix"
                 ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <DashboardIcon className="w-3.5 h-3.5" />
-            <span>Matrice Grupe</span>
+            <DashboardIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Matrice Grupe</span>
+            <span className="sm:hidden">Matrice</span>
           </button>
           <button
             type="button"
             onClick={() => onViewModeChange("rooms")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 ${
               viewMode === "rooms"
                 ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <DoorIcon className="w-3.5 h-3.5" />
-            <span>Distribuție Săli</span>
+            <DoorIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Distribuție Săli</span>
+            <span className="sm:hidden">Săli</span>
           </button>
           <button
             type="button"
             onClick={() => onViewModeChange("week")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 ${
               viewMode === "week"
                 ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <CalendarIcon className="w-3.5 h-3.5" />
-            <span>Săptămânal</span>
+            <CalendarIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Săptămânal</span>
+            <span className="sm:hidden">Săptămână</span>
           </button>
         </div>
 
         {/* Day Selector with Quick "Azi" Button */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
           {/* Quick "Azi" button */}
           <button
             type="button"
             onClick={() => onSelectDay(todayDayKey)}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer shrink-0 flex items-center gap-1 ${
               isTodayActive
                 ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                 : "bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100"
@@ -143,13 +146,14 @@ export function ScheduleFilters({
           <button
             type="button"
             onClick={() => onSelectDay("all")}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
               selectedDay === "all"
                 ? "bg-slate-900 text-white shadow-xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
             }`}
           >
-            Toate Zilele
+            <span className="hidden sm:inline">Toate Zilele</span>
+            <span className="sm:hidden">Toate</span>
           </button>
 
           {/* Mon-Sat pills */}
@@ -161,7 +165,7 @@ export function ScheduleFilters({
                 key={day.key}
                 type="button"
                 onClick={() => onSelectDay(day.key)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer relative ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 relative ${
                   isSelected
                     ? "bg-slate-900 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
@@ -179,14 +183,14 @@ export function ScheduleFilters({
           <button
             type="button"
             onClick={onToggleHideEmptySlots}
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ml-auto sm:ml-0 ${
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 ml-auto sm:ml-0 ${
               hideEmptySlots
                 ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                 : "bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100"
             }`}
             title="Comută între afișarea doar a orelor ocupate sau a tuturor orelor"
           >
-            <span>{hideEmptySlots ? "Ore Ocupate" : "Toate Orele"}</span>
+            <span>{hideEmptySlots ? "Ocupate" : "Toate"}</span>
           </button>
         </div>
       </div>
@@ -194,7 +198,7 @@ export function ScheduleFilters({
       {/* Row 2: Secondary Dropdown Filters & Search */}
       <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-slate-100 text-xs">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
           <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"

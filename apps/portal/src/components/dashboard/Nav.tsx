@@ -7,9 +7,10 @@ import { useState } from "react";
 import {
   DashboardIcon, UsersIcon, StudentsIcon, BookOpenIcon, CalendarIcon,
   KeyIcon, DoorIcon, SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
-  ChevronRightIcon, LogOutIcon, XIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
+  ChevronRightIcon, LogOutIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { MobileMenuHub } from "./MobileMenuHub";
 import { trpc } from "@/lib/trpc";
 
 export type NavProps = {
@@ -19,6 +20,7 @@ export type NavProps = {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   mobileOpen: boolean;
+  onOpenMobile?: () => void;
   onCloseMobile: () => void;
 };
 
@@ -29,6 +31,7 @@ export function Nav({
   isCollapsed,
   onToggleCollapse,
   mobileOpen,
+  onOpenMobile,
   onCloseMobile,
 }: NavProps) {
   const pathname = usePathname();
@@ -38,10 +41,10 @@ export function Nav({
   const canManageStudents = isSuperOrAdmin || permissions?.includes("teach") || role === "teacher";
   const canAccessDoor = permissions?.includes("open-front-door") || isSuperOrAdmin;
 
-  const { data: overdueCount = 0 } = trpc.billing.getOverdueCount.useQuery(
-    undefined,
-    { enabled: isBillingAllowed, staleTime: 60_000 },
-  );
+  const { data: overdueCount = 0 } = trpc.billing.getOverdueCount.useQuery(undefined, {
+    enabled: isBillingAllowed,
+    staleTime: 60_000,
+  });
 
   const [academicOpen, setAcademicOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(true);
@@ -160,15 +163,6 @@ export function Nav({
             </button>
           </>
         )}
-
-        {/* Mobile close button */}
-        <button
-          onClick={onCloseMobile}
-          className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
-          aria-label="Închide meniul"
-        >
-          <XIcon className="w-5 h-5" />
-        </button>
       </div>
 
       {/* Navigation List */}
@@ -324,24 +318,26 @@ export function Nav({
         {renderNavContent(isCollapsed)}
       </aside>
 
-      {/* Mobile Drawer Backdrop & Menu */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={onCloseMobile}
-          />
-          <div className="relative w-[280px] max-w-[85vw] bg-[#0c0e14] h-full shadow-2xl z-10 border-r border-white/[0.1] overflow-hidden">
-            {renderNavContent(false)}
-          </div>
-        </div>
-      )}
+      {/* Mobile Radial Hub Menu */}
+      <MobileMenuHub
+        isOpen={mobileOpen}
+        onClose={onCloseMobile}
+        userName={userName}
+        role={role}
+        permissions={permissions}
+        isSuperOrAdmin={isSuperOrAdmin}
+        canAccessDoor={canAccessDoor}
+        isBillingAllowed={isBillingAllowed}
+      />
 
       {/* Mobile Bottom Quick-Action Bar */}
       <MobileBottomNav
         canManageStudents={canManageStudents}
         isSuperOrAdmin={isSuperOrAdmin}
         canAccessDoor={canAccessDoor}
+        isBillingAllowed={isBillingAllowed}
+        overdueCount={overdueCount}
+        onOpenMobile={onOpenMobile}
       />
     </>
   );

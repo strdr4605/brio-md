@@ -48,6 +48,7 @@ export function DashboardShell({
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
         mobileOpen={mobileOpen}
+        onOpenMobile={() => setMobileOpen(true)}
         onCloseMobile={() => setMobileOpen(false)}
       />
 
