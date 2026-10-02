@@ -12,6 +12,7 @@
     "build:portal": "cd apps/portal && npm run build",
     "build:learn": "cd apps/learn && npm run build",
     "studio": "cd packages/db && npx drizzle-kit studio",
+    "cron:subscriptions": "npm run --prefix apps/portal cron:subscriptions",
     "deploy": "kamal deploy",
     "lint": "oxlint -c oxlintrc.json .",
     "format": "prettier --write . --list-different",
