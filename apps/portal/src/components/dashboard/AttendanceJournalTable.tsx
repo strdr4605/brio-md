@@ -7,6 +7,7 @@ import { AttendanceStatus } from "./AttendanceCell";
 import { AttendanceJournalHeader } from "./AttendanceJournalHeader";
 import { AttendanceJournalToolbar, JournalFilterMode } from "./AttendanceJournalToolbar";
 import { AttendanceJournalDesktopTable } from "./AttendanceJournalDesktopTable";
+import { AttendanceJournalMobileView } from "./AttendanceJournalMobileView";
 import {
   getMonthLabel,
   shiftMonth,
@@ -266,18 +267,37 @@ export function AttendanceJournalTable({
         </div>
       )}
 
-      {/* High-Density Physical School Journal Table */}
+      {/* High-Density Physical School Journal Table & Mobile Cards */}
       {!isLoading && data && (
-        <AttendanceJournalDesktopTable
-          displayedStudents={displayedStudents}
-          totalStudentsCount={data.students.length}
-          dates={data.dates}
-          records={localRecords}
-          studentStats={studentStats}
-          dateTotals={dateTotals}
-          isSuperOrAdmin={isSuperOrAdmin}
-          onCellUpdate={handleCellUpdate}
-        />
+        <>
+          {/* Mobile Check-In Cards View (<md screens) */}
+          <div className="block md:hidden">
+            <AttendanceJournalMobileView
+              displayedStudents={displayedStudents}
+              totalStudentsCount={data.students.length}
+              dates={data.dates}
+              records={localRecords}
+              studentStats={studentStats}
+              dateTotals={dateTotals}
+              isSuperOrAdmin={isSuperOrAdmin}
+              onCellUpdate={handleCellUpdate}
+            />
+          </div>
+
+          {/* Desktop Full Matrix Table (>=md screens) */}
+          <div className="hidden md:block">
+            <AttendanceJournalDesktopTable
+              displayedStudents={displayedStudents}
+              totalStudentsCount={data.students.length}
+              dates={data.dates}
+              records={localRecords}
+              studentStats={studentStats}
+              dateTotals={dateTotals}
+              isSuperOrAdmin={isSuperOrAdmin}
+              onCellUpdate={handleCellUpdate}
+            />
+          </div>
+        </>
       )}
     </div>
   );

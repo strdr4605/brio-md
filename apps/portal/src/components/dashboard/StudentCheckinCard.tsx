@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AttendanceStatus } from "./AttendanceCell";
 import { JournalStudentItem } from "./AttendanceJournalDesktopTable";
+import { StudentBillingBadge } from "./StudentBillingBadge";
 import { PhoneIcon, XIcon } from "@/components/ui/icons";
 
 export type StudentCheckinCardProps = {
@@ -28,6 +29,7 @@ export function StudentCheckinCard({
   onCellUpdate,
 }: StudentCheckinCardProps) {
   const currentStatus = record?.status || null;
+  const isUnpaid = Boolean(student.billing?.hasDebt || student.billing?.isOverdue);
 
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteDraft, setNoteDraft] = useState(record?.comment || "");
@@ -44,7 +46,11 @@ export function StudentCheckinCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-2xs space-y-2.5 transition">
+    <div
+      className={`bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-2xs space-y-2.5 transition ${
+        isUnpaid ? "border-l-4 border-l-rose-500 bg-rose-50/15" : ""
+      }`}
+    >
       {/* Top Row: Index + Name + Age + Call Parent Button */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -53,7 +59,11 @@ export function StudentCheckinCard({
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm truncate font-black text-slate-900">
+              <span
+                className={`text-sm truncate font-black ${
+                  isUnpaid ? "text-rose-950" : "text-slate-900"
+                }`}
+              >
                 {student.studentName}
               </span>
               {student.age && (
@@ -61,6 +71,13 @@ export function StudentCheckinCard({
                   ({student.age} ani)
                 </span>
               )}
+            </div>
+            <div className="mt-0.5">
+              <StudentBillingBadge
+                billing={student.billing}
+                studentName={student.studentName}
+                compact
+              />
             </div>
           </div>
         </div>
@@ -82,7 +99,7 @@ export function StudentCheckinCard({
       {/* Note quote bubble if present */}
       {Boolean(record?.comment) && !isEditingNote && (
         <div className="bg-amber-50 border border-amber-200/80 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-xs text-amber-900">
-          <span className="italic">{record?.comment}</span>
+          <span className="italic">💬 {record?.comment}</span>
           {canEdit && (
             <button
               type="button"
@@ -197,7 +214,7 @@ export function StudentCheckinCard({
               }`}
               title="Adaugă sau modifică notă"
             >
-              <span>{record?.comment ? "Notă ✓" : "Notă"}</span>
+              <span>{record?.comment ? "Notă ✓" : "📝 Notă"}</span>
             </button>
           </div>
         ) : (
