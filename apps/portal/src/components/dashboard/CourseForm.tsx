@@ -233,7 +233,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
         <div className="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              {isEditing ? "Editează Curs" : "Adaugă Curs"}
+              {isEditing ? "Editează Curs" : "Adaugă Curs Nou"}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {isEditing ? "Actualizează detaliile cursului, orarul și materialele" : "Configurează un nou curs academic"}
@@ -274,7 +274,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ex: Robotică & Programare A1"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   />
                 </div>
 
@@ -285,7 +285,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Descrierea cursului și obiectivele de învățare..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition resize-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition resize-none"
                   />
                 </div>
 
@@ -296,7 +296,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     onChange={(e) =>
                       setLevel(e.target.value as "beginner" | "intermediate" | "advanced")
                     }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   >
                     <option value="beginner">Începător (Beginner)</option>
                     <option value="intermediate">Mediu (Intermediate)</option>
@@ -319,7 +319,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                       required
                       value={totalSessions}
                       onChange={(e) => setTotalSessions(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                   <div>
@@ -330,7 +330,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                       required
                       value={sessionDurationMinutes}
                       onChange={(e) => setSessionDurationMinutes(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                 </div>
@@ -347,7 +347,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     {DAYS_OF_WEEK.map((day) => (
                       <label
                         key={day.id}
-                        className={`flex items-center justify-center px-2 py-2 border rounded-xl text-xs font-bold cursor-pointer transition ${
+                        className={`flex items-center justify-center px-2 py-2 border rounded-md text-xs font-bold cursor-pointer transition ${
                           scheduleDays.includes(day.id)
                             ? "bg-slate-900 border-slate-900 text-white shadow-xs"
                             : "border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -372,7 +372,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                   <div>
@@ -381,7 +381,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                     />
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     onChange={(e) =>
                       setTeacherId(e.target.value ? Number(e.target.value) : null)
                     }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   >
                     <option value="">-- Fără profesor asignat --</option>
                     {teachers.map((t) => (
@@ -442,7 +442,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                             placeholder="Titlu material (ex: Ghid Laborator)"
                             value={m.title}
                             onChange={(e) => updateMaterial(idx, "title", e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                           />
                           <select
                             value={m.type}
@@ -453,7 +453,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                                 e.target.value as CourseMaterialItem["type"],
                               )
                             }
-                            className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
+                            className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-semibold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                           >
                             <option value="manual">Manual</option>
                             <option value="textbook">Manual școlar</option>
@@ -474,7 +474,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                           placeholder="https://example.com/material.pdf"
                           value={m.url}
                           onChange={(e) => updateMaterial(idx, "url", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
                         />
                       </div>
                     ))}
