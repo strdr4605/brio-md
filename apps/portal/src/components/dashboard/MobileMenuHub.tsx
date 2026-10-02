@@ -15,6 +15,8 @@ import {
   LogOutIcon,
   XIcon,
   ShieldCheckIcon,
+  KeyIcon,
+  InvoiceIcon,
 } from "@/components/ui/icons";
 
 export type MobileMenuHubProps = {
@@ -95,10 +97,24 @@ export function MobileMenuHub({
       visible: true,
     },
     {
+      href: "/dashboard/invoices",
+      label: "Facturare",
+      description: "Registru & plăți",
+      Icon: InvoiceIcon,
+      visible: isBillingAllowed,
+    },
+    {
       href: "/dashboard/users",
       label: "Utilizatori",
       description: "Profesori & conturi",
       Icon: UsersIcon,
+      visible: isSuperOrAdmin,
+    },
+    {
+      href: "/dashboard/keys",
+      label: "Securitate & Chei",
+      description: "Chei RFID & acces",
+      Icon: KeyIcon,
       visible: isSuperOrAdmin,
     },
     {
@@ -168,7 +184,7 @@ export function MobileMenuHub({
         </div>
 
         {/* Action Hub Circular Grid */}
-        <div className="w-full grid grid-cols-3 gap-3.5 mb-6">
+        <div className="w-full grid grid-cols-3 gap-3 max-h-[58vh] overflow-y-auto px-1 py-1 mb-5 scrollbar-none">
           {hubActions.map((action) => {
             const isActive =
               action.href === "/dashboard"
@@ -180,16 +196,16 @@ export function MobileMenuHub({
                 key={action.href}
                 href={action.href}
                 onClick={onClose}
-                className="flex flex-col items-center gap-2 group transition active:scale-95 cursor-pointer"
+                className="flex flex-col items-center gap-1.5 group transition active:scale-95 cursor-pointer"
               >
                 <div
-                  className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                     isActive
                       ? "bg-white text-slate-950 shadow-lg shadow-white/10 ring-2 ring-white/50 scale-105"
                       : "bg-white/[0.08] group-hover:bg-white/[0.14] text-white border border-white/[0.12] backdrop-blur-xl shadow-md group-hover:scale-105"
                   }`}
                 >
-                  <action.Icon className="w-7 h-7 shrink-0 transition-transform group-hover:scale-110" />
+                  <action.Icon className="w-6 h-6 shrink-0 transition-transform group-hover:scale-110" />
                 </div>
                 <div className="text-center">
                   <span

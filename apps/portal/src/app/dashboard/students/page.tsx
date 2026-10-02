@@ -158,7 +158,6 @@ export default function StudentiPage() {
       />
 
       {/* Main Table with Smart Expandable Rows */}
-      {/* Main Table with Smart Expandable Rows */}
       <StudentsTable
         students={filteredStudents}
         schools={schools}
