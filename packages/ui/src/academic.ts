@@ -49,12 +49,16 @@ export type StudentProfileTab = (typeof STUDENT_PROFILE_TABS)[number];
 export type StudentDossierSummary = {
   id: number;
   name: string;
-  age?: number | null;
-  contractNumber?: string | null;
+  age: number | null;
+  contractNumber: string | null;
   active: boolean;
+  schoolId?: number | null;
   phone?: string | null;
   parentName?: string | null;
+  /** Relationship descriptor, e.g. "mama", "tata", "tutore" */
+  parentRelation?: string | null;
   parentPhone?: string | null;
+  /** Outstanding balance in MDL currency (not minor units/bani) */
   debtAmount: number;
   debtFormatted: string;
 };
@@ -64,12 +68,16 @@ export type AcademicGroupSummary = {
   courseId: number;
   courseName: string;
   groupName: string;
-  priceMonthly?: number | null;
+  enrollmentId?: number;
+  status?: "active" | "inactive" | "archived";
+  /** Monthly group subscription fee in MDL */
+  priceMonthly: number | null;
   scheduleFormatted: string;
-  room?: string | null;
-  teacherName?: string | null;
-  attendancePercent?: number | null;
-  attendanceRatio?: string | null;
+  room: string | null;
+  teacherName: string | null;
+  /** Overall student attendance percentage on 0..100 scale */
+  attendancePercent: number | null;
+  attendanceRatio: string | null;
   capacity?: {
     enrolled: number;
     max: number;
