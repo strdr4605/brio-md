@@ -7,9 +7,10 @@ import { useState } from "react";
 import {
   DashboardIcon, UsersIcon, StudentsIcon, BookOpenIcon, CalendarIcon,
   KeyIcon, DoorIcon, SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
-  ChevronRightIcon, LogOutIcon, XIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
+  ChevronRightIcon, LogOutIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { MobileMenuHub } from "./MobileMenuHub";
 import { trpc } from "@/lib/trpc";
 
 export type NavProps = {
@@ -162,15 +163,6 @@ export function Nav({
             </button>
           </>
         )}
-
-        {/* Mobile close button */}
-        <button
-          onClick={onCloseMobile}
-          className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
-          aria-label="Închide meniul"
-        >
-          <XIcon className="w-5 h-5" />
-        </button>
       </div>
 
       {/* Navigation List */}
@@ -326,15 +318,17 @@ export function Nav({
         {renderNavContent(isCollapsed)}
       </aside>
 
-      {/* Mobile Drawer Backdrop & Menu */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onCloseMobile} />
-          <div className="relative w-[280px] max-w-[85vw] bg-[#0c0e14] h-full shadow-2xl z-10 border-r border-white/[0.1] overflow-hidden">
-            {renderNavContent(false)}
-          </div>
-        </div>
-      )}
+      {/* Mobile Radial Hub Menu */}
+      <MobileMenuHub
+        isOpen={mobileOpen}
+        onClose={onCloseMobile}
+        userName={userName}
+        role={role}
+        permissions={permissions}
+        isSuperOrAdmin={isSuperOrAdmin}
+        canAccessDoor={canAccessDoor}
+        isBillingAllowed={isBillingAllowed}
+      />
 
       {/* Mobile Bottom Quick-Action Bar */}
       <MobileBottomNav
