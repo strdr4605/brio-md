@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { ACADEMIC_LABELS, type StudentProfileTab } from "@brio-md/ui";
 import { trpc } from "@/lib/trpc";
-import {
-  StudentProfileHeader,
-  StudentProfileStateScreen,
-} from "@/components/dashboard/StudentProfileHeader";
+import { StudentProfileStateScreen } from "@/components/dashboard/StudentProfileHeader";
+import { StudentProfileBreadcrumb } from "@/components/dashboard/StudentProfileBreadcrumb";
+import { StudentDossierSidebar } from "@/components/dashboard/StudentDossierSidebar";
+import { StudentModuleProgressBar } from "@/components/dashboard/StudentModuleProgressBar";
+import { StudentNotesTab } from "@/components/dashboard/StudentNotesTab";
 import { StudentAttendanceTab } from "@/components/dashboard/StudentAttendanceTab";
 import { StudentCoursesTab } from "@/components/dashboard/StudentCoursesTab";
 import { StudentBillingTab } from "@/components/dashboard/billing/StudentBillingTab";
@@ -19,14 +20,15 @@ import {
 import { StudentFormDrawer } from "@/components/dashboard/StudentForm";
 import { EnrollmentDrawer } from "@/components/dashboard/EnrollmentDrawer";
 import {
-  ChevronLeftIcon,
-  PlusIcon,
   TrendingUpIcon,
   BookOpenIcon,
+  CalendarIcon,
 } from "@/components/ui/icons";
 
 export default function StudentProfilePage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const studentId = Number(params.id);
 
   const { data: session, status: authStatus } = useSession();
@@ -46,11 +48,20 @@ export default function StudentProfilePage() {
   const [statusModalEnrollment, setStatusModalEnrollment] =
     useState<EnrollmentStatusItem | null>(null);
 
-  const searchParams = useSearchParams();
-  const urlTab = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<"academic" | "billing">(
-    urlTab === "billing" ? "billing" : "academic",
-  );
+  // Sync active tab with URL search parameter (?tab=courses)
+  const currentTabParam = searchParams.get("tab");
+  const activeTab: StudentProfileTab =
+    currentTabParam === "attendance" ||
+    currentTabParam === "billing" ||
+    currentTabParam === "notes"
+      ? currentTabParam
+      : "courses";
+
+  const handleTabChange = (tab: StudentProfileTab) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set("tab", tab);
+    router.replace(`?${nextParams.toString()}`, { scroll: false });
+  };
 
   const utils = trpc.useUtils();
 
@@ -161,14 +172,10 @@ export default function StudentProfilePage() {
     return (
       <div className="space-y-6 animate-pulse max-w-7xl mx-auto p-4 sm:p-6">
         <div className="h-8 w-48 bg-slate-200/80 rounded-lg" />
-        <div className="h-44 bg-slate-200/80 rounded-2xl" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="h-28 bg-slate-200/80 rounded-2xl" />
-          <div className="h-28 bg-slate-200/80 rounded-2xl" />
-          <div className="h-28 bg-slate-200/80 rounded-2xl" />
-          <div className="h-28 bg-slate-200/80 rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="col-span-12 lg:col-span-4 h-96 bg-slate-200/80 rounded-2xl" />
+          <div className="col-span-12 lg:col-span-8 h-96 bg-slate-200/80 rounded-2xl" />
         </div>
-        <div className="h-96 bg-slate-200/80 rounded-2xl" />
       </div>
     );
   }
@@ -197,111 +204,130 @@ export default function StudentProfilePage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up max-w-7xl mx-auto pb-12">
-      {/* Navigation Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <Link
-          href="/dashboard/students"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition truncate"
-        >
-          <ChevronLeftIcon className="w-4 h-4 shrink-0" />
-          <span className="truncate">Înapoi la Catalog Studenți</span>
-        </Link>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setShowEnrollDrawer(true)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-xs transition hover:border-slate-300"
-          >
-            <PlusIcon className="w-3.5 h-3.5 text-slate-700" />
-            <span>Înrolare în Grupă</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowEditDrawer(true)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition"
-          >
-            <span>Editează Profil</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 1. Header & Contact Information Card */}
-      <StudentProfileHeader
-        student={student}
-        balanceSummary={balanceSummary}
-        createdDateFormatted={createdDateFormatted}
-        onOpenBillingTab={() => setActiveTab("billing")}
+      {/* Navigation Breadcrumb & Action Triggers */}
+      <StudentProfileBreadcrumb
+        onOpenEnroll={() => setShowEnrollDrawer(true)}
+        onOpenEdit={() => setShowEditDrawer(true)}
       />
 
-      {/* Primary Navigation Tabs */}
-      <div className="flex items-center gap-3 sm:gap-4 border-b border-slate-200/80 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-        <button
-          type="button"
-          onClick={() => setActiveTab("academic")}
-          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 shrink-0 ${
-            activeTab === "academic"
-              ? "border-slate-900 text-slate-900"
-              : "border-transparent text-slate-500 hover:text-slate-900"
-          }`}
-        >
-          <BookOpenIcon className="w-4 h-4" />
-          <span>Parcurs Academic & Prezență</span>
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-            {activeEnrollments.length} grupe
-          </span>
-        </button>
+      {/* Main 30% / 70% Layout Grid (Mobile 390px: single column) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (30% on lg:grid-cols-12): Student Identity Dossier */}
+        <StudentDossierSidebar
+          student={student}
+          balanceSummary={balanceSummary}
+          createdDateFormatted={createdDateFormatted}
+          onOpenBillingTab={() => handleTabChange("billing")}
+        />
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("billing")}
-          className={`pb-3.5 text-sm font-bold border-b-2 transition flex items-center gap-2 shrink-0 ${
-            activeTab === "billing"
-              ? "border-slate-900 text-slate-900"
-              : "border-transparent text-slate-500 hover:text-slate-900"
-          }`}
-        >
-          <TrendingUpIcon className="w-4 h-4" />
-          <span>Finanțe & Facturi</span>
-          {balanceSummary && (
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                balanceSummary.currentDebt > 0
-                  ? balanceSummary.overdueCount > 0
-                    ? "bg-rose-100 text-rose-700"
-                    : "bg-amber-100 text-amber-800"
-                  : "bg-emerald-100 text-emerald-800"
-              }`}
+        {/* Right Column (70% on lg:grid-cols-12): Tabbed Workspace */}
+        <main className="col-span-12 lg:col-span-8 space-y-4">
+          {/* Tab Navigation Header Bar */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+              <button
+                type="button"
+                onClick={() => handleTabChange("courses")}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
+                  activeTab === "courses"
+                    ? "border-slate-900 text-slate-900"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <BookOpenIcon className="w-3.5 h-3.5" />
+                <span>{ACADEMIC_LABELS.tabs.courses}</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-700">
+                  {activeEnrollments.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleTabChange("attendance")}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
+                  activeTab === "attendance"
+                    ? "border-slate-900 text-slate-900"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <CalendarIcon className="w-3.5 h-3.5" />
+                <span>{ACADEMIC_LABELS.tabs.attendance}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleTabChange("billing")}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
+                  activeTab === "billing"
+                    ? "border-slate-900 text-slate-900"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <TrendingUpIcon className="w-3.5 h-3.5" />
+                <span>{ACADEMIC_LABELS.tabs.billing}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleTabChange("notes")}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
+                  activeTab === "notes"
+                    ? "border-slate-900 text-slate-900"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <span>{ACADEMIC_LABELS.tabs.notes}</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowEnrollDrawer(true)}
+              className="h-8 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold inline-flex items-center justify-center gap-1 shrink-0 transition"
             >
-              {balanceSummary.currentDebt > 0
-                ? `${balanceSummary.currentDebt} MDL restanță`
-                : "La zi"}
-            </span>
+              <span>{ACADEMIC_LABELS.profile.addGroup}</span>
+            </button>
+          </div>
+
+          {/* Tab Workspace Content */}
+          {activeTab === "courses" && (
+            <div className="space-y-4">
+              <StudentModuleProgressBar
+                currentModule={2}
+                totalModules={4}
+                moduleName={activeEnrollments[0]?.courseName || "Modul Curricular"}
+              />
+              <StudentCoursesTab
+                activeEnrollments={activeEnrollments}
+                historyEnrollments={historyEnrollments}
+                isLoadingEnrollments={isLoadingEnrollments}
+                onOpenEnrollDrawer={() => setShowEnrollDrawer(true)}
+                onOpenStatusModal={handleOpenStatusModal}
+              />
+            </div>
           )}
-        </button>
+
+          {activeTab === "attendance" && (
+            <StudentAttendanceTab
+              attendanceSummary={attendanceSummary}
+              attendanceRecords={attendanceRecords}
+              isLoadingAttendance={isLoadingAttendance}
+            />
+          )}
+
+          {activeTab === "billing" && (
+            <StudentBillingTab studentId={studentId} studentName={student.name} />
+          )}
+
+          {activeTab === "notes" && (
+            <StudentNotesTab
+              info={student.info}
+              parentName={student.parentName}
+              parentPhone={student.parentPhone}
+            />
+          )}
+        </main>
       </div>
-
-      {activeTab === "academic" ? (
-        <>
-          {/* 2. Attendance Summary Widget */}
-          <StudentAttendanceTab
-            attendanceSummary={attendanceSummary}
-            attendanceRecords={attendanceRecords}
-            isLoadingAttendance={isLoadingAttendance}
-          />
-
-          {/* 3. Enrolled Courses & Groups */}
-          <StudentCoursesTab
-            activeEnrollments={activeEnrollments}
-            historyEnrollments={historyEnrollments}
-            isLoadingEnrollments={isLoadingEnrollments}
-            onOpenEnrollDrawer={() => setShowEnrollDrawer(true)}
-            onOpenStatusModal={handleOpenStatusModal}
-          />
-        </>
-      ) : (
-        <StudentBillingTab studentId={studentId} studentName={student.name} />
-      )}
 
       {/* Status Toggle Modal */}
       <StudentEnrollmentStatusModal
