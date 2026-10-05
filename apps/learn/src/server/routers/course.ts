@@ -1,5 +1,12 @@
 import { router, protectedProcedure } from "../trpc";
-import { courses, courseMaterials, studentCourseProgress, users } from "@brio-md/db";
+import {
+  courses,
+  courseMaterials,
+  studentCourseProgress,
+  users,
+  courseLearningResources,
+  learningResources,
+} from "@brio-md/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -135,5 +142,47 @@ export const courseRouter = router({
               notes: null,
             },
       };
+    }),
+
+  getCourseResources: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.number(),
+        sessionNumber: z.number().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = [eq(courseLearningResources.courseId, input.courseId)];
+      if (input.sessionNumber !== undefined) {
+        conditions.push(
+          eq(courseLearningResources.sessionNumber, input.sessionNumber),
+        );
+      }
+
+      return db
+        .select({
+          id: courseLearningResources.id,
+          courseId: courseLearningResources.courseId,
+          resourceId: courseLearningResources.resourceId,
+          sessionNumber: courseLearningResources.sessionNumber,
+          orderIndex: courseLearningResources.orderIndex,
+          createdAt: courseLearningResources.createdAt,
+          resource: {
+            id: learningResources.id,
+            title: learningResources.title,
+            description: learningResources.description,
+            type: learningResources.type,
+            url: learningResources.url,
+            metadata: learningResources.metadata,
+            schoolId: learningResources.schoolId,
+          },
+        })
+        .from(courseLearningResources)
+        .innerJoin(
+          learningResources,
+          eq(courseLearningResources.resourceId, learningResources.id),
+        )
+        .where(and(...conditions))
+        .orderBy(courseLearningResources.orderIndex, courseLearningResources.id);
     }),
 });
