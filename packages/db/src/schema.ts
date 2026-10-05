@@ -8,6 +8,7 @@ import {
   timestamp,
   integer,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // Schools table
@@ -154,7 +155,7 @@ export const studentGroupEnrollments = pgTable(
     courseId: integer("course_id").references(() => courses.id),
     status: varchar("status", {
       length: 50,
-      enum: ["active", "inactive", "archived", "completed"],
+      enum: ["active", "restricted", "inactive", "archived", "completed"],
     }).default("active"),
     billingType: varchar("billing_type", {
       length: 50,
@@ -277,6 +278,73 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Learning Resources table
+export const learningResources = pgTable("learning_resources", {
+  id: serial("id").primaryKey(),
+  schoolId: integer("school_id").references(() => schools.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", {
+    length: 50,
+    enum: ["pdf", "manual", "textbook", "worksheet", "minigame", "link", "video", "vdr"],
+  }).notNull(),
+  url: text("url").notNull(),
+  metadata: jsonb("metadata").$type<LearningResourceMetadata>(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Course Learning Resources (junction table)
+export const courseLearningResources = pgTable(
+  "course_learning_resources",
+  {
+    id: serial("id").primaryKey(),
+    courseId: integer("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    resourceId: integer("resource_id")
+      .notNull()
+      .references(() => learningResources.id, { onDelete: "cascade" }),
+    sessionNumber: integer("session_number"),
+    orderIndex: integer("order_index").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("course_learning_resources_course_resource_session_idx").on(
+      table.courseId,
+      table.resourceId,
+      table.sessionNumber,
+    ),
+  ],
+);
+
+// Student Resource Submissions table
+export const studentResourceSubmissions = pgTable("student_resource_submissions", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  resourceId: integer("resource_id")
+    .notNull()
+    .references(() => learningResources.id, { onDelete: "cascade" }),
+  courseId: integer("course_id")
+    .notNull()
+    .references(() => courses.id),
+  groupId: integer("group_id").references(() => groups.id),
+  teacherId: integer("teacher_id").references(() => users.id),
+  status: varchar("status", {
+    length: 50,
+    enum: ["assigned", "in_progress", "completed", "reviewed"],
+  })
+    .notNull()
+    .default("assigned"),
+  score: integer("score"),
+  maxScore: integer("max_score"),
+  teacherFeedback: text("teacher_feedback"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Auth.js adapter tables
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -326,6 +394,8 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   groups: many(groups),
   enrollments: many(studentGroupEnrollments),
   attendanceRecords: many(attendanceRecords),
+  learningResources: many(courseLearningResources),
+  resourceSubmissions: many(studentResourceSubmissions),
 }));
 
 export const courseMaterialsRelations = relations(courseMaterials, ({ one }) => ({
@@ -355,6 +425,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.studentId],
     references: [students.id],
   }),
+  reviewedSubmissions: many(studentResourceSubmissions),
 }));
 
 export const studentsRelations = relations(students, ({ many }) => ({
@@ -363,6 +434,7 @@ export const studentsRelations = relations(students, ({ many }) => ({
   attendanceRecords: many(attendanceRecords),
   invoices: many(invoices),
   payments: many(payments),
+  resourceSubmissions: many(studentResourceSubmissions),
 }));
 
 export const groupsRelations = relations(groups, ({ one, many }) => ({
@@ -381,6 +453,7 @@ export const groupsRelations = relations(groups, ({ one, many }) => ({
   enrollments: many(studentGroupEnrollments),
   attendanceRecords: many(attendanceRecords),
   invoices: many(invoices),
+  resourceSubmissions: many(studentResourceSubmissions),
 }));
 
 export const studentGroupEnrollmentsRelations = relations(
@@ -427,6 +500,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   groups: many(groups),
   invoices: many(invoices),
   payments: many(payments),
+  learningResources: many(learningResources),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
@@ -480,6 +554,52 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
+export const learningResourcesRelations = relations(learningResources, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [learningResources.schoolId],
+    references: [schools.id],
+  }),
+  courseLearningResources: many(courseLearningResources),
+  submissions: many(studentResourceSubmissions),
+}));
+
+export const courseLearningResourcesRelations = relations(courseLearningResources, ({ one }) => ({
+  course: one(courses, {
+    fields: [courseLearningResources.courseId],
+    references: [courses.id],
+  }),
+  resource: one(learningResources, {
+    fields: [courseLearningResources.resourceId],
+    references: [learningResources.id],
+  }),
+}));
+
+export const studentResourceSubmissionsRelations = relations(
+  studentResourceSubmissions,
+  ({ one }) => ({
+    student: one(students, {
+      fields: [studentResourceSubmissions.studentId],
+      references: [students.id],
+    }),
+    resource: one(learningResources, {
+      fields: [studentResourceSubmissions.resourceId],
+      references: [learningResources.id],
+    }),
+    course: one(courses, {
+      fields: [studentResourceSubmissions.courseId],
+      references: [courses.id],
+    }),
+    group: one(groups, {
+      fields: [studentResourceSubmissions.groupId],
+      references: [groups.id],
+    }),
+    teacher: one(users, {
+      fields: [studentResourceSubmissions.teacherId],
+      references: [users.id],
+    }),
+  }),
+);
+
 // Types
 export type School = typeof schools.$inferSelect;
 export type NewSchool = typeof schools.$inferInsert;
@@ -519,3 +639,43 @@ export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
 
 export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;
+
+export type LearningResourceMetadata = {
+  maxScore?: number;
+  level?: string;
+  guidelines?: string;
+  instructions?: string;
+  [key: string]: unknown;
+};
+
+export type LearningResourceType =
+  | "pdf"
+  | "manual"
+  | "textbook"
+  | "worksheet"
+  | "minigame"
+  | "link"
+  | "video"
+  | "vdr";
+
+export type StudentResourceSubmissionStatus =
+  | "assigned"
+  | "in_progress"
+  | "completed"
+  | "reviewed";
+
+export type EnrollmentStatus =
+  | "active"
+  | "restricted"
+  | "inactive"
+  | "archived"
+  | "completed";
+
+export type LearningResource = typeof learningResources.$inferSelect;
+export type NewLearningResource = typeof learningResources.$inferInsert;
+
+export type CourseLearningResource = typeof courseLearningResources.$inferSelect;
+export type NewCourseLearningResource = typeof courseLearningResources.$inferInsert;
+
+export type StudentResourceSubmission = typeof studentResourceSubmissions.$inferSelect;
+export type NewStudentResourceSubmission = typeof studentResourceSubmissions.$inferInsert;
