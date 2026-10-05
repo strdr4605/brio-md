@@ -1,40 +1,55 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useState, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import {
   InvoiceIcon,
   BarChartIcon,
-  CalendarIcon,
-  SchoolIcon,
+  AlertTriangleIcon,
 } from "@/components/ui/icons";
 import { BillingKpiCards } from "@/components/dashboard/invoices/BillingKpiCards";
 import { RevenueDistributionChart } from "@/components/dashboard/invoices/RevenueDistributionChart";
 import { DebtorsTable } from "@/components/dashboard/invoices/DebtorsTable";
-import { ExportCsvModal } from "@/components/dashboard/invoices/ExportCsvModal";
+import {
+  FinancialStatisticsHeader,
+  DatePreset,
+} from "@/components/dashboard/invoices/FinancialStatisticsHeader";
 
-type DatePreset = "mtd" | "last30" | "ytd" | "all" | "custom";
+type TabView = "analytics" | "debtors";
 
-export default function FinancialStatisticsPage() {
+function FinancialStatisticsContent() {
   const { data: session, status: sessionStatus } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
   const isSuperAdmin = permissions.includes("super") || role === "superadmin";
   const isSuperOrAdmin =
     isSuperAdmin || permissions.includes("admin") || role === "admin";
 
+  // Tab View from URL or default to "analytics"
+  const currentTab = (searchParams.get("tab") as TabView) || "analytics";
+  const activeTab: TabView = currentTab === "debtors" ? "debtors" : "analytics";
+
   // Filter States
   const [preset, setPreset] = useState<DatePreset>("mtd");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const [selectedSchoolId, setSelectedSchoolId] = useState<number | "all">("all");
 
-  // Fetch Schools for Superadmin
-  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
-    enabled: isSuperAdmin,
-  });
+  const handleTabChange = (newTab: TabView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newTab === "analytics") {
+      params.delete("tab");
+    } else {
+      params.set("tab", newTab);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   // Calculate Date Range based on Preset
   const dateRange = useMemo(() => {
@@ -44,11 +59,6 @@ export default function FinancialStatisticsPage() {
     if (preset === "mtd") {
       const yearMonth = todayStr.slice(0, 7);
       return { from: `${yearMonth}-01`, to: todayStr };
-    }
-
-    if (preset === "last30") {
-      const past = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-      return { from: past.toISOString().slice(0, 10), to: todayStr };
     }
 
     if (preset === "ytd") {
@@ -63,7 +73,6 @@ export default function FinancialStatisticsPage() {
       };
     }
 
-    // "all"
     return undefined;
   }, [preset, customFrom, customTo]);
 
@@ -71,10 +80,8 @@ export default function FinancialStatisticsPage() {
   const {
     data: statistics,
     isLoading: isLoadingStats,
-    refetch,
   } = trpc.billing.getStatistics.useQuery(
     {
-      schoolId: selectedSchoolId !== "all" ? selectedSchoolId : undefined,
       dateRange: dateRange,
     },
     {
@@ -82,10 +89,9 @@ export default function FinancialStatisticsPage() {
     },
   );
 
-  // Fetch Invoices and Payments for CSV Export
+  // Fetch Invoices for CSV Export
   const { data: rawInvoices = [] } = trpc.billing.getInvoices.useQuery(
     {
-      schoolId: selectedSchoolId !== "all" ? selectedSchoolId : undefined,
       dateRange: dateRange,
       limit: 500,
     },
@@ -116,221 +122,116 @@ export default function FinancialStatisticsPage() {
     );
   }
 
-  // Payments data prepared for CSV export
   const paymentsCsvData = statistics?.recentPayments || [];
+  const debtorsCount = statistics?.debtors?.length ?? 0;
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Statistici Financiare & Restanțieri
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Monitorizează indicatorii de încasare, veniturile recurente și gestionează restanțele elevilor.
-          </p>
-        </div>
+      {/* Header and Filter Toolbar */}
+      <FinancialStatisticsHeader
+        preset={preset}
+        setPreset={setPreset}
+        customFrom={customFrom}
+        setCustomFrom={setCustomFrom}
+        customTo={customTo}
+        setCustomTo={setCustomTo}
+        rawInvoices={rawInvoices}
+        paymentsCsvData={paymentsCsvData}
+        debtorsData={statistics?.debtors || []}
+      />
 
-        {/* View Switcher Tabs: Invoices vs Statistics */}
-        <div className="inline-flex rounded-xl bg-slate-100 p-1 self-start sm:self-auto">
-          <Link
-            href="/dashboard/invoices"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all"
-          >
-            <InvoiceIcon className="w-3.5 h-3.5" />
-            <span>Registru Facturi</span>
-          </Link>
+      {/* Main View Mode Segmented Control (Brio DS Monochrome) */}
+      <div className="border-b border-slate-200/80 pb-2">
+        <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/60 shadow-xs">
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition-all"
-          >
-            <BarChartIcon className="w-3.5 h-3.5" />
-            <span>Statistici & Restanțieri</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Controls & Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Date Presets */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-bold text-slate-400 mr-1 flex items-center gap-1">
-            <CalendarIcon className="w-3.5 h-3.5" />
-            <span>Perioadă:</span>
-          </span>
-
-          <button
-            type="button"
-            onClick={() => setPreset("mtd")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              preset === "mtd"
-                ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
+            onClick={() => handleTabChange("analytics")}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all ${
+              activeTab === "analytics"
+                ? "bg-white text-slate-900 font-bold shadow-xs"
+                : "text-slate-600 hover:text-slate-900 font-semibold"
             }`}
           >
-            Luna Curentă (MTD)
+            <BarChartIcon className="w-4 h-4" />
+            <span>Prezentare & Venituri</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setPreset("last30")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              preset === "last30"
-                ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
+            onClick={() => handleTabChange("debtors")}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all ${
+              activeTab === "debtors"
+                ? "bg-white text-slate-900 font-bold shadow-xs"
+                : "text-slate-600 hover:text-slate-900 font-semibold"
             }`}
           >
-            Ultimele 30 zile
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPreset("ytd")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              preset === "ytd"
-                ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
-            }`}
-          >
-            Anul Curent (YTD)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPreset("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              preset === "all"
-                ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
-            }`}
-          >
-            Toate Timpurile
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPreset("custom")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              preset === "custom"
-                ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
-            }`}
-          >
-            Personalizat
-          </button>
-        </div>
-
-        {/* Right Section: Superadmin School Selector & Export CSV */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Superadmin School Filter */}
-          {isSuperAdmin && schools.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <SchoolIcon className="w-3.5 h-3.5 text-slate-400" />
-              <select
-                value={selectedSchoolId}
-                onChange={(e) =>
-                  setSelectedSchoolId(
-                    e.target.value === "all" ? "all" : Number(e.target.value),
-                  )
-                }
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="all">Toate Școlile</option>
-                {schools.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Refresh Button */}
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="p-2 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all active:scale-95 shadow-xs"
-            title="Reîmprospătează statisticile"
-            aria-label="Reîmprospătează statisticile"
-          >
-            <svg
-              className={`w-4 h-4 ${isLoadingStats ? "animate-spin text-blue-600" : ""}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <AlertTriangleIcon
+              className={`w-3.5 h-3.5 ${debtorsCount > 0 ? "text-amber-500" : "text-slate-400"}`}
+            />
+            <span>Registru Restanțieri</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === "debtors"
+                  ? "bg-slate-100 text-slate-800"
+                  : debtorsCount > 0
+                    ? "bg-slate-200 text-slate-700"
+                    : "bg-slate-200/70 text-slate-500"
+              }`}
             >
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-              <path d="M3 21v-5h5" />
-            </svg>
+              {debtorsCount}
+            </span>
           </button>
-
-          {/* Export CSV Modal Button */}
-          <ExportCsvModal
-            invoicesData={rawInvoices}
-            paymentsData={paymentsCsvData}
-            debtorsData={statistics?.debtors || []}
-          />
         </div>
       </div>
 
-      {/* Custom Date Range Picker Fields */}
-      {preset === "custom" && (
-        <div className="bg-blue-50/60 rounded-2xl p-3.5 border border-blue-200/60 flex flex-wrap items-center gap-3 animate-fade-in text-xs">
-          <span className="font-bold text-blue-900">Alege intervalul:</span>
-          <div className="flex items-center gap-2">
-            <label className="text-slate-600">De la:</label>
-            <input
-              type="date"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-slate-600">Până la:</label>
-            <input
-              type="date"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
+      {/* Tab 1: Macro Analytics View */}
+      {activeTab === "analytics" && (
+        <div className="space-y-6 animate-fade-in">
+          <BillingKpiCards
+            collectionRate={statistics?.kpis.collectionRate || 0}
+            totalRevenueCollected={statistics?.kpis.totalRevenueCollected || 0}
+            totalRevenueMTD={statistics?.kpis.totalRevenueMTD || 0}
+            totalActiveDebt={statistics?.kpis.totalActiveDebt || 0}
+            projectedRecurringRevenue={statistics?.kpis.projectedRecurringRevenue || 0}
+            totalInvoiced={statistics?.kpis.totalInvoiced || 0}
+            overdueInvoicesCount={statistics?.kpis.overdueInvoicesCount || 0}
+            totalDebtorsCount={statistics?.kpis.totalDebtorsCount || 0}
+            isLoading={isLoadingStats}
+          />
+
+          <RevenueDistributionChart
+            trends={statistics?.trends || []}
+            modelDistribution={statistics?.billingModelDistribution || []}
+            courseBreakdown={statistics?.courseBreakdown || []}
+            groupBreakdown={statistics?.groupBreakdown || []}
+            isLoading={isLoadingStats}
+          />
         </div>
       )}
 
-      {/* 1. Visual KPI Cards */}
-      <BillingKpiCards
-        collectionRate={statistics?.kpis.collectionRate || 0}
-        totalRevenueCollected={statistics?.kpis.totalRevenueCollected || 0}
-        totalRevenueMTD={statistics?.kpis.totalRevenueMTD || 0}
-        totalActiveDebt={statistics?.kpis.totalActiveDebt || 0}
-        projectedRecurringRevenue={statistics?.kpis.projectedRecurringRevenue || 0}
-        totalInvoiced={statistics?.kpis.totalInvoiced || 0}
-        overdueInvoicesCount={statistics?.kpis.overdueInvoicesCount || 0}
-        totalDebtorsCount={statistics?.kpis.totalDebtorsCount || 0}
-        isLoading={isLoadingStats}
-      />
-
-      {/* 2. Monthly Trend Chart, Model Distribution & Course Breakdown */}
-      <RevenueDistributionChart
-        trends={statistics?.trends || []}
-        modelDistribution={statistics?.billingModelDistribution || []}
-        courseBreakdown={statistics?.courseBreakdown || []}
-        groupBreakdown={statistics?.groupBreakdown || []}
-        isLoading={isLoadingStats}
-      />
-
-      {/* 3. Debtors List (Top Restanțieri) with ParentCallWidget */}
-      <DebtorsTable
-        debtors={statistics?.debtors || []}
-        isLoading={isLoadingStats}
-      />
+      {/* Tab 2: Operational Debtors Management View */}
+      {activeTab === "debtors" && (
+        <div className="space-y-6 animate-fade-in">
+          <DebtorsTable
+            debtors={statistics?.debtors || []}
+            isLoading={isLoadingStats}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function FinancialStatisticsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="w-8 h-8 border-3 border-slate-900 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <FinancialStatisticsContent />
+    </Suspense>
   );
 }

@@ -119,7 +119,7 @@ export function GroupEnrollmentView({
                   onChange={() => {
                     if (!isConflicted) onToggleStudent(s.id);
                   }}
-                  className={`w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 ${
+                  className={`w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900/20 ${
                     isConflicted ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                   }`}
                 />

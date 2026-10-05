@@ -23,6 +23,7 @@ const ROUTE_TITLES: Record<string, { title: string; section: string; sectionHref
   "/dashboard/invoices": { title: "Registru Facturi", section: "Facturare", sectionHref: "/dashboard/invoices" },
   "/dashboard/invoices/statistics": { title: "Statistici Financiare", section: "Facturare", sectionHref: "/dashboard/invoices/statistics" },
   "/dashboard/permissions": { title: "Permisiuni", section: "Securitate", sectionHref: "/dashboard/permissions" },
+  "/dashboard/keys": { title: "Securitate & Chei", section: "Securitate", sectionHref: "/dashboard/permissions" },
   "/dashboard/roller-door": { title: "Roletă Intrare", section: "Control Acces", sectionHref: "/dashboard/roller-door" },
   "/dashboard/settings": { title: "Setări Sistem", section: "Configurare", sectionHref: "/dashboard/settings" },
 };

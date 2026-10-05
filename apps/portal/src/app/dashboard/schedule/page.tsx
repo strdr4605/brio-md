@@ -10,7 +10,7 @@ export default function SchedulePage() {
   if (authStatus === "loading") {
     return (
       <div className="p-6">
-        <p className="text-neutral-500 text-sm">Se încarcă sesiunea...</p>
+        <p className="text-slate-500 text-sm">Se încarcă sesiunea...</p>
       </div>
     );
   }

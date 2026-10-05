@@ -9,19 +9,19 @@ export function getLevelBadge(level: string | null | undefined) {
   switch (level?.toLowerCase()) {
     case "beginner":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/50">
           Începător
         </span>
       );
     case "intermediate":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
           Mediu
         </span>
       );
     case "advanced":
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-white border border-transparent">
           Avansat
         </span>
       );
@@ -186,7 +186,7 @@ export function StudentEnrollmentView({
                 <span className="text-xs font-bold text-slate-900">{course.name}</span>
                 {course.level && getLevelBadge(course.level)}
                 {selectedCountInCourse > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-white shadow-2xs">
                     {selectedCountInCourse}{" "}
                     {selectedCountInCourse === 1 ? "grupă selectată" : "grupe selectate"}
                   </span>
@@ -251,7 +251,7 @@ export function StudentEnrollmentView({
                               onChange={() => {
                                 if (!isConflicted) onToggleGroup(grp.id);
                               }}
-                              className={`mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 ${
+                              className={`mt-0.5 w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900/20 ${
                                 isConflicted ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                               }`}
                             />
