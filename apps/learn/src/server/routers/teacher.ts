@@ -1,4 +1,6 @@
-import { router, teacherProcedure } from "../trpc";
+import { router, teacherProcedure, mergeRouters } from "../trpc";
+import { resourceRouter } from "./resource";
+import { lessonRouter } from "./lesson";
 import { courses, studentCourseProgress, students } from "@brio-md/db";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -20,7 +22,7 @@ function getUserCourseIds(user: { courseIds: number[] }): number[] {
     .filter((id) => !isNaN(id));
 }
 
-export const teacherRouter = router({
+const teacherCoreRouter = router({
   getMyCourses: teacherProcedure.query(async ({ ctx }) => {
     const userId = parseInt(ctx.user.id, 10);
     const userCourseIds = getUserCourseIds(ctx.user);
@@ -317,3 +319,9 @@ export const teacherRouter = router({
       return inserted;
     }),
 });
+
+export const teacherRouter = mergeRouters(
+  teacherCoreRouter,
+  resourceRouter,
+  lessonRouter,
+);
