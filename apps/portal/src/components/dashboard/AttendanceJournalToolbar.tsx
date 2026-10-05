@@ -87,7 +87,7 @@ export function AttendanceJournalToolbar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Caută elev..."
-          className="w-full pl-8 pr-3 py-1 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+          className="w-full pl-8 pr-3 py-1 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
         />
         {searchQuery && (
           <button

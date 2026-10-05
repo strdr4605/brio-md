@@ -3,11 +3,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
-import { AttendanceCell, AttendanceStatus } from "./AttendanceCell";
+import { AttendanceStatus } from "./AttendanceCell";
 import { AttendanceJournalHeader } from "./AttendanceJournalHeader";
 import { AttendanceJournalToolbar, JournalFilterMode } from "./AttendanceJournalToolbar";
-import { StudentBillingBadge } from "./StudentBillingBadge";
-import { PhoneIcon } from "@/components/ui/icons";
+import { AttendanceJournalDesktopTable } from "./AttendanceJournalDesktopTable";
+import { AttendanceJournalMobileView } from "./AttendanceJournalMobileView";
 import {
   getMonthLabel,
   shiftMonth,
@@ -267,153 +267,37 @@ export function AttendanceJournalTable({
         </div>
       )}
 
-      {/* High-Density Physical School Journal Table */}
+      {/* High-Density Physical School Journal Table & Mobile Cards */}
       {!isLoading && data && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col flex-1">
-          <div className="overflow-x-auto flex-1 select-none">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="bg-slate-100/90 text-slate-700 text-[11px] font-black border-b border-slate-200">
-                  <th className="sticky left-0 z-20 bg-slate-100 w-10 p-2 text-center border-r border-slate-200">
-                    #
-                  </th>
-                  <th className="sticky left-10 z-20 bg-slate-100 w-52 sm:w-60 p-2.5 border-r border-slate-200 truncate">
-                    Elev (Nume, Abonament & Contact)
-                  </th>
-                  {data.dates.map((d) => (
-                    <th
-                      key={d.date}
-                      title={d.isToday ? "Ziua de astăzi (Editabilă)" : isSuperOrAdmin ? `Arhivă ${d.date} (Editabilă - Admin)` : `Arhivă ${d.date}`}
-                      className={`w-10 sm:w-11 p-1 text-center border-r border-slate-200/80 transition-colors ${
-                        d.isToday ? "bg-blue-100/90 text-blue-900 ring-2 ring-blue-500 ring-inset" : isSuperOrAdmin ? "bg-slate-50 hover:bg-slate-100/80" : "bg-slate-100/60"
-                      }`}
-                    >
-                      <div className={`text-[9px] uppercase ${d.isToday ? "font-black text-blue-700" : isSuperOrAdmin ? "font-bold text-slate-500" : "font-bold text-slate-400"}`}>
-                        {d.shortDay}
-                      </div>
-                      <div className={`text-xs ${d.isToday ? "font-black text-blue-950" : isSuperOrAdmin ? "font-extrabold text-slate-800" : "font-bold text-slate-700"}`}>
-                        {d.dayNumber}
-                      </div>
-                    </th>
-                  ))}
-                  <th className="w-12 p-2 text-center text-[10px] font-bold text-emerald-700 bg-emerald-50/50 border-r border-slate-200">
-                    Prez
-                  </th>
-                  <th className="w-12 p-2 text-center text-[10px] font-bold text-rose-700 bg-rose-50/50 border-r border-slate-200">
-                    Abs
-                  </th>
-                  <th className="w-14 p-2 text-center text-[10px] font-bold text-blue-700 bg-blue-50/50">
-                    %
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200/80 text-xs">
-                {displayedStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={data.dates.length + 5} className="p-8 text-center text-slate-400 text-xs">
-                      {data.students.length === 0
-                        ? "Nu există elevi înscriși în această grupă."
-                        : "Niciun elev nu corespunde filtrelor selectate."}
-                    </td>
-                  </tr>
-                ) : (
-                  displayedStudents.map((student, idx) => {
-                    const stats = studentStats[student.studentId] || { present: 0, absent: 0, pct: 100 };
-                    const isUnpaid = Boolean(student.billing?.hasDebt || student.billing?.isOverdue);
-                    return (
-                      <tr
-                        key={student.studentId}
-                        className={`hover:bg-slate-50/80 transition-colors group ${
-                          isUnpaid ? "bg-rose-50/25" : ""
-                        }`}
-                      >
-                        <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50/80 text-center font-bold text-slate-400 text-[11px] border-r border-slate-200 py-1">
-                          {idx + 1}
-                        </td>
-                        <td
-                          className={`sticky left-10 z-10 bg-white group-hover:bg-slate-50/80 px-2.5 py-1.5 border-r border-slate-200 font-bold text-slate-900 truncate ${
-                            isUnpaid ? "border-l-4 border-l-rose-500 bg-rose-50/30" : ""
-                          }`}
-                        >
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <span
-                                className={`truncate max-w-[155px] ${
-                                  isUnpaid ? "text-rose-950 font-black" : "text-slate-900"
-                                }`}
-                                title={student.studentName}
-                              >
-                                {student.studentName}
-                              </span>
-                              {Boolean(student.parentPhone) && (
-                                <a
-                                  href={`tel:${student.parentPhone}`}
-                                  title={`Părinte: ${student.parentName || "Familie"} (${student.parentPhone})`}
-                                  className="text-slate-400 hover:text-blue-600 transition p-0.5 rounded shrink-0"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <PhoneIcon className="w-3 h-3" />
-                                </a>
-                              )}
-                            </div>
-                            <div className="mt-0.5">
-                              <StudentBillingBadge
-                                billing={student.billing}
-                                studentName={student.studentName}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        {data.dates.map((d) => {
-                          const record = localRecords[`${student.studentId}_${d.date}`];
-                          return (
-                            <td key={d.date} className="p-0 text-center">
-                              <AttendanceCell
-                                studentId={student.studentId}
-                                studentName={student.studentName}
-                                date={d.date}
-                                isToday={d.isToday}
-                                canEditAnyDate={isSuperOrAdmin}
-                                status={record?.status || null}
-                                comment={record?.comment}
-                                onUpdate={(newStatus, newComment) => handleCellUpdate(student.studentId, d.date, newStatus, newComment)}
-                              />
-                            </td>
-                          );
-                        })}
-                        <td className="text-center font-bold text-[11px] text-emerald-700 bg-emerald-50/30 border-r border-slate-200 py-1">
-                          {stats.present}
-                        </td>
-                        <td className="text-center font-bold text-[11px] text-rose-700 bg-rose-50/30 border-r border-slate-200 py-1">
-                          {stats.absent}
-                        </td>
-                        <td className="text-center font-extrabold text-[11px] text-blue-700 bg-blue-50/30 py-1">
-                          {stats.pct}%
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-              <tfoot>
-                <tr className="bg-slate-50 text-slate-600 text-[10px] font-black border-t-2 border-slate-300">
-                  <td className="sticky left-0 z-10 bg-slate-50 border-r border-slate-200 p-2 text-center" colSpan={2}>
-                    Total Prezenți pe Lecție:
-                  </td>
-                  {data.dates.map((d) => {
-                    const tot = dateTotals[d.date] || { present: 0, absent: 0 };
-                    return (
-                      <td key={d.date} className="text-center p-1 border-r border-slate-200 font-extrabold text-emerald-700">
-                        {tot.present > 0 ? tot.present : "—"}
-                      </td>
-                    );
-                  })}
-                  <td colSpan={3} className="bg-slate-50" />
-                </tr>
-              </tfoot>
-            </table>
+        <>
+          {/* Mobile Check-In Cards View (<md screens) */}
+          <div className="block md:hidden">
+            <AttendanceJournalMobileView
+              displayedStudents={displayedStudents}
+              totalStudentsCount={data.students.length}
+              dates={data.dates}
+              records={localRecords}
+              studentStats={studentStats}
+              dateTotals={dateTotals}
+              isSuperOrAdmin={isSuperOrAdmin}
+              onCellUpdate={handleCellUpdate}
+            />
           </div>
-        </div>
+
+          {/* Desktop Full Matrix Table (>=md screens) */}
+          <div className="hidden md:block">
+            <AttendanceJournalDesktopTable
+              displayedStudents={displayedStudents}
+              totalStudentsCount={data.students.length}
+              dates={data.dates}
+              records={localRecords}
+              studentStats={studentStats}
+              dateTotals={dateTotals}
+              isSuperOrAdmin={isSuperOrAdmin}
+              onCellUpdate={handleCellUpdate}
+            />
+          </div>
+        </>
       )}
     </div>
   );

@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { formatPhone } from "@/lib/phone";
 import { CalendarIcon, SchoolIcon } from "@/components/ui/icons";
-import { StudentCoursesCell, getCourseColor } from "./StudentCoursesCell";
 import { EnrollmentDrawer } from "./EnrollmentDrawer";
 import { ParentCallWidget } from "./ParentCallWidget";
 import { trpc } from "@/lib/trpc";
@@ -29,19 +28,15 @@ type Props = {
     schoolId?: number | null;
   };
   schoolName?: string;
-  availableCourses: CourseItem[];
-  onEdit: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
+  availableCourses?: CourseItem[];
+  onEdit?: () => void;
+  onDelete?: () => void;
+  deletePending?: boolean;
 };
 
 export function StudentRowDetails({
   student,
   schoolName,
-  availableCourses,
-  onEdit,
-  onDelete,
-  deletePending,
 }: Props) {
   const [showEnrollmentDrawer, setShowEnrollmentDrawer] = useState(false);
 
@@ -170,7 +165,7 @@ export function StudentRowDetails({
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Detalii Înscriere
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200/80">
               {student.age ? `${student.age} ani` : "Vârstă N/A"}
             </span>
           </div>
@@ -184,17 +179,6 @@ export function StudentRowDetails({
               <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0" />
               <span>Înscris la {createdDateStr}</span>
             </div>
-          </div>
-
-          <div className="pt-2 border-t border-slate-100">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase block mb-1">
-              Cursuri Înrolate
-            </span>
-            <StudentCoursesCell
-              studentId={student.id}
-              currentCourses={student.courses || []}
-              availableCourses={availableCourses}
-            />
           </div>
 
           <div className="pt-2 border-t border-slate-100">
@@ -217,18 +201,16 @@ export function StudentRowDetails({
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {groupDisplayItems.map((item) => {
-                  const color = getCourseColor(item.courseId);
-
                   if (item.type === "enrolled") {
                     return (
                       <span
                         key={item.key}
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border shadow-xs transition-all ${color.bg} ${color.text} ${color.border}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200/80 shadow-2xs"
                         title={`${item.courseName} - ${item.groupName} (activ)`}
                       >
-                        <span className={`w-2 h-2 rounded-full ${color.dot} flex-shrink-0`} />
-                        <span className="font-semibold">{item.courseName}:</span>
-                        <span>{item.groupName}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <span>{item.courseName}:</span>
+                        <span className="font-normal text-slate-600">{item.groupName}</span>
                       </span>
                     );
                   }
@@ -238,12 +220,12 @@ export function StudentRowDetails({
                       key={item.key}
                       type="button"
                       onClick={() => setShowEnrollmentDrawer(true)}
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed shadow-xs transition-all cursor-pointer hover:opacity-90 ${color.bg} ${color.text} ${color.border}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-600 border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-100 transition cursor-pointer"
                       title={`${item.courseName}: Nicio grupă selectată. Click pentru a înrola într-o grupă.`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${color.dot} flex-shrink-0`} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                       <span className="font-semibold">{item.courseName}:</span>
-                      <span className="italic opacity-80">Nicio grupă selectată</span>
+                      <span className="italic text-slate-400">Nicio grupă selectată</span>
                     </button>
                   );
                 })}
@@ -252,7 +234,7 @@ export function StudentRowDetails({
           </div>
         </div>
 
-        {/* Col 3: Notes & Quick Actions */}
+        {/* Col 3: Notes & Action */}
         <div className="bg-white rounded-xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between space-y-3">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
@@ -266,23 +248,11 @@ export function StudentRowDetails({
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <Link
               href={`/dashboard/students/${student.id}`}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold text-xs transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition active:scale-95"
             >
-              Dosar Elev →
+              <span>Dosar Elev</span>
+              <span aria-hidden="true">→</span>
             </Link>
-            <button
-              onClick={onEdit}
-              className="px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold text-xs transition"
-            >
-              Editează Profil
-            </button>
-            <button
-              onClick={onDelete}
-              disabled={deletePending}
-              className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold text-xs transition disabled:opacity-50"
-            >
-              Șterge
-            </button>
           </div>
         </div>
       </div>
