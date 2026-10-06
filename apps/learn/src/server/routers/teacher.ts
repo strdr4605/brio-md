@@ -4,6 +4,7 @@ import { and, eq, inArray, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { attendanceRouter } from "./attendance";
 
 function isPrivilegedUser(user: { role: string; permissions: string[] }) {
   return (
@@ -316,4 +317,9 @@ export const teacherRouter = router({
 
       return inserted;
     }),
+
+  getLessonAttendance: attendanceRouter._def.procedures.getLessonAttendance,
+  markLessonAttendance: attendanceRouter._def.procedures.markLessonAttendance,
+  submitWorksheet: attendanceRouter._def.procedures.submitWorksheet,
+  finalizeLessonAttendance: attendanceRouter._def.procedures.finalizeLessonAttendance,
 });
