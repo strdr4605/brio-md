@@ -61,7 +61,10 @@ export function LiveLessonWorkspace({ courseId }: Props) {
                 return {
                   ...s,
                   status: nextStatus,
-                  comment: newRecord.comment !== undefined ? newRecord.comment : s.comment,
+                  comment:
+                    nextStatus === "present" || nextStatus === "late"
+                      ? null
+                      : (newRecord.comment !== undefined ? newRecord.comment : s.comment),
                   isEligibleForAssignment: isEligible,
                 };
               }

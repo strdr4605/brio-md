@@ -91,7 +91,7 @@ export function FinalizeLessonModal({
           ? "Absență motivată la finalizarea lecției"
           : statuses[s.studentId] === "absent"
             ? "Absență nemotivată la finalizarea lecției"
-            : "Prezență confirmată la finalizare",
+            : null,
     }));
 
     finalizeMutation.mutate({

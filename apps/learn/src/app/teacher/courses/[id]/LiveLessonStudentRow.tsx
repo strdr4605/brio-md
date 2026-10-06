@@ -49,7 +49,7 @@ export function LiveLessonStudentRow({
 }: Props) {
   const canAssign = student.isEligibleForAssignment;
   const isAbsent = student.status === "absent" || student.status === "excused";
-  const showCommentArea = isAbsent || Boolean(student.comment);
+  const showCommentArea = isAbsent;
 
   return (
     <div
@@ -96,7 +96,7 @@ export function LiveLessonStudentRow({
             currentStatus={student.status}
             onStatusChange={(next) => onStatusChange(student.studentId, next)}
             disabled={isMutating}
-            hasComment={Boolean(student.comment)}
+            hasComment={isAbsent && Boolean(student.comment)}
           />
         </div>
 
