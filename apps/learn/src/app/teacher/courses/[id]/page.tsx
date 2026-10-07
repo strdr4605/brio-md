@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@brio-md/auth";
 import { signOut } from "@/lib/auth";
 import Link from "next/link";
+import { TeacherNavbar } from "@/components/layout/TeacherNavbar";
 import { CourseRosterView } from "./CourseRosterView";
 
 export default async function TeacherCourseRosterPage({
@@ -40,38 +41,13 @@ export default async function TeacherCourseRosterPage({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-16">
-      {/* Header */}
-      <header className="bg-emerald-700 text-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/teacher" className="text-xl font-bold tracking-tight hover:opacity-95">
-              Learning Portal
-            </Link>
-            <span className="bg-emerald-900/60 text-emerald-200 border border-emerald-500/40 text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <span>👨‍🏫</span> Teacher Mode
-            </span>
-          </div>
-
-          <div className="flex items-center gap-5 text-sm">
-            <Link
-              href="/teacher"
-              className="text-emerald-100 hover:text-white underline underline-offset-4 transition"
-            >
-              ← All Courses
-            </Link>
-            <span className="text-emerald-100/90 font-medium">{session.user.name}</span>
-            <form action={handleSignOut}>
-              <button
-                type="submit"
-                className="text-emerald-100 hover:text-white underline cursor-pointer"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50 pb-16">
+      {/* Design System Compliant Teacher Header */}
+      <TeacherNavbar
+        userName={session.user.name}
+        activeTab="courses"
+        onSignOut={handleSignOut}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
