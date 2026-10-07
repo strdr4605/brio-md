@@ -7,7 +7,4 @@ const sql = postgres(
   { max: 10 },
 );
 
-export const db = drizzle(sql, {
-  schema,
-});
-
+export const db = drizzle(sql, { schema });
