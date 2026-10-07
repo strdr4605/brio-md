@@ -47,12 +47,8 @@ export async function broadcastResourceToGroupService(params: {
 
     if (!existing) {
       await db.insert(studentResourceSubmissions).values({
-        studentId: enrollment.studentId,
-        resourceId,
-        courseId,
-        groupId,
-        teacherId: isNaN(teacherId) ? null : teacherId,
-        status: "assigned",
+        studentId: enrollment.studentId, resourceId, courseId, groupId,
+        teacherId: isNaN(teacherId) ? null : teacherId, status: "assigned",
       });
     }
     assignedStudentIds.push(enrollment.studentId);
@@ -62,11 +58,7 @@ export async function broadcastResourceToGroupService(params: {
 }
 
 export async function assignIndividualResourceService(params: {
-  studentId: number;
-  courseId: number;
-  resourceId: number;
-  groupId?: number;
-  user: SessionUserInfo;
+  studentId: number; courseId: number; resourceId: number; groupId?: number; user: SessionUserInfo;
 }) {
   const { studentId, courseId, resourceId, groupId, user } = params;
   const teacherId = parseInt(user.id, 10);
@@ -86,9 +78,7 @@ export async function assignIndividualResourceService(params: {
   const [submission] = await db
     .insert(studentResourceSubmissions)
     .values({
-      studentId,
-      resourceId,
-      courseId,
+      studentId, resourceId, courseId,
       groupId: groupId ?? null,
       teacherId: isNaN(teacherId) ? null : teacherId,
       status: "assigned",
@@ -179,16 +169,10 @@ export async function recordStudentSubmissionService(params: {
     const [inserted] = await db
       .insert(studentResourceSubmissions)
       .values({
-        studentId: targetStudentId,
-        resourceId,
-        courseId,
-        groupId: groupId ?? null,
-        teacherId: isNaN(teacherId) ? null : teacherId,
-        status,
-        score: score ?? null,
-        maxScore: maxScore ?? null,
-        teacherFeedback: teacherFeedback ?? null,
-        completedAt,
+        studentId: targetStudentId, resourceId, courseId,
+        groupId: groupId ?? null, teacherId: isNaN(teacherId) ? null : teacherId,
+        status, score: score ?? null, maxScore: maxScore ?? null,
+        teacherFeedback: teacherFeedback ?? null, completedAt,
       })
       .returning();
     savedSubmission = inserted;
@@ -287,16 +271,10 @@ export async function bulkFinalizeLessonSubmissionsService(params: {
         .where(eq(studentResourceSubmissions.id, existing.id));
     } else {
       await db.insert(studentResourceSubmissions).values({
-        studentId: sub.studentId,
-        resourceId: sub.resourceId,
-        courseId,
-        groupId,
-        teacherId: isNaN(teacherId) ? null : teacherId,
-        status: subStatus,
-        score: sub.score ?? null,
-        maxScore: sub.maxScore ?? null,
-        teacherFeedback: sub.teacherFeedback ?? null,
-        completedAt: now,
+        studentId: sub.studentId, resourceId: sub.resourceId, courseId, groupId,
+        teacherId: isNaN(teacherId) ? null : teacherId, status: subStatus,
+        score: sub.score ?? null, maxScore: sub.maxScore ?? null,
+        teacherFeedback: sub.teacherFeedback ?? null, completedAt: now,
       });
     }
   }
@@ -327,4 +305,40 @@ export async function getLessonSubmissionsService(params: { courseId: number; gr
     .from(studentResourceSubmissions)
     .innerJoin(learningResources, eq(studentResourceSubmissions.resourceId, learningResources.id))
     .where(and(...conditions));
+}
+
+export async function getMySubmissionsService(params: {
+  courseId: number;
+  user: SessionUserInfo;
+}) {
+  const { courseId, user } = params;
+  const studentId = user.studentId;
+
+  if (!studentId) {
+    return [];
+  }
+
+  return await db
+    .select({
+      id: studentResourceSubmissions.id,
+      studentId: studentResourceSubmissions.studentId,
+      resourceId: studentResourceSubmissions.resourceId,
+      status: studentResourceSubmissions.status,
+      score: studentResourceSubmissions.score,
+      maxScore: studentResourceSubmissions.maxScore,
+      teacherFeedback: studentResourceSubmissions.teacherFeedback,
+      completedAt: studentResourceSubmissions.completedAt,
+      createdAt: studentResourceSubmissions.createdAt,
+      resourceTitle: learningResources.title,
+      resourceType: learningResources.type,
+      resourceUrl: learningResources.url,
+    })
+    .from(studentResourceSubmissions)
+    .innerJoin(learningResources, eq(studentResourceSubmissions.resourceId, learningResources.id))
+    .where(
+      and(
+        eq(studentResourceSubmissions.courseId, courseId),
+        eq(studentResourceSubmissions.studentId, studentId),
+      ),
+    );
 }

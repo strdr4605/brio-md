@@ -6,6 +6,7 @@ import {
   recordStudentSubmissionService,
   bulkFinalizeLessonSubmissionsService,
   getLessonSubmissionsService,
+  getMySubmissionsService,
 } from "../submissionService";
 
 export const submissionRouter = router({
@@ -115,6 +116,19 @@ export const submissionRouter = router({
       return getLessonSubmissionsService({
         courseId: input.courseId,
         groupId: input.groupId,
+      });
+    }),
+
+  getMySubmissions: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return getMySubmissionsService({
+        courseId: input.courseId,
+        user: ctx.user,
       });
     }),
 });
