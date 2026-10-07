@@ -12,6 +12,19 @@ type StudentInfo = {
   studentPhone?: string | null;
 };
 
+export type LessonSubmissionItem = {
+  studentId: number;
+  resourceId: number;
+  score: number | null;
+  maxScore: number | null;
+  status: "assigned" | "in_progress" | "completed" | "reviewed";
+};
+
+function formatDateToEuropean(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-");
+  return year && month && day ? `${day}/${month}/${year}` : dateStr;
+}
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -19,6 +32,7 @@ type Props = {
   groupId?: number;
   date: string;
   allStudents: StudentInfo[];
+  lessonSubmissions?: LessonSubmissionItem[];
   onSuccess: () => void;
 };
 
@@ -29,14 +43,12 @@ export function FinalizeLessonModal({
   groupId,
   date,
   allStudents,
+  lessonSubmissions = [],
   onSuccess,
 }: Props) {
   const unmarkedStudents = allStudents.filter((s) => s.status === null);
   const presentCount = allStudents.filter(
     (s) => s.status === "present" || s.status === "late",
-  ).length;
-  const alreadyAbsentCount = allStudents.filter(
-    (s) => s.status === "absent" || s.status === "excused",
   ).length;
 
   const [statuses, setStatuses] = useState<
@@ -55,6 +67,8 @@ export function FinalizeLessonModal({
       onClose();
     },
   });
+
+  const bulkSubmissionsMutation = trpc.lesson.bulkFinalizeLessonSubmissions.useMutation();
 
   if (!isOpen) return null;
 
@@ -77,6 +91,21 @@ export function FinalizeLessonModal({
   };
 
   const handleSubmit = () => {
+    // Persist all student task submissions and scores in bulk
+    if (groupId && lessonSubmissions.length > 0) {
+      bulkSubmissionsMutation.mutate({
+        courseId,
+        groupId,
+        submissions: lessonSubmissions.map((sub) => ({
+          studentId: sub.studentId,
+          resourceId: sub.resourceId,
+          score: sub.score ?? (sub.status === "completed" ? 100 : null),
+          maxScore: sub.maxScore ?? 100,
+          status: sub.status,
+        })),
+      });
+    }
+
     if (unmarkedStudents.length === 0) {
       onSuccess();
       onClose();
@@ -113,12 +142,17 @@ export function FinalizeLessonModal({
                 📋
               </span>
               <h3 className="text-lg font-bold text-neutral-900">
-                Finalizare Lecție & Catalogare Prezență
+                Finalizare Lecție & Salvare Activități
               </h3>
             </div>
             <p className="text-xs text-neutral-600 mt-1">
-              Data: <strong className="text-neutral-900">{date}</strong> • Elevi deja prezenți:{" "}
+              Data: <strong className="text-neutral-900">{formatDateToEuropean(date)}</strong> • Elevi prezenți:{" "}
               <strong className="text-emerald-700">{presentCount}</strong>
+              {lessonSubmissions.length > 0 && (
+                <>
+                  {" "}• Sarcini înregistrate: <strong className="text-slate-800">{lessonSubmissions.length}</strong>
+                </>
+              )}
             </p>
           </div>
           <button
@@ -139,82 +173,64 @@ export function FinalizeLessonModal({
         )}
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-4 flex-1">
+        <div className="p-6 overflow-y-auto space-y-5">
           {unmarkedStudents.length === 0 ? (
-            <div className="text-center py-6 space-y-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mx-auto">
-                ✓
-              </div>
-              <h4 className="text-sm font-bold text-neutral-900">
-                Toți elevii au fost deja marcați!
-              </h4>
-              <p className="text-xs text-neutral-600 max-w-sm mx-auto">
-                Nu există elevi rămași nemarcați. ({presentCount} prezenți/întârziați,{" "}
-                {alreadyAbsentCount} absenți). Poți încheia lecția direct.
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-1">
+              <p className="text-sm font-bold text-emerald-900">
+                Toți elevii din această clasă au prezența deja catalogată!
+              </p>
+              <p className="text-xs text-emerald-700">
+                Apasă pe butonul de mai jos pentru a închide activitățile sesiunii și a salva rezultatele.
               </p>
             </div>
           ) : (
             <>
-              <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-800 space-y-1">
-                <p className="font-bold flex items-center gap-1.5">
-                  <span>ℹ️</span> Revizuire automată elevi nemarcați ({unmarkedStudents.length})
-                </p>
-                <p className="text-amber-700/90 text-[11px]">
-                  Elevii deja prezenți sau activi au fost omiși automat. Stabilește statusul
-                  pentru elevii rămași (absențe motivate sau nemotivate).
-                </p>
-              </div>
-
-              {/* Quick bulk action buttons */}
-              <div className="flex items-center justify-between gap-2 pt-1 text-xs">
-                <span className="font-semibold text-neutral-500 text-[11px] uppercase tracking-wider">
-                  Acțiuni rapide:
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-900 text-xs">
+                <span>
+                  Au rămas <strong>{unmarkedStudents.length} elevi</strong> fără prezență marcată.
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-[11px] text-amber-800">Setează toți ca:</span>
                   <button
                     type="button"
                     onClick={() => handleBulkSet("absent")}
-                    className="px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-white hover:bg-amber-100 border border-amber-300 font-bold text-[10px] uppercase transition cursor-pointer"
                   >
-                    Toți Absenți nemotivați
+                    Absenți
                   </button>
                   <button
                     type="button"
                     onClick={() => handleBulkSet("excused")}
-                    className="px-2.5 py-1 text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200 rounded-lg transition cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-white hover:bg-amber-100 border border-amber-300 font-bold text-[10px] uppercase transition cursor-pointer"
                   >
-                    Toți Motivați
+                    Scuzați
                   </button>
                 </div>
               </div>
 
-              {/* Unmarked students list */}
-              <div className="space-y-2.5 divide-y divide-neutral-100">
-                {unmarkedStudents.map((student) => {
-                  const currentChoice = statuses[student.studentId] || "absent";
+              {/* Unmarked Students List */}
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {unmarkedStudents.map((s) => {
+                  const currentChoice = statuses[s.studentId] || "absent";
                   return (
                     <div
-                      key={student.studentId}
-                      className="pt-2.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      key={s.studentId}
+                      className="p-3 rounded-xl border border-neutral-200 bg-neutral-50/40 flex items-center justify-between gap-3"
                     >
-                      <div>
-                        <p className="text-sm font-bold text-neutral-900">
-                          {student.studentName}
-                        </p>
-                        <p className="text-[11px] text-neutral-500">
-                          {student.parentName
-                            ? `Părinte: ${student.parentName}`
-                            : student.studentPhone
-                              ? `Tel: ${student.studentPhone}`
-                              : "Fără contact direct"}
-                        </p>
+                      <div className="min-w-0">
+                        <div className="font-bold text-xs text-neutral-900 truncate">
+                          {s.studentName}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">
+                          {s.parentName ? `Părinte: ${s.parentName}` : `STD-${s.studentId}`}
+                        </div>
                       </div>
 
-                      {/* Status choice pills */}
-                      <div className="inline-flex items-center gap-1 p-0.5 bg-neutral-100 rounded-xl border border-neutral-200 text-xs">
+                      {/* Pill options */}
+                      <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-xl text-xs select-none">
                         <button
                           type="button"
-                          onClick={() => handleSingleChange(student.studentId, "absent")}
+                          onClick={() => handleSingleChange(s.studentId, "absent")}
                           className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                             currentChoice === "absent"
                               ? "bg-rose-600 text-white shadow-2xs"
@@ -225,18 +241,18 @@ export function FinalizeLessonModal({
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleSingleChange(student.studentId, "excused")}
+                          onClick={() => handleSingleChange(s.studentId, "excused")}
                           className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                             currentChoice === "excused"
                               ? "bg-amber-600 text-white shadow-2xs"
                               : "text-neutral-600 hover:bg-neutral-200"
                           }`}
                         >
-                          Motivat
+                          Scuzat
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleSingleChange(student.studentId, "present")}
+                          onClick={() => handleSingleChange(s.studentId, "present")}
                           className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                             currentChoice === "present"
                               ? "bg-emerald-600 text-white shadow-2xs"
@@ -265,11 +281,11 @@ export function FinalizeLessonModal({
           </button>
           <button
             type="button"
-            disabled={finalizeMutation.isPending}
+            disabled={finalizeMutation.isPending || bulkSubmissionsMutation.isPending}
             onClick={handleSubmit}
             className="px-5 py-2.5 text-xs font-bold text-white bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2"
           >
-            {finalizeMutation.isPending ? (
+            {finalizeMutation.isPending || bulkSubmissionsMutation.isPending ? (
               <span>Se procesează...</span>
             ) : (
               <>

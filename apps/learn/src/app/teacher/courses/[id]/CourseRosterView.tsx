@@ -63,7 +63,7 @@ export function CourseRosterView({ courseId }: Props) {
             }`}
           >
             <span>⚡</span>
-            <span>Daily Attendance</span>
+            <span>Sesiune Curs Activ (Live Lesson)</span>
           </button>
           <button
             type="button"
