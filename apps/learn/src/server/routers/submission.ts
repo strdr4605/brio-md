@@ -330,4 +330,20 @@ export const submissionRouter = router({
 
       return { success: true, count: input.submissions.length };
     }),
+
+  getMyCourseSubmissions: protectedProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const studentId = ctx.user.studentId;
+      if (!studentId) return [];
+      return db
+        .select()
+        .from(studentResourceSubmissions)
+        .where(
+          and(
+            eq(studentResourceSubmissions.studentId, studentId),
+            eq(studentResourceSubmissions.courseId, input.courseId),
+          ),
+        );
+    }),
 });
