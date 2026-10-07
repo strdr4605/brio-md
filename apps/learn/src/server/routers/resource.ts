@@ -1,11 +1,27 @@
 import { router, teacherProcedure, protectedProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
 import {
   learningResources,
   courseLearningResources,
+  courses,
 } from "@brio-md/db";
 import { and, eq, ilike, or, desc, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
+
+const resourceTypeSchema = z.enum(["pdf", "manual", "textbook", "worksheet", "minigame", "link", "video", "vdr"]);
+
+const resourceMetadataSchema = z.object({
+  maxScore: z.number().optional(),
+  level: z.string().optional(),
+  guidelines: z.string().optional(),
+  instructions: z.string().optional(),
+  embedUrl: z.string().optional(),
+  provider: z.string().optional(),
+  fileSize: z.number().optional(),
+  mimeType: z.string().optional(),
+  originalName: z.string().optional(),
+}).catchall(z.unknown()).nullable().optional();
 
 export const resourceRouter = router({
   createLearningResource: teacherProcedure
@@ -13,30 +29,13 @@ export const resourceRouter = router({
       z.object({
         title: z.string().min(1, "Titlul resursei este obligatoriu"),
         description: z.string().nullable().optional(),
-        type: z.enum([
-          "pdf",
-          "manual",
-          "textbook",
-          "worksheet",
-          "minigame",
-          "link",
-          "video",
-          "vdr",
-        ]),
+        type: resourceTypeSchema,
         url: z.string().min(1, "URL-ul este obligatoriu"),
         schoolId: z.number().nullable().optional(),
-        metadata: z
-          .object({
-            maxScore: z.number().optional(),
-            level: z.string().optional(),
-            guidelines: z.string().optional(),
-            instructions: z.string().optional(),
-          })
-          .catchall(z.unknown())
-          .nullable()
-          .optional(),
+        metadata: resourceMetadataSchema,
         courseId: z.number().optional(),
         sessionNumber: z.number().optional(),
+        orderIndex: z.number().optional().default(10),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -60,11 +59,93 @@ export const resourceRouter = router({
           courseId: input.courseId,
           resourceId: resource.id,
           sessionNumber: input.sessionNumber ?? null,
-          orderIndex: 0,
+          orderIndex: input.orderIndex ?? 10,
         });
       }
 
       return resource;
+    }),
+
+  updateLearningResource: teacherProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().min(1, "Titlul resursei este obligatoriu"),
+        description: z.string().nullable().optional(),
+        type: resourceTypeSchema,
+        url: z.string().min(1, "URL-ul este obligatoriu"),
+        metadata: resourceMetadataSchema,
+        courseId: z.number().nullable().optional(),
+        sessionNumber: z.number().nullable().optional(),
+        orderIndex: z.number().optional().default(10),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const [existing] = await db
+        .select()
+        .from(learningResources)
+        .where(eq(learningResources.id, input.id))
+        .limit(1);
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Resursa nu a fost găsită.",
+        });
+      }
+
+      const currentMeta = (existing.metadata || {}) as Record<string, unknown>;
+      const mergedMeta =
+        input.metadata !== undefined
+          ? input.metadata
+            ? { ...currentMeta, ...input.metadata }
+            : null
+          : existing.metadata;
+
+      const [updated] = await db
+        .update(learningResources)
+        .set({
+          title: input.title,
+          description: input.description !== undefined ? input.description : existing.description,
+          type: input.type,
+          url: input.url,
+          metadata: mergedMeta,
+          updatedAt: new Date(),
+        })
+        .where(eq(learningResources.id, input.id))
+        .returning();
+
+      if (input.courseId !== undefined && input.courseId !== null) {
+        const [existingAssignment] = await db
+          .select()
+          .from(courseLearningResources)
+          .where(
+            and(
+              eq(courseLearningResources.courseId, input.courseId),
+              eq(courseLearningResources.resourceId, input.id),
+            ),
+          )
+          .limit(1);
+
+        if (existingAssignment) {
+          await db
+            .update(courseLearningResources)
+            .set({
+              sessionNumber: input.sessionNumber !== undefined ? input.sessionNumber : existingAssignment.sessionNumber,
+              orderIndex: input.orderIndex ?? existingAssignment.orderIndex,
+            })
+            .where(eq(courseLearningResources.id, existingAssignment.id));
+        } else {
+          await db.insert(courseLearningResources).values({
+            courseId: input.courseId,
+            resourceId: input.id,
+            sessionNumber: input.sessionNumber ?? null,
+            orderIndex: input.orderIndex ?? 10,
+          });
+        }
+      }
+
+      return updated;
     }),
 
   getLibraryResources: teacherProcedure
@@ -169,6 +250,27 @@ export const resourceRouter = router({
       return rows;
     }),
 
+  getNextCourseSession: teacherProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({ sessionNumber: courseLearningResources.sessionNumber })
+        .from(courseLearningResources)
+        .where(eq(courseLearningResources.courseId, input.courseId));
+
+      const numbers = rows
+        .map((r) => r.sessionNumber)
+        .filter((n): n is number => n !== null && n !== undefined);
+
+      const maxSession = numbers.length > 0 ? Math.max(...numbers) : 0;
+      const uniqueExisting = Array.from(new Set(numbers)).sort((a, b) => a - b);
+
+      return {
+        nextSessionNumber: maxSession + 1,
+        existingSessions: uniqueExisting,
+      };
+    }),
+
   assignResourceToSession: teacherProcedure
     .input(
       z.object({
@@ -224,4 +326,19 @@ export const resourceRouter = router({
 
       return created;
     }),
+
+  getResourceAssignments: teacherProcedure.query(async () => {
+    const rows = await db
+      .select({
+        resourceId: courseLearningResources.resourceId,
+        courseId: courseLearningResources.courseId,
+        courseName: courses.name,
+        sessionNumber: courseLearningResources.sessionNumber,
+        orderIndex: courseLearningResources.orderIndex,
+      })
+      .from(courseLearningResources)
+      .innerJoin(courses, eq(courseLearningResources.courseId, courses.id));
+
+    return rows;
+  }),
 });
