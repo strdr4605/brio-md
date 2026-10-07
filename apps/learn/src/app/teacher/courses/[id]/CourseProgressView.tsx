@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { TeacherNotesModal } from "./TeacherNotesModal";
+import { StudentSubmissionsDrawer } from "./StudentSubmissionsDrawer";
 
 type Props = {
   courseId: number;
@@ -43,6 +44,10 @@ export function CourseProgressView({ courseId }: Props) {
     name: string;
     notes: string | null;
     currentSession: number;
+  } | null>(null);
+  const [drawerStudent, setDrawerStudent] = useState<{
+    id: number;
+    name: string;
   } | null>(null);
 
   const utils = trpc.useUtils();
@@ -209,6 +214,19 @@ export function CourseProgressView({ courseId }: Props) {
                     <button
                       type="button"
                       onClick={() =>
+                        setDrawerStudent({
+                          id: student.id,
+                          name: student.name,
+                        })
+                      }
+                      className="px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer"
+                      title="Vezi și evaluează sarcinile elevului"
+                    >
+                      📝 Sarcini & Note
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
                         setEditingStudent({
                           id: student.id,
                           name: student.name,
@@ -238,6 +256,16 @@ export function CourseProgressView({ courseId }: Props) {
           initialNotes={editingStudent.notes}
           currentSession={editingStudent.currentSession}
           totalSessions={total}
+        />
+      )}
+
+      {drawerStudent && (
+        <StudentSubmissionsDrawer
+          isOpen={!!drawerStudent}
+          onClose={() => setDrawerStudent(null)}
+          courseId={courseId}
+          studentId={drawerStudent.id}
+          studentName={drawerStudent.name}
         />
       )}
     </div>
