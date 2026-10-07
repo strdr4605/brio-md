@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+import { CourseResourcesSection } from "./CourseResourcesSection";
 
 type Props = {
   courseId: number;
@@ -17,36 +18,6 @@ function getLevelBadgeClass(level: string | null | undefined) {
       return "bg-purple-50 text-purple-700 border-purple-200";
     default:
       return "bg-neutral-100 text-neutral-700 border-neutral-200";
-  }
-}
-
-function getMaterialTypeBadge(type: string) {
-  switch (type.toLowerCase()) {
-    case "textbook":
-      return {
-        label: "Textbook",
-        className: "bg-indigo-50 text-indigo-700 border-indigo-200",
-      };
-    case "manual":
-      return {
-        label: "Manual",
-        className: "bg-amber-50 text-amber-700 border-amber-200",
-      };
-    case "link":
-      return {
-        label: "External Link",
-        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      };
-    case "file":
-      return {
-        label: "Document",
-        className: "bg-purple-50 text-purple-700 border-purple-200",
-      };
-    default:
-      return {
-        label: type,
-        className: "bg-neutral-100 text-neutral-700 border-neutral-200",
-      };
   }
 }
 
@@ -257,79 +228,13 @@ export function CourseDetailView({ courseId }: Props) {
 
       {/* Main Grid: Materials (Left/Top) and Timeline (Right/Bottom) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Study Materials Section (5 columns on large screens) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-neutral-900">Learning Materials</h2>
-              <span className="text-xs font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
-                {course.materials.length} available
-              </span>
-            </div>
-
-            {course.materials.length === 0 ? (
-              <div className="p-8 text-center bg-neutral-50 rounded-xl border border-dashed border-neutral-200">
-                <p className="text-sm text-neutral-500">No study materials attached to this course yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {course.materials.map((material) => {
-                  const badge = getMaterialTypeBadge(material.type);
-                  return (
-                    <a
-                      key={material.id}
-                      href={material.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-center justify-between p-4 rounded-xl border border-neutral-200 hover:border-blue-400 hover:shadow-sm transition bg-white"
-                    >
-                      <div className="space-y-1.5 pr-3">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${badge.className}`}
-                          >
-                            {badge.label}
-                          </span>
-                        </div>
-                        <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-blue-600 transition line-clamp-1">
-                          {material.title}
-                        </h3>
-                      </div>
-
-                      <div className="text-neutral-400 group-hover:text-blue-600 transition shrink-0">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Teacher Feedback / Progress Notes Card if available */}
-          {course.progress?.notes && (
-            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-2 text-amber-900 font-semibold text-sm">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                  />
-                </svg>
-                Teacher Feedback & Notes
-              </div>
-              <p className="text-sm text-amber-800 leading-relaxed">{course.progress.notes}</p>
-            </div>
-          )}
+        {/* Course Resources & Minigames Section (5 columns on large screens) */}
+        <div className="lg:col-span-5">
+          <CourseResourcesSection
+            courseId={courseId}
+            materials={course.materials}
+            notes={course.progress?.notes}
+          />
         </div>
 
         {/* Session Timeline Section (7 columns on large screens) */}
