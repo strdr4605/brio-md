@@ -6,6 +6,8 @@ import { trpc } from "@/lib/trpc";
 import { FinalizeLessonModal } from "./FinalizeLessonModal";
 import { LiveLessonStudentRow } from "./LiveLessonStudentRow";
 import { LiveLessonFilterTabs, FilterTab } from "./LiveLessonFilterTabs";
+import { SessionResourceBroadcastBar } from "./SessionResourceBroadcastBar";
+import { StudentSubmissionData } from "./StudentResourceAssigner";
 
 type Props = {
   courseId: number;
@@ -26,28 +28,38 @@ function formatDateToEuropean(dateStr: string): string {
 export function LiveLessonWorkspace({ courseId }: Props) {
   const todayStr = getLocalDateString();
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [activeTab, setActiveTab] = useState<FilterTab>("present");
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
-  const [assignedResources, setAssignedResources] = useState<Record<number, boolean>>({});
+  const [selectedBroadcastResourceId, setSelectedBroadcastResourceId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
   const { data, isLoading, error, refetch } = trpc.attendance.getLessonAttendance.useQuery(
     { courseId, date: selectedDate },
-    {
-      refetchInterval: 4000,
-      staleTime: 2000,
-    },
+    { refetchInterval: 4000, staleTime: 2000 },
   );
+
+  const { data: courseResources = [] } = trpc.resource.getCourseResources.useQuery(
+    { courseId },
+    { staleTime: 10000 },
+  );
+
+  const group = data?.group;
+  const { data: lessonSubmissions = [] } = trpc.lesson.getLessonSubmissions.useQuery(
+    { courseId, groupId: group?.id },
+    { enabled: Boolean(group?.id), refetchInterval: 5000, staleTime: 2000 },
+  );
+
+  const submissionsByStudent = new Map<number, StudentSubmissionData>();
+  for (const sub of lessonSubmissions) {
+    submissionsByStudent.set(sub.studentId, sub as StudentSubmissionData);
+  }
 
   const markMutation = trpc.attendance.markLessonAttendance.useMutation({
     onMutate: async (newRecord) => {
       await utils.attendance.getLessonAttendance.cancel({ courseId, date: selectedDate });
-      const previousData = utils.attendance.getLessonAttendance.getData({
-        courseId,
-        date: selectedDate,
-      });
+      const previousData = utils.attendance.getLessonAttendance.getData({ courseId, date: selectedDate });
 
       if (previousData) {
         utils.attendance.getLessonAttendance.setData(
@@ -55,33 +67,24 @@ export function LiveLessonWorkspace({ courseId }: Props) {
           {
             ...previousData,
             students: previousData.students.map((s) => {
-              if (s.studentId === newRecord.studentId) {
-                const nextStatus = newRecord.status;
-                const isEligible = nextStatus === "present" || nextStatus === "late";
-                return {
-                  ...s,
-                  status: nextStatus,
-                  comment:
-                    nextStatus === "present" || nextStatus === "late"
-                      ? null
-                      : (newRecord.comment !== undefined ? newRecord.comment : s.comment),
-                  isEligibleForAssignment: isEligible,
-                };
-              }
-              return s;
+              if (s.studentId !== newRecord.studentId) return s;
+              const nextStatus = newRecord.status;
+              const isEligible = nextStatus === "present" || nextStatus === "late";
+              return {
+                ...s,
+                status: nextStatus,
+                comment: isEligible ? null : (newRecord.comment !== undefined ? newRecord.comment : s.comment),
+                isEligibleForAssignment: isEligible,
+              };
             }),
           },
         );
       }
-
       return { previousData };
     },
     onError: (_err, _newRecord, context) => {
       if (context?.previousData) {
-        utils.attendance.getLessonAttendance.setData(
-          { courseId, date: selectedDate },
-          context.previousData,
-        );
+        utils.attendance.getLessonAttendance.setData({ courseId, date: selectedDate }, context.previousData);
       }
     },
     onSettled: () => {
@@ -91,27 +94,9 @@ export function LiveLessonWorkspace({ courseId }: Props) {
   });
 
   const submitWorksheetMutation = trpc.attendance.submitWorksheet.useMutation({
-    onSuccess: (res) => {
-      utils.attendance.getLessonAttendance.setData(
-        { courseId, date: selectedDate },
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            students: old.students.map((s) =>
-              s.studentId === res.record.studentId
-                ? {
-                    ...s,
-                    status: "present",
-                    worksheetCompleted: true,
-                    isEligibleForAssignment: true,
-                  }
-                : s,
-            ),
-          };
-        },
-      );
+    onSuccess: () => {
       utils.attendance.getLessonAttendance.invalidate({ courseId, date: selectedDate });
+      utils.lesson.getLessonSubmissions.invalidate({ courseId, groupId: group?.id });
       utils.teacher.getCourseStudentsProgress.invalidate({ courseId });
     },
   });
@@ -146,7 +131,11 @@ export function LiveLessonWorkspace({ courseId }: Props) {
     );
   }
 
-  const { course, group, students = [] } = data;
+  const { course, students = [] } = data;
+  const tasksCompletedCount = lessonSubmissions.filter(
+    (s) => s.status === "completed" || s.status === "reviewed",
+  ).length;
+
   const counts = {
     total: students.length,
     present: students.filter((s) => s.status === "present" || s.status === "late").length,
@@ -157,49 +146,38 @@ export function LiveLessonWorkspace({ courseId }: Props) {
   };
 
   const filteredStudents = students.filter((s) => {
-    const matchesSearch = s.studentName.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
-
+    if (!s.studentName.toLowerCase().includes(search.toLowerCase())) return false;
     switch (activeTab) {
-      case "present":
-        return s.status === "present" || s.status === "late";
-      case "late":
-        return s.status === "late";
-      case "unmarked":
-        return s.status === null;
-      case "absent":
-        return s.status === "absent" || s.status === "excused";
-      case "restricted":
-        return s.isRestricted;
+      case "present": return s.status === "present" || s.status === "late";
+      case "late": return s.status === "late";
+      case "unmarked": return s.status === null;
+      case "absent": return s.status === "absent" || s.status === "excused";
+      case "restricted": return s.isRestricted;
       case "all":
-      default:
-        return true;
+      default: return true;
     }
   });
 
   return (
     <div className="space-y-4">
-      {/* ACAMIS Style Header */}
+      {/* Header */}
       <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            <span>Daily Attendance:</span>
+            <span>Sesiune Curs Activ:</span>
             <span className="text-slate-700 font-medium">
               {course?.name || "Course"} / {group?.name || "Group"}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Total {counts.total} elevi înscriși • {counts.present} prezenți acum • Sincronizare automată în timp real
+            Total {counts.total} elevi înscriși • {counts.present} prezenți acum • {tasksCompletedCount} sarcini finalizate • Sincronizare automată în timp real
           </p>
         </div>
 
         {/* Right Actions: Date box + Finalize + Go Back */}
         <div className="flex items-center gap-3 flex-wrap">
-          {/* ACAMIS Date Box with strictly European DD/MM/YYYY formatting */}
           <div className="relative border border-slate-300 rounded-[4px] px-3 py-1 bg-white shadow-2xs flex flex-col justify-center cursor-pointer hover:border-slate-400 transition min-w-[130px] select-none">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
-              Date
-            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">Data</span>
             <div className="flex items-center justify-between gap-2 mt-0.5">
               <span className="text-xs font-bold text-slate-800 tracking-wide font-mono">
                 {formatDateToEuropean(selectedDate)}
@@ -217,15 +195,14 @@ export function LiveLessonWorkspace({ courseId }: Props) {
             />
           </div>
 
-          {/* Finalize Lesson Button */}
           <button
             type="button"
             onClick={() => setIsFinalizeOpen(true)}
-            className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-2xs cursor-pointer flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1 focus:outline-none"
+            className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-2xs cursor-pointer flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-slate-900 focus:outline-none"
             title="Finalizează prezența și cataloghează elevii rămași"
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
             <span>Finalizează Lecția</span>
             {counts.unmarked > 0 && (
@@ -235,7 +212,6 @@ export function LiveLessonWorkspace({ courseId }: Props) {
             )}
           </button>
 
-          {/* Go Back Link */}
           <Link
             href="/teacher"
             className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition flex items-center gap-1 px-2 py-2"
@@ -244,6 +220,15 @@ export function LiveLessonWorkspace({ courseId }: Props) {
           </Link>
         </div>
       </div>
+
+      {/* Resource Broadcasting Bar */}
+      <SessionResourceBroadcastBar
+        courseId={courseId}
+        groupId={group?.id}
+        resources={courseResources}
+        selectedResourceId={selectedBroadcastResourceId}
+        onSelectResource={setSelectedBroadcastResourceId}
+      />
 
       {/* Filter Tabs & Search */}
       <LiveLessonFilterTabs
@@ -254,74 +239,66 @@ export function LiveLessonWorkspace({ courseId }: Props) {
         onSearchChange={setSearch}
       />
 
-      {/* ACAMIS Attendance Table Container */}
+      {/* Attendance & Tasks Table */}
       <div
         role="region"
-        aria-label="Tabel prezență elevi"
+        aria-label="Tabel prezență și sarcini elevi"
         className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden"
       >
         <div className="overflow-x-auto">
-          <div className="min-w-[840px]">
-            {/* Table Column Headers */}
-            <div className="bg-[#f8fafc] border-b border-slate-200 px-5 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider grid grid-cols-[48px_minmax(220px,1fr)_300px_270px] items-center gap-4 select-none">
+          <div className="min-w-[860px]">
+            <div className="bg-[#f8fafc] border-b border-slate-200 px-5 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider grid grid-cols-[48px_minmax(200px,1fr)_280px_minmax(260px,1.2fr)] items-center gap-4 select-none">
               <span className="text-center">#</span>
               <span>STUDENT NAME</span>
-              <span className="text-center">STATUS</span>
-              <span className="text-right pr-2">SARCINI &amp; FIȘĂ</span>
+              <span className="text-center">STATUS PREZENȚĂ</span>
+              <span className="text-right pr-2">SARCINI &amp; EXERCIȚII</span>
             </div>
 
-        {/* Table Body Rows */}
-        {filteredStudents.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <p className="text-slate-500 text-sm">
-              {activeTab === "present"
-                ? "Niciun elev prezent marcat încă. Selectează «Toți» sau marchează prezența."
-                : "Niciun elev nu corespunde filtrelor selectate."}
-            </p>
-            {activeTab === "present" && counts.total > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab("all")}
-                className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer"
-              >
-                Afișează toți elevii ({counts.total})
-              </button>
+            {filteredStudents.length === 0 ? (
+              <div className="p-12 text-center space-y-3">
+                <p className="text-slate-500 text-sm">
+                  {activeTab === "present"
+                    ? "Niciun elev prezent marcat încă. Selectează «Toți» sau marchează prezența."
+                    : "Niciun elev nu corespunde filtrelor selectate."}
+                </p>
+                {activeTab !== "all" && counts.total > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("all")}
+                    className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    Afișează toți elevii ({counts.total})
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredStudents.map((student, idx) => (
+                <LiveLessonStudentRow
+                  key={student.studentId}
+                  index={idx + 1}
+                  student={student}
+                  courseId={courseId}
+                  groupId={group?.id}
+                  availableResources={courseResources}
+                  currentSubmission={submissionsByStudent.get(student.studentId)}
+                  onStatusChange={(id, next) => markMutation.mutate({
+                    courseId, groupId: group?.id, studentId: id, date: selectedDate, status: next,
+                    comment: next === "absent" ? student.comment : null,
+                  })}
+                  onCommentChange={(id, comment) => markMutation.mutate({
+                    courseId, groupId: group?.id, studentId: id, date: selectedDate, status: "absent", comment,
+                  })}
+                  onWorksheetSubmit={(id) => submitWorksheetMutation.mutate({
+                    courseId, groupId: group?.id, studentId: id, date: selectedDate,
+                  })}
+                  isMutating={markMutation.isPending && markMutation.variables?.studentId === student.studentId}
+                  isWorksheetSubmitting={
+                    submitWorksheetMutation.isPending &&
+                    submitWorksheetMutation.variables?.studentId === student.studentId
+                  }
+                />
+              ))
             )}
-          </div>
-        ) : (
-          filteredStudents.map((student, idx) => (
-            <LiveLessonStudentRow
-              key={student.studentId}
-              index={idx + 1}
-              student={student}
-              isAssignedResource={assignedResources[student.studentId] || false}
-              onToggleResource={(id) =>
-                setAssignedResources((prev) => ({ ...prev, [id]: !prev[id] }))
-              }
-              onStatusChange={(id, next) =>
-                markMutation.mutate({
-                  courseId,
-                  groupId: group?.id,
-                  studentId: id,
-                  date: selectedDate,
-                  status: next,
-                  comment: next === "absent" ? student.comment : null,
-                })
-              }
-              onCommentChange={(id, comment) =>
-                markMutation.mutate({ courseId, groupId: group?.id, studentId: id, date: selectedDate, status: "absent", comment })
-              }
-              onWorksheetSubmit={(id) =>
-                submitWorksheetMutation.mutate({ courseId, groupId: group?.id, studentId: id, date: selectedDate })
-              }
-              isMutating={markMutation.isPending && markMutation.variables?.studentId === student.studentId}
-              isWorksheetSubmitting={
-                submitWorksheetMutation.isPending &&
-                submitWorksheetMutation.variables?.studentId === student.studentId
-              }
-            />
-          ))
-        )}
           </div>
         </div>
       </div>
@@ -335,8 +312,10 @@ export function LiveLessonWorkspace({ courseId }: Props) {
           groupId={group?.id}
           date={selectedDate}
           allStudents={students}
+          lessonSubmissions={lessonSubmissions}
           onSuccess={() => {
             utils.attendance.getLessonAttendance.invalidate({ courseId, date: selectedDate });
+            utils.lesson.getLessonSubmissions.invalidate({ courseId, groupId: group?.id });
             utils.teacher.getCourseStudentsProgress.invalidate({ courseId });
           }}
         />
