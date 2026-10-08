@@ -18,7 +18,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-extrabold tracking-tight text-slate-900 group-hover:text-slate-700 transition">
-                Brio Learn
+                Learning Portal
               </span>
               <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wider hidden sm:inline-block">
                 Profesor
