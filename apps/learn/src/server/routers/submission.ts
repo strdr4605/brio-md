@@ -1,5 +1,8 @@
 import { router, teacherProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
+import { db } from "@/lib/db";
+import { studentResourceSubmissions } from "@brio-md/db";
+import { and, eq } from "drizzle-orm";
 import {
   broadcastResourceToGroupService,
   assignIndividualResourceService,
@@ -116,5 +119,21 @@ export const submissionRouter = router({
         courseId: input.courseId,
         groupId: input.groupId,
       });
+    }),
+
+  getMyCourseSubmissions: protectedProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const studentId = ctx.user.studentId;
+      if (!studentId) return [];
+      return db
+        .select()
+        .from(studentResourceSubmissions)
+        .where(
+          and(
+            eq(studentResourceSubmissions.studentId, studentId),
+            eq(studentResourceSubmissions.courseId, input.courseId),
+          ),
+        );
     }),
 });

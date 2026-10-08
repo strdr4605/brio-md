@@ -104,6 +104,29 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
         } as any),
       ).rejects.toThrow();
     });
+
+    it("throws FORBIDDEN when updating a resource from another school", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 999, title: "Other School Resource" }]),
+          }),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+
+      await expect(
+        caller.updateLearningResource({
+          id: 1,
+          title: "Hacked Title",
+          type: "worksheet",
+          url: "https://example.com/hacked",
+        }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+    });
   });
 
   describe("getLibraryResources & getCourseResources", () => {
@@ -164,6 +187,25 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].resource.type).toBe("minigame");
+    });
+
+    it("retrieves resource assignments mapping across courses", async () => {
+      const mockAssignments = [{ resourceId: 10, courseId: 1, courseName: "Python", sessionNumber: 2 }];
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(mockAssignments),
+            then: (resolve: any) => Promise.resolve(mockAssignments).then(resolve),
+          }),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const result = await caller.getResourceAssignments();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].courseName).toBe("Python");
     });
   });
 
@@ -242,6 +284,31 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
       expect(result.score).toBe(95);
       // Verify db.insert was called for both submission and attendanceRecords
       expect(db.insert).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns submissions for the current student in getMyCourseSubmissions", async () => {
+      const mockSubmissions = [
+        {
+          id: 1,
+          studentId: 101,
+          resourceId: 5,
+          courseId: 1,
+          status: "completed",
+          score: 95,
+        },
+      ];
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(mockSubmissions),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: studentUser });
+      const subs = await caller.getMyCourseSubmissions({ courseId: 1 });
+
+      expect(subs).toHaveLength(1);
+      expect(subs[0].status).toBe("completed");
     });
   });
 
@@ -323,6 +390,78 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
 
       expect(result.status).toBe("late");
       expect(result.comment).toBe("Intarziat 10 min");
+    });
+  });
+
+  describe("getNextCourseSession & orderIndex", () => {
+    it("calculates next session number accurately based on existing course sessions", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            { sessionNumber: 1 },
+            { sessionNumber: 2 },
+            { sessionNumber: 1 }, // duplicate session should be deduped
+          ]),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const result = await caller.getNextCourseSession({ courseId: 1 });
+
+      expect(result.nextSessionNumber).toBe(3);
+      expect(result.existingSessions).toEqual([1, 2]);
+    });
+
+    it("returns nextSessionNumber as 1 when course has no assigned sessions", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const result = await caller.getNextCourseSession({ courseId: 99 });
+
+      expect(result.nextSessionNumber).toBe(1);
+      expect(result.existingSessions).toEqual([]);
+    });
+
+    it("creates resource with custom orderIndex", async () => {
+      const mockResource = {
+        id: 10,
+        schoolId: 1,
+        title: "Test Order Resource",
+        type: "video",
+        url: "https://youtube.com/watch?v=123",
+      };
+
+      const valuesMock = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([mockResource]),
+      });
+
+      (db.insert as any).mockReturnValue({
+        values: valuesMock,
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      await caller.createLearningResource({
+        title: "Test Order Resource",
+        type: "video",
+        url: "https://youtube.com/watch?v=123",
+        courseId: 1,
+        sessionNumber: 2,
+        orderIndex: 0, // "Principal" preset
+      });
+
+      // Verify that courseLearningResources insertion received orderIndex: 0
+      expect(valuesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: 1,
+          resourceId: 10,
+          sessionNumber: 2,
+          orderIndex: 0,
+        }),
+      );
     });
   });
 });
