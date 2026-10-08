@@ -1,35 +1,36 @@
 "use client";
 
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { normalizeGameUrl } from "@/lib/gameUrlHelper";
 import { FileUploadDropzone } from "./FileUploadDropzone";
 import { MinigamePresets } from "./MinigamePresets";
 import { CourseSessionAssigner } from "./CourseSessionAssigner";
 import { ResourcePedagogicalFields } from "./ResourcePedagogicalFields";
+import { useResourceForm, ResourceType } from "./useResourceForm";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-type ResourceType = "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr";
-
 export function CreateResourceModal({ isOpen, onClose }: Props) {
-  const [inputMode, setInputMode] = useState<"upload" | "link">("upload");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState<ResourceType>("worksheet");
-  const [url, setUrl] = useState("");
-  const [uploadedMeta, setUploadedMeta] = useState<{ size?: number; mimeType?: string; originalName?: string } | null>(null);
-  const [instructions, setInstructions] = useState("");
-  const [guidelines, setGuidelines] = useState("");
-  const [maxScore, setMaxScore] = useState<string>("");
-  const [level, setLevel] = useState<string>("");
-  const [courseId, setCourseId] = useState<string>("");
-  const [sessionNumber, setSessionNumber] = useState<string>("");
-  const [orderIndex, setOrderIndex] = useState<number>(10);
-  const [showDetails, setShowDetails] = useState(false);
+  const form = useResourceForm();
+  const {
+    inputMode, setInputMode,
+    title, setTitle,
+    description, setDescription,
+    type, setType,
+    url, setUrl,
+    uploadedMeta, setUploadedMeta,
+    instructions, setInstructions,
+    guidelines, setGuidelines,
+    maxScore, setMaxScore,
+    level, setLevel,
+    courseId, setCourseId,
+    sessionNumber, setSessionNumber,
+    orderIndex, setOrderIndex,
+    showDetails, setShowDetails,
+    resetForm, handleUrlChange, applyPreset, getPayload,
+  } = form;
 
   const utils = trpc.useUtils();
 
@@ -46,23 +47,9 @@ export function CreateResourceModal({ isOpen, onClose }: Props) {
   });
 
   const handleClose = () => {
-    setInputMode("upload"); setTitle(""); setDescription(""); setType("worksheet"); setUrl("");
-    setUploadedMeta(null); setInstructions(""); setGuidelines(""); setMaxScore(""); setLevel("");
-    setCourseId(""); setSessionNumber(""); setOrderIndex(10); setShowDetails(false);
-    createMutation.reset(); onClose();
-  };
-
-  const handleUrlChange = (val: string) => {
-    setUrl(val);
-    const lower = val.toLowerCase();
-    if (lower.includes("youtube.com") || lower.includes("youtu.be") || lower.includes("vimeo.com")) {
-      setType("video");
-    } else if (
-      lower.includes("scratch.mit.edu") || lower.includes("wordwall.net") ||
-      lower.includes("phet.colorado.edu") || lower.includes("geogebra.org")
-    ) {
-      setType("minigame");
-    }
+    resetForm();
+    createMutation.reset();
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -70,24 +57,7 @@ export function CreateResourceModal({ isOpen, onClose }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !url.trim()) return;
-
-    const normalized = type === "minigame" ? normalizeGameUrl(url.trim()) : null;
-
-    createMutation.mutate({
-      title: title.trim(),
-      description: description.trim() || null,
-      type,
-      url: normalized?.url || url.trim(),
-      courseId: courseId ? parseInt(courseId, 10) : undefined,
-      sessionNumber: sessionNumber ? parseInt(sessionNumber, 10) : undefined,
-      orderIndex: courseId ? orderIndex : undefined,
-      metadata: {
-        embedUrl: normalized?.embedUrl, provider: normalized?.provider,
-        instructions: instructions.trim() || undefined, guidelines: guidelines.trim() || undefined,
-        level: level.trim() || undefined, maxScore: maxScore ? parseInt(maxScore, 10) : undefined,
-        fileSize: uploadedMeta?.size, mimeType: uploadedMeta?.mimeType, originalName: uploadedMeta?.originalName,
-      },
-    });
+    createMutation.mutate(getPayload());
   };
 
   return (
@@ -272,15 +242,7 @@ export function CreateResourceModal({ isOpen, onClose }: Props) {
 
           {/* Minigame Quick Presets */}
           {type === "minigame" && (
-            <MinigamePresets
-              onSelect={(preset) => {
-                setTitle(preset.title);
-                setUrl(preset.url);
-                setMaxScore(String(preset.maxScore));
-                setInstructions(preset.instructions);
-                if (preset.instructions) setShowDetails(true);
-              }}
-            />
+            <MinigamePresets onSelect={applyPreset} />
           )}
 
           {/* Course & Session Assignment (Prominently Visible) */}
