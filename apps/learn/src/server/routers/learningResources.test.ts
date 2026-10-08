@@ -104,6 +104,29 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
         } as any),
       ).rejects.toThrow();
     });
+
+    it("throws FORBIDDEN when updating a resource from another school", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ id: 1, schoolId: 999, title: "Other School Resource" }]),
+          }),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+
+      await expect(
+        caller.updateLearningResource({
+          id: 1,
+          title: "Hacked Title",
+          type: "worksheet",
+          url: "https://example.com/hacked",
+        }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+    });
   });
 
   describe("getLibraryResources & getCourseResources", () => {
@@ -171,7 +194,10 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
 
       (db.select as any).mockReturnValue({
         from: vi.fn().mockReturnValue({
-          innerJoin: vi.fn().mockResolvedValue(mockAssignments),
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(mockAssignments),
+            then: (resolve: any) => Promise.resolve(mockAssignments).then(resolve),
+          }),
         }),
       });
 

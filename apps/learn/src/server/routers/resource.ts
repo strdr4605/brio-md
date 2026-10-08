@@ -80,7 +80,7 @@ export const resourceRouter = router({
         orderIndex: z.number().optional().default(10),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const [existing] = await db
         .select()
         .from(learningResources)
@@ -91,6 +91,13 @@ export const resourceRouter = router({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Resursa nu a fost găsită.",
+        });
+      }
+
+      if (existing.schoolId && ctx.user.schoolId && existing.schoolId !== ctx.user.schoolId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu aveți permisiunea de a modifica această resursă.",
         });
       }
 
@@ -327,8 +334,10 @@ export const resourceRouter = router({
       return created;
     }),
 
-  getResourceAssignments: teacherProcedure.query(async () => {
-    const rows = await db
+  getResourceAssignments: teacherProcedure.query(async ({ ctx }) => {
+    const isSuper = ctx.user.role === "superadmin" || ctx.user.permissions?.includes("super");
+
+    const query = db
       .select({
         resourceId: courseLearningResources.resourceId,
         courseId: courseLearningResources.courseId,
@@ -339,6 +348,10 @@ export const resourceRouter = router({
       .from(courseLearningResources)
       .innerJoin(courses, eq(courseLearningResources.courseId, courses.id));
 
-    return rows;
+    if (!isSuper && ctx.user.schoolId) {
+      return query.where(eq(courses.schoolId, ctx.user.schoolId));
+    }
+
+    return query;
   }),
 });
