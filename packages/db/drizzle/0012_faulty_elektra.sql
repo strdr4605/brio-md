@@ -1,0 +1,1 @@
+ALTER TABLE "course_learning_resources" ADD COLUMN "settings" jsonb;

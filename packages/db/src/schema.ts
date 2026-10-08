@@ -307,6 +307,7 @@ export const courseLearningResources = pgTable(
       .references(() => learningResources.id, { onDelete: "cascade" }),
     sessionNumber: integer("session_number"),
     orderIndex: integer("order_index").default(0),
+    settings: jsonb("settings").$type<CourseResourceSettings>(),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
@@ -644,6 +645,13 @@ export type LearningResourceMetadata = {
   maxScore?: number;
   level?: string;
   guidelines?: string;
+  instructions?: string;
+  [key: string]: unknown;
+};
+
+export type CourseResourceSettings = {
+  maxScore?: number;
+  targetMinigamesCount?: number;
   instructions?: string;
   [key: string]: unknown;
 };
