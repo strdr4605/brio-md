@@ -88,9 +88,13 @@ export function DocumentDownloadCard({ url, title, description, metadata, classN
             >
               {formatInfo.typeLabel}
             </span>
-            {fileSizeText && (
+            {fileSizeText ? (
               <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
                 {fileSizeText}
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                Material didactic
               </span>
             )}
           </div>
@@ -114,12 +118,10 @@ export function DocumentDownloadCard({ url, title, description, metadata, classN
               {originalName}
             </p>
           </div>
-          {fileSizeText && (
-            <div className="shrink-0 text-right">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dimensiune</p>
-              <p className="font-semibold text-slate-700">{fileSizeText}</p>
-            </div>
-          )}
+          <div className="shrink-0 text-right">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dimensiune</p>
+            <p className="font-semibold text-slate-700">{fileSizeText || "Fișier"}</p>
+          </div>
         </div>
 
         {/* Action Buttons */}

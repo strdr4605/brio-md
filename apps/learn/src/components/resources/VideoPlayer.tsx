@@ -36,6 +36,7 @@ export function VideoPlayer({ url, title = "Video player", className = "", autoP
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        referrerPolicy="no-referrer"
         className="w-full h-full border-none min-h-[360px] max-w-5xl"
       />
     </div>
