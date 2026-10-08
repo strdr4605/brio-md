@@ -265,5 +265,38 @@ describe("submissionRouter & submissionService", () => {
       expect(result[0].resourceTitle).toBe("Matematica - Exercitii");
       expect(result[0].score).toBe(100);
     });
+
+    it("retrieves submissions filtered by specific studentId", async () => {
+      const mockSubmissions = [
+        {
+          id: 1,
+          studentId: 101,
+          resourceId: 5,
+          status: "completed",
+          score: 100,
+          maxScore: 100,
+          resourceTitle: "Matematica - Exercitii",
+          resourceType: "worksheet",
+          resourceUrl: "https://example.com/math.pdf",
+        },
+      ];
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(mockSubmissions),
+          }),
+        }),
+      });
+
+      const caller = submissionRouter.createCaller({ user: teacherUser });
+      const result = await caller.getLessonSubmissions({
+        courseId: 1,
+        studentId: 101,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].studentId).toBe(101);
+    });
   });
 });

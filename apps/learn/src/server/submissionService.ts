@@ -304,10 +304,15 @@ export async function bulkFinalizeLessonSubmissionsService(params: {
   return { success: true, count: submissions.length };
 }
 
-export async function getLessonSubmissionsService(params: { courseId: number; groupId?: number }) {
-  const { courseId, groupId } = params;
+export async function getLessonSubmissionsService(params: {
+  courseId: number;
+  groupId?: number;
+  studentId?: number;
+}) {
+  const { courseId, groupId, studentId } = params;
   const conditions = [eq(studentResourceSubmissions.courseId, courseId)];
   if (groupId) conditions.push(eq(studentResourceSubmissions.groupId, groupId));
+  if (studentId) conditions.push(eq(studentResourceSubmissions.studentId, studentId));
 
   return await db
     .select({
