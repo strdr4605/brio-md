@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { CourseSessionCard } from "./CourseSessionCard";
+import { CurriculumWeekSection } from "./CurriculumWeekSection";
+import { CurriculumOverviewBanner } from "./CurriculumOverviewBanner";
+import { CurriculumHeader } from "./CurriculumHeader";
 import { AttachResourceDrawer } from "./AttachResourceDrawer";
 import { ResourceSettingsModal } from "./ResourceSettingsModal";
 import { ConfirmDetachModal } from "./ConfirmDetachModal";
+import { ResourcePreviewModal } from "@/app/teacher/resources/ResourcePreviewModal";
 import { type AttachedResource } from "./types";
 
 type Props = {
@@ -18,20 +21,29 @@ export function CourseCurriculumView({ courseId }: Props) {
   const [isAttachDrawerOpen, setIsAttachDrawerOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<AttachedResource | null>(null);
   const [detachingItem, setDetachingItem] = useState<{ id: number; title: string } | null>(null);
+  const [previewResource, setPreviewResource] = useState<{
+    id: number;
+    title: string;
+    type: string;
+    url: string;
+    description?: string | null;
+    metadata?: Record<string, unknown> | null;
+  } | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [customSessionsPerWeek, setCustomSessionsPerWeek] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
-  const { data: courseProgressData, isLoading: isCourseLoading } =
+  const { data: courseProgressData, isLoading: isCourseLoading, error: courseError } =
     trpc.teacher.getCourseStudentsProgress.useQuery(
       { courseId },
-      { retry: false },
+      { retry: false, staleTime: 30000 },
     );
 
-  const { data: rawResources = [], isLoading: isResourcesLoading } =
+  const { data: rawResources = [], isLoading: isResourcesLoading, error: resourcesError } =
     trpc.resource.getCourseResources.useQuery(
       { courseId },
-      { staleTime: 5000 },
+      { retry: false, staleTime: 30000 },
     );
 
   const resources = rawResources as AttachedResource[];
@@ -70,8 +82,39 @@ export function CourseCurriculumView({ courseId }: Props) {
     );
   }
 
+  if (courseError || resourcesError) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center max-w-lg mx-auto shadow-2xs my-8">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 font-bold border border-rose-100">
+          ⚠️
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">
+          Eroare la încărcarea resurselor cursului
+        </h3>
+        <p className="text-xs text-slate-500 mb-4">
+          {resourcesError?.message || courseError?.message || "Nu s-au putut prelua materialele de curs."}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            utils.resource.getCourseResources.invalidate({ courseId });
+            utils.teacher.getCourseStudentsProgress.invalidate({ courseId });
+          }}
+          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer shadow-2xs"
+        >
+          Reîncearcă
+        </button>
+      </div>
+    );
+  }
+
   const course = courseProgressData?.course;
   const totalSessions = course?.totalSessions || 1;
+
+  // Determine cadence (sessions per week) from course schedule days (default: 2)
+  const scheduleDaysCount = course?.scheduleDays?.length || 0;
+  const defaultSessionsPerWeek = scheduleDaysCount > 0 ? scheduleDaysCount : 2;
+  const sessionsPerWeek = customSessionsPerWeek ?? defaultSessionsPerWeek;
 
   // Find max session number present in assigned resources
   const assignedSessionNumbers = resources
@@ -88,25 +131,48 @@ export function CourseCurriculumView({ courseId }: Props) {
     resourcesBySession.set(item.sessionNumber, list);
   }
 
-  // Session 1..N array
-  const sessionList: Array<{ number: number | null; title: string }> = [];
-  for (let i = 1; i <= effectiveTotalSessions; i++) {
-    sessionList.push({ number: i, title: `Sesiunea ${i}` });
+  // Divide sessions into weeks based on sessionsPerWeek
+  const totalWeeks = Math.ceil(effectiveTotalSessions / sessionsPerWeek);
+  const weeks: Array<{
+    weekNumber: number;
+    startSession: number;
+    endSession: number;
+    sessions: Array<{ number: number; title: string }>;
+  }> = [];
+
+  for (let w = 1; w <= totalWeeks; w++) {
+    const start = (w - 1) * sessionsPerWeek + 1;
+    const end = Math.min(w * sessionsPerWeek, effectiveTotalSessions);
+    const weekSessions: Array<{ number: number; title: string }> = [];
+    for (let s = start; s <= end; s++) {
+      weekSessions.push({ number: s, title: `Sesiunea ${s}` });
+    }
+    weeks.push({
+      weekNumber: w,
+      startSession: start,
+      endSession: end,
+      sessions: weekSessions,
+    });
   }
 
-  // If there are unassigned / global resources for this course
   const unassignedResources = resourcesBySession.get(null) || [];
-  if (unassignedResources.length > 0) {
-    sessionList.push({ number: null, title: "Resurse Generale / Fără sesiune alocată" });
-  }
 
   // Count metrics
   const totalWorksheets = resources.filter((r) => r.resource.type === "worksheet").length;
   const totalMinigames = resources.filter((r) => r.resource.type === "minigame").length;
+  const coveredSessionsCount = weeks
+    .flatMap((w) => w.sessions)
+    .filter((s) => (resourcesBySession.get(s.number) || []).length > 0).length;
+  const syllabusCoveragePercent = Math.round((coveredSessionsCount / effectiveTotalSessions) * 100);
 
-  const handleOpenAttachDrawer = (sessionNumber?: number | null) => {
-    setSelectedSessionForAttach(sessionNumber ?? 1);
-    setIsAttachDrawerOpen(true);
+  const handleConfirmDetach = () => {
+    if (!detachingItem) return;
+    detachMutation.mutate(
+      { id: detachingItem.id },
+      {
+        onSettled: () => setDetachingItem(null),
+      },
+    );
   };
 
   const handleMove = (index: number, direction: "up" | "down", sessionResources: AttachedResource[]) => {
@@ -132,86 +198,29 @@ export function CourseCurriculumView({ courseId }: Props) {
   return (
     <div className="space-y-6">
       {/* Course Curriculum Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900">
-              {course?.name || "Plan de Învățământ & Resurse"}
-            </h1>
-            {course?.level && (
-              <span className="text-[11px] font-bold uppercase px-2 py-0.5 rounded-md border border-slate-300 bg-slate-50 text-slate-700">
-                {course.level}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 mt-1 max-w-xl">
-            {course?.description ||
-              "Structura curriculară a sesiunilor de curs și materialele interactive atașate elevilor."}
-          </p>
-        </div>
+      <CurriculumHeader
+        name={course?.name}
+        level={course?.level}
+        description={course?.description}
+        onAttachClick={() => {
+          setSelectedSessionForAttach(1);
+          setIsAttachDrawerOpen(true);
+        }}
+      />
 
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/teacher/resources"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition border border-slate-200/70"
-          >
-            <span>📁</span>
-            <span>Biblioteca Globală</span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => handleOpenAttachDrawer(1)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-2xs"
-          >
-            <span>+</span>
-            <span>Atașează Resursă</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Metric Cards Banner (Monochrome Slate First) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Total Sesiuni
-          </span>
-          <div className="text-2xl font-black text-slate-900 mt-1">
-            {effectiveTotalSessions}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            Planificat: {course?.totalSessions || 1} sesiuni
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Resurse Atașate
-          </span>
-          <div className="text-2xl font-black text-slate-900 mt-1">
-            {resources.length}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {totalWorksheets} fișe de lucru • {totalMinigames} minijocuri
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Acoperire Syllabus
-          </span>
-          <div className="text-2xl font-black text-slate-900 mt-1">
-            {Math.round(
-              (sessionList.filter((s) => (resourcesBySession.get(s.number) || []).length > 0).length /
-                effectiveTotalSessions) *
-                100,
-            )}
-            %
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            Sesiuni cu materiale configurate
-          </p>
-        </div>
-      </div>
+      {/* Metrics Banner & Cadence Control */}
+      <CurriculumOverviewBanner
+        effectiveTotalSessions={effectiveTotalSessions}
+        plannedSessions={course?.totalSessions || 1}
+        totalWeeks={totalWeeks}
+        sessionsPerWeek={sessionsPerWeek}
+        totalResources={resources.length}
+        totalWorksheets={totalWorksheets}
+        totalMinigames={totalMinigames}
+        syllabusCoveragePercent={syllabusCoveragePercent}
+        scheduleDays={course?.scheduleDays}
+        onSessionsPerWeekChange={(val) => setCustomSessionsPerWeek(val)}
+      />
 
       {feedbackMsg && (
         <div className="p-3 text-xs rounded-xl bg-slate-100 border border-slate-200 text-slate-800 animate-in fade-in">
@@ -219,30 +228,76 @@ export function CourseCurriculumView({ courseId }: Props) {
         </div>
       )}
 
-      {/* Session List */}
-      <div className="space-y-4">
-        {sessionList.map((session) => {
-          const sessionItems = (resourcesBySession.get(session.number) || []).sort(
-            (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0),
-          );
+      {/* Session List Grouped By Week */}
+      <div className="space-y-6">
+        {weeks.map((week) => (
+          <CurriculumWeekSection
+            key={week.weekNumber}
+            weekNumber={week.weekNumber}
+            startSession={week.startSession}
+            endSession={week.endSession}
+            sessions={week.sessions}
+            resourcesBySession={resourcesBySession}
+            onAttachClick={(sNum) => {
+              setSelectedSessionForAttach(sNum);
+              setIsAttachDrawerOpen(true);
+            }}
+            onEditSettingsClick={(res) => setEditingResource(res)}
+            onDetachClick={(id, title) => setDetachingItem({ id, title })}
+            onMoveUp={(idx, list) => handleMove(idx, "up", list)}
+            onMoveDown={(idx, list) => handleMove(idx, "down", list)}
+            onPreviewClick={(item) =>
+              setPreviewResource({
+                id: item.resource.id,
+                title: item.resource.title,
+                type: item.resource.type,
+                url: item.resource.url,
+                description: item.resource.description,
+                metadata: (item.resource.metadata as Record<string, unknown>) || null,
+              })
+            }
+          />
+        ))}
 
-          return (
-            <CourseSessionCard
-              key={session.number ?? "general"}
-              sessionNumber={session.number}
-              title={session.title}
-              resources={sessionItems}
-              onAttachClick={handleOpenAttachDrawer}
-              onEditSettingsClick={(res) => setEditingResource(res)}
-              onDetachClick={(id, title) => setDetachingItem({ id, title })}
-              onMoveUp={(idx, list) => handleMove(idx, "up", list)}
-              onMoveDown={(idx, list) => handleMove(idx, "down", list)}
-            />
-          );
-        })}
+        {/* Unassigned / Global Resources Section */}
+        {unassignedResources.length > 0 && (
+          <div className="pt-2">
+            <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Resurse Generale (Fără sesiune alocată)
+              </h3>
+              <div className="h-px bg-slate-200 flex-1" />
+            </div>
+            <div className="mt-4">
+              <CourseSessionCard
+                sessionNumber={null}
+                title="Resurse Generale / Globale"
+                resources={unassignedResources}
+                onAttachClick={(sNum) => {
+                  setSelectedSessionForAttach(sNum);
+                  setIsAttachDrawerOpen(true);
+                }}
+                onEditSettingsClick={(res) => setEditingResource(res)}
+                onDetachClick={(id, title) => setDetachingItem({ id, title })}
+                onMoveUp={(idx, list) => handleMove(idx, "up", list)}
+                onMoveDown={(idx, list) => handleMove(idx, "down", list)}
+                onPreviewClick={(item: AttachedResource) =>
+                  setPreviewResource({
+                    id: item.resource.id,
+                    title: item.resource.title,
+                    type: item.resource.type,
+                    url: item.resource.url,
+                    description: item.resource.description,
+                    metadata: (item.resource.metadata as Record<string, unknown>) || null,
+                  })
+                }
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Attach Resource Drawer */}
+      {/* Modals & Drawers */}
       <AttachResourceDrawer
         isOpen={isAttachDrawerOpen}
         onClose={() => setIsAttachDrawerOpen(false)}
@@ -254,7 +309,6 @@ export function CourseCurriculumView({ courseId }: Props) {
         }}
       />
 
-      {/* Resource Settings Modal */}
       {editingResource && (
         <ResourceSettingsModal
           isOpen={Boolean(editingResource)}
@@ -267,20 +321,18 @@ export function CourseCurriculumView({ courseId }: Props) {
         />
       )}
 
-      {/* Detach Confirmation Modal */}
       <ConfirmDetachModal
         isOpen={Boolean(detachingItem)}
-        title={detachingItem?.title || ""}
         onClose={() => setDetachingItem(null)}
-        onConfirm={() => {
-          if (detachingItem) {
-            detachMutation.mutate(
-              { id: detachingItem.id },
-              { onSettled: () => setDetachingItem(null) },
-            );
-          }
-        }}
+        onConfirm={handleConfirmDetach}
+        title={detachingItem?.title || "Resursă"}
         isPending={detachMutation.isPending}
+      />
+
+      <ResourcePreviewModal
+        isOpen={Boolean(previewResource)}
+        onClose={() => setPreviewResource(null)}
+        resource={previewResource}
       />
     </div>
   );

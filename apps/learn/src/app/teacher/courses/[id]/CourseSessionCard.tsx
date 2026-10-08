@@ -12,6 +12,7 @@ type Props = {
   onDetachClick: (assignmentId: number, title: string) => void;
   onMoveUp: (index: number, sessionResources: AttachedResource[]) => void;
   onMoveDown: (index: number, sessionResources: AttachedResource[]) => void;
+  onPreviewClick?: (resource: AttachedResource) => void;
 };
 
 function getResourceTypeLabel(type: string): { label: string; icon: string } {
@@ -44,6 +45,7 @@ export function CourseSessionCard({
   onDetachClick,
   onMoveUp,
   onMoveDown,
+  onPreviewClick,
 }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs transition-all hover:border-slate-300">
@@ -98,9 +100,14 @@ export function CourseSessionCard({
                 >
                   {/* Left info */}
                   <div className="flex items-start gap-3 min-w-0">
-                    <span className="text-base shrink-0 select-none mt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => onPreviewClick?.(item)}
+                      title="Previzualizează resursa"
+                      className="text-base shrink-0 select-none mt-0.5 cursor-pointer"
+                    >
                       {meta.icon}
-                    </span>
+                    </button>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-bold text-slate-900 truncate">
