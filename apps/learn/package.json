@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
     "@brio-md/auth": "*",
     "@brio-md/db": "*",
     "@tanstack/react-query": "^5.100.10",
