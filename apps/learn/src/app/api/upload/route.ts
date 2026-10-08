@@ -28,6 +28,7 @@ export const ALLOWED_MIME_TYPES = new Set([
   "image/webp",
   "image/gif",
   "image/svg+xml",
+  "application/octet-stream",
 ]);
 
 export const ALLOWED_EXTENSIONS = new Set([
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     const isMimeAllowed = file.type ? ALLOWED_MIME_TYPES.has(file.type) : false;
     const isExtAllowed = ALLOWED_EXTENSIONS.has(ext);
 
-    if (!isMimeAllowed && !isExtAllowed) {
+    if (!isMimeAllowed || !isExtAllowed) {
       return NextResponse.json(
         { error: `Formatul fișierului (${filename}) nu este suportat. Vă rugăm să încărcați documente (PDF, Word, Excel) sau fișiere video (MP4/WebM).` },
         { status: 400 },

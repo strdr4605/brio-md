@@ -128,4 +128,25 @@ describe("POST /api/upload", () => {
     expect(data.success).toBe(true);
     expect(data.originalName).toBe("exercitii.doc");
   });
+
+  it("rejects dangerous or disallowed extensions even with a valid mime type", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "2", role: "teacher", permissions: ["teach"] },
+    } as any);
+
+    const formData = new FormData();
+    const blob = new Blob(["malicious binary"], { type: "application/pdf" });
+    const file = new File([blob], "trojan.exe", { type: "application/pdf" });
+    formData.append("file", file);
+
+    const req = new NextRequest("http://localhost:3003/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("nu este suportat");
+  });
 });

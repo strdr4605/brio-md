@@ -24,11 +24,14 @@ export async function GET(
 ) {
   try {
     const resolved = await context.params;
-    const safeSegments = (resolved.path || []).map((seg) =>
-      seg.replace(/\.\./g, "").replace(/[^a-zA-Z0-9._-]/g, ""),
-    );
+    const pathSegments = resolved.path || [];
 
-    const filePath = path.join(process.cwd(), "uploads", ...safeSegments);
+    const uploadsBaseDir = path.resolve(process.cwd(), "uploads");
+    const filePath = path.resolve(uploadsBaseDir, ...pathSegments);
+
+    if (!filePath.startsWith(uploadsBaseDir + path.sep)) {
+      return new NextResponse("Acces interzis.", { status: 403 });
+    }
 
     if (!fs.existsSync(filePath)) {
       return new NextResponse("Fișierul nu a fost găsit.", { status: 404 });
@@ -42,6 +45,7 @@ export async function GET(
     const fileSize = stat.size;
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_MAP[ext] || "application/octet-stream";
+    const isSvg = ext === ".svg" || contentType === "image/svg+xml";
 
     const range = req.headers.get("range");
 
@@ -69,14 +73,20 @@ export async function GET(
         },
       });
 
+      const responseHeaders: Record<string, string> = {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": String(chunksize),
+        "Content-Type": contentType,
+      };
+
+      if (isSvg) {
+        responseHeaders["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'";
+      }
+
       return new NextResponse(webStream, {
         status: 206,
-        headers: {
-          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-          "Accept-Ranges": "bytes",
-          "Content-Length": String(chunksize),
-          "Content-Type": contentType,
-        },
+        headers: responseHeaders,
       });
     }
 
@@ -89,13 +99,19 @@ export async function GET(
       },
     });
 
+    const responseHeaders: Record<string, string> = {
+      "Content-Length": String(fileSize),
+      "Content-Type": contentType,
+      "Accept-Ranges": "bytes",
+    };
+
+    if (isSvg) {
+      responseHeaders["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'";
+    }
+
     return new NextResponse(webStream, {
       status: 200,
-      headers: {
-        "Content-Length": String(fileSize),
-        "Content-Type": contentType,
-        "Accept-Ranges": "bytes",
-      },
+      headers: responseHeaders,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Eroare la servirea fișierului.";

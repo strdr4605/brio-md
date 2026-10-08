@@ -44,9 +44,7 @@ export async function uploadFileToStorage(
   const key = `resources/${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
 
   if (STORAGE_DRIVER === "s3" && S3_ENDPOINT && S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY) {
-    // Dynamic runtime import to prevent Turbopack AST static resolution errors when running in local dev / cached containers
-    const dynamicImport = new Function("pkg", "return import(pkg)") as (pkg: string) => Promise<any>;
-    const { S3Client, PutObjectCommand } = await dynamicImport("@aws-sdk/client-s3");
+    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
     const client = new S3Client({
       endpoint: S3_ENDPOINT,
       region: S3_REGION,
