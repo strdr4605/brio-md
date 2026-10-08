@@ -58,7 +58,7 @@ export default async function TeacherResourcesPage() {
 
         {/* Staff Portal Link */}
         <div className="mt-12 text-center">
-          <Link href="https://in.brio.md" className="text-sm text-emerald-700 hover:underline">
+          <Link href="https://in.brio.md" className="text-sm text-slate-500 hover:text-slate-800 transition font-medium">
             Go to Staff Portal →
           </Link>
         </div>
