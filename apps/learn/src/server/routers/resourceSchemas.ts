@@ -70,3 +70,46 @@ export const getLibraryResourcesInputSchema = z
     schoolId: z.number().optional(),
   })
   .optional();
+
+export const courseResourceSettingsSchema = z
+  .object({
+    maxScore: z.number().optional(),
+    targetMinigamesCount: z.number().optional(),
+    instructions: z.string().optional(),
+  })
+  .catchall(z.unknown())
+  .nullable()
+  .optional();
+
+export const assignResourceToSessionInputSchema = z.object({
+  courseId: z.number(),
+  resourceId: z.number(),
+  sessionNumber: z.number().nullable().optional(),
+  orderIndex: z.number().optional().default(0),
+  settings: courseResourceSettingsSchema,
+});
+
+export const updateCourseResourceSettingsInputSchema = z.object({
+  id: z.number(),
+  sessionNumber: z.number().nullable().optional(),
+  orderIndex: z.number().optional(),
+  settings: courseResourceSettingsSchema,
+});
+
+export const detachResourceFromSessionInputSchema = z.object({
+  id: z.number().optional(),
+  courseId: z.number().optional(),
+  resourceId: z.number().optional(),
+  sessionNumber: z.number().nullable().optional(),
+});
+
+export const reorderSessionResourcesInputSchema = z.object({
+  courseId: z.number(),
+  sessionNumber: z.number().nullable().optional(),
+  items: z.array(
+    z.object({
+      id: z.number(),
+      orderIndex: z.number(),
+    }),
+  ),
+});

@@ -166,6 +166,7 @@ export const courseRouter = router({
           resourceId: courseLearningResources.resourceId,
           sessionNumber: courseLearningResources.sessionNumber,
           orderIndex: courseLearningResources.orderIndex,
+          settings: courseLearningResources.settings,
           createdAt: courseLearningResources.createdAt,
           resource: {
             id: learningResources.id,
