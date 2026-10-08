@@ -95,6 +95,33 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
           </form>
         </div>
       </div>
+
+      {/* Mobile Sub-Navigation Bar */}
+      <nav
+        aria-label="Navigare mobilă profesor"
+        className="flex md:hidden items-center gap-1.5 px-4 py-2 bg-slate-50/90 border-t border-slate-200/80 overflow-x-auto"
+      >
+        <Link
+          href="/teacher"
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+            activeTab === "courses"
+              ? "bg-white text-slate-900 font-bold shadow-2xs border border-slate-200"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Cursurile Mele
+        </Link>
+        <Link
+          href="/teacher/resources"
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+            activeTab === "resources"
+              ? "bg-white text-slate-900 font-bold shadow-2xs border border-slate-200"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Biblioteca de Resurse
+        </Link>
+      </nav>
     </header>
   );
 }
