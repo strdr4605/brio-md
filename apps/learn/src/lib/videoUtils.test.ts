@@ -39,4 +39,10 @@ describe("parseVideoSource", () => {
     expect(res.provider).toBe("vimeo");
     expect(res.embedUrl).toBe("https://player.vimeo.com/video/76979871");
   });
+
+  it("handles youtube-nocookie embed URLs", () => {
+    const res = parseVideoSource("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(res.provider).toBe("youtube");
+    expect(res.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+  });
 });

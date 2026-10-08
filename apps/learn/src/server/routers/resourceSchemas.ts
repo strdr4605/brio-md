@@ -76,6 +76,7 @@ export const courseResourceSettingsSchema = z
     maxScore: z.number().optional(),
     targetMinigamesCount: z.number().optional(),
     instructions: z.string().optional(),
+    dueDate: z.string().optional(),
   })
   .catchall(z.unknown())
   .nullable()

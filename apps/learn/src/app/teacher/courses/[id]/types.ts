@@ -8,6 +8,7 @@ export type AttachedResource = {
     maxScore?: number;
     targetMinigamesCount?: number;
     instructions?: string;
+    dueDate?: string;
     [key: string]: unknown;
   } | null;
   createdAt: Date | null;

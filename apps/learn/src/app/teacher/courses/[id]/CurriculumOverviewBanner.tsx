@@ -1,5 +1,6 @@
 "use client";
 
+
 type CurriculumOverviewBannerProps = {
   effectiveTotalSessions: number;
   plannedSessions: number;
@@ -11,7 +12,9 @@ type CurriculumOverviewBannerProps = {
   syllabusCoveragePercent: number;
   scheduleDays?: string[] | null;
   onSessionsPerWeekChange: (val: number) => void;
-}
+  onToggleAllCollapse?: (collapseAll: boolean) => void;
+  allCollapsed?: boolean;
+};
 
 export function CurriculumOverviewBanner({
   effectiveTotalSessions,
@@ -24,6 +27,8 @@ export function CurriculumOverviewBanner({
   syllabusCoveragePercent,
   scheduleDays,
   onSessionsPerWeekChange,
+  onToggleAllCollapse,
+  allCollapsed = false,
 }: CurriculumOverviewBannerProps) {
   return (
     <div className="space-y-4">
@@ -66,7 +71,7 @@ export function CurriculumOverviewBanner({
         </div>
       </div>
 
-      {/* Cadence Control Bar */}
+      {/* Cadence Control Bar with Expand/Collapse All */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 px-4 py-3 shadow-2xs">
         <div className="flex items-center gap-2 text-xs text-slate-700">
           <span className="font-bold text-slate-900">Structură Curs:</span>
@@ -80,21 +85,33 @@ export function CurriculumOverviewBanner({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="sessions-per-week" className="text-xs font-semibold text-slate-500">
-            Ritm Săptămânal:
-          </label>
-          <select
-            id="sessions-per-week"
-            value={sessionsPerWeek}
-            onChange={(e) => onSessionsPerWeekChange(Number(e.target.value))}
-            className="bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 px-2.5 py-1.5 outline-none cursor-pointer hover:bg-slate-100 transition shadow-2xs"
-          >
-            <option value={1}>1 sesiune / săpt.</option>
-            <option value={2}>2 sesiuni / săpt.</option>
-            <option value={3}>3 sesiuni / săpt.</option>
-            <option value={4}>4 sesiuni / săpt.</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {onToggleAllCollapse && (
+            <button
+              type="button"
+              onClick={() => onToggleAllCollapse(!allCollapsed)}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-200/80 cursor-pointer shadow-2xs"
+            >
+              {allCollapsed ? "Extinde toate" : "Restrânge toate"}
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="sessions-per-week" className="text-xs font-semibold text-slate-500">
+              Ritm:
+            </label>
+            <select
+              id="sessions-per-week"
+              value={sessionsPerWeek}
+              onChange={(e) => onSessionsPerWeekChange(Number(e.target.value))}
+              className="bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 px-2.5 py-1.5 outline-none cursor-pointer hover:bg-slate-100 transition shadow-2xs"
+            >
+              <option value={1}>1 ses. / săpt.</option>
+              <option value={2}>2 ses. / săpt.</option>
+              <option value={3}>3 ses. / săpt.</option>
+              <option value={4}>4 ses. / săpt.</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

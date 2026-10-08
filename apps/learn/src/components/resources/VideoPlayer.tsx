@@ -34,9 +34,9 @@ export function VideoPlayer({ url, title = "Video player", className = "", autoP
       <iframe
         src={source.embedUrl}
         title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
-        referrerPolicy="no-referrer"
+        referrerPolicy="strict-origin-when-cross-origin"
         className="w-full h-full border-none min-h-[360px] max-w-5xl"
       />
     </div>

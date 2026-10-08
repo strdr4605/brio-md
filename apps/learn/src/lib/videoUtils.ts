@@ -30,7 +30,11 @@ export function parseVideoSource(rawUrl: string): VideoSource {
   }
 
   // 2. YouTube (standard watch, short URL, shorts, embed)
-  if (lower.includes("youtube.com") || lower.includes("youtu.be")) {
+  if (
+    lower.includes("youtube.com") ||
+    lower.includes("youtu.be") ||
+    lower.includes("youtube-nocookie.com")
+  ) {
     try {
       if (lower.includes("youtube.com/watch")) {
         const parsed = new URL(url);
@@ -60,7 +64,10 @@ export function parseVideoSource(rawUrl: string): VideoSource {
             isDirectVideo: false,
           };
         }
-      } else if (lower.includes("youtube.com/embed/")) {
+      } else if (
+        lower.includes("youtube.com/embed/") ||
+        lower.includes("youtube-nocookie.com/embed/")
+      ) {
         return {
           provider: "youtube",
           embedUrl: url,

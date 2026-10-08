@@ -44,7 +44,7 @@ export function ResourceSettingsModal({
           : "",
       );
       setInstructions(settings?.instructions || "");
-      setDueDate(typeof settings?.dueDate === "string" ? settings.dueDate : "");
+      setDueDate(settings?.dueDate || "");
       setErrorMsg(null);
     }
   }, [resource, isOpen]);
