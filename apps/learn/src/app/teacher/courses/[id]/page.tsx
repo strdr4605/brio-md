@@ -3,7 +3,7 @@ import { auth } from "@brio-md/auth";
 import { signOut } from "@/lib/auth";
 import Link from "next/link";
 import { TeacherNavbar } from "@/components/layout/TeacherNavbar";
-import { CourseRosterView } from "./CourseRosterView";
+import { TeacherCourseView } from "./TeacherCourseView";
 
 export default async function TeacherCourseRosterPage({
   params,
@@ -51,7 +51,7 @@ export default async function TeacherCourseRosterPage({
 
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 py-8 max-w-6xl">
-        <CourseRosterView courseId={courseId} />
+        <TeacherCourseView courseId={courseId} />
       </main>
 
       {/* Semantic Footer (Monochrome Slate Design System) */}
