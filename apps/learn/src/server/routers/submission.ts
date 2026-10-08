@@ -1,5 +1,8 @@
 import { router, teacherProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
+import { db } from "@/lib/db";
+import { studentResourceSubmissions } from "@brio-md/db";
+import { and, eq } from "drizzle-orm";
 import {
   broadcastResourceToGroupService,
   assignIndividualResourceService,
