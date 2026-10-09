@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { teacherRouter } from "./teacher";
 import { resourceRouter } from "./resource";
 
 // Mock database module
@@ -79,7 +78,7 @@ describe("Curriculum & Course Session Resource Manager Router", () => {
       });
       (db.insert as any).mockReturnValue({ values: valuesMock });
 
-      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const caller = resourceRouter.createCaller({ user: teacherUser });
       const result = await caller.assignResourceToSession({
         courseId: 1,
         resourceId: 5,
@@ -186,7 +185,7 @@ describe("Curriculum & Course Session Resource Manager Router", () => {
         }),
       });
 
-      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const caller = resourceRouter.createCaller({ user: teacherUser });
       const result = await caller.updateCourseResourceSettings({
         id: 77,
         settings: { maxScore: 100, instructions: "Rezolva testul" },
@@ -204,7 +203,7 @@ describe("Curriculum & Course Session Resource Manager Router", () => {
         }),
       });
 
-      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const caller = resourceRouter.createCaller({ user: teacherUser });
       await expect(
         caller.updateCourseResourceSettings({
           id: 9999,
@@ -224,7 +223,7 @@ describe("Curriculum & Course Session Resource Manager Router", () => {
         }),
       });
 
-      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const caller = resourceRouter.createCaller({ user: teacherUser });
       const result = await caller.detachResourceFromSession({ id: 88 });
 
       expect(result).toEqual(deletedRecord);
@@ -260,7 +259,7 @@ describe("Curriculum & Course Session Resource Manager Router", () => {
         set: updateSetMock,
       });
 
-      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const caller = resourceRouter.createCaller({ user: teacherUser });
       const result = await caller.reorderSessionResources({
         courseId: 1,
         sessionNumber: 2,
