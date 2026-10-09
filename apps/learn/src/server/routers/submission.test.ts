@@ -223,11 +223,49 @@ describe("submissionRouter & submissionService", () => {
         resourceId: 5,
         courseId: 1,
         status: "completed",
-        score: 95,
       });
 
       expect(result.status).toBe("completed");
-      expect(result.score).toBe(95);
+    });
+
+    it("clears score, maxScore, and teacherFeedback when submitted by a student", async () => {
+      let selectStep = 0;
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => ({
+            limit: vi.fn().mockImplementation(() => {
+              selectStep++;
+              if (selectStep === 1) return Promise.resolve([]);
+              if (selectStep === 2) return Promise.resolve([]);
+              if (selectStep === 3) return Promise.resolve([]);
+              return Promise.resolve([]);
+            }),
+          })),
+        })),
+      }));
+
+      const valuesMock = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: 2, status: "completed", score: null }]),
+      });
+      (db.insert as any).mockReturnValue({ values: valuesMock });
+
+      const caller = submissionRouter.createCaller({ user: studentUser });
+      await caller.recordStudentSubmission({
+        resourceId: 5,
+        courseId: 1,
+        status: "completed",
+        score: 100,
+        maxScore: 100,
+        teacherFeedback: "Self-graded feedback",
+      });
+
+      expect(valuesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          score: null,
+          maxScore: null,
+          teacherFeedback: null,
+        }),
+      );
     });
   });
 
