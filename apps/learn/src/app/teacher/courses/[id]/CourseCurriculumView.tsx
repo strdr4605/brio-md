@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { CourseSessionCard } from "./CourseSessionCard";
+import { AttachResourceDrawer } from "./AttachResourceDrawer";
 import { type AttachedResource } from "./types";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export function CourseCurriculumView({ courseId }: Props) {
+  const [selectedSessionForAttach, setSelectedSessionForAttach] = useState<number | null>(null);
+  const [isAttachDrawerOpen, setIsAttachDrawerOpen] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
@@ -97,9 +100,9 @@ export function CourseCurriculumView({ courseId }: Props) {
   const totalWorksheets = resources.filter((r) => r.resource.type === "worksheet").length;
   const totalMinigames = resources.filter((r) => r.resource.type === "minigame").length;
 
-  const handleOpenAttachDrawer = (_sessionNumber?: number | null) => {
-    setFeedbackMsg("Modulul de atașare resurse este disponibil în PR 3.");
-    setTimeout(() => setFeedbackMsg(null), 3000);
+  const handleOpenAttachDrawer = (sessionNumber?: number | null) => {
+    setSelectedSessionForAttach(sessionNumber ?? 1);
+    setIsAttachDrawerOpen(true);
   };
 
   const handleDetach = (assignmentId: number, title: string) => {
@@ -240,6 +243,18 @@ export function CourseCurriculumView({ courseId }: Props) {
           );
         })}
       </div>
+
+      {/* Attach Resource Drawer */}
+      <AttachResourceDrawer
+        isOpen={isAttachDrawerOpen}
+        onClose={() => setIsAttachDrawerOpen(false)}
+        courseId={courseId}
+        initialSessionNumber={selectedSessionForAttach}
+        totalSessions={effectiveTotalSessions}
+        onSuccess={() => {
+          utils.resource.getCourseResources.invalidate({ courseId });
+        }}
+      />
     </div>
   );
 }
