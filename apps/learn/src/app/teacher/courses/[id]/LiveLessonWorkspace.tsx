@@ -28,7 +28,7 @@ function formatDateToEuropean(dateStr: string): string {
 export function LiveLessonWorkspace({ courseId }: Props) {
   const todayStr = getLocalDateString();
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeTab, setActiveTab] = useState<FilterTab>("present");
   const [search, setSearch] = useState("");
   const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
   const [selectedBroadcastResourceId, setSelectedBroadcastResourceId] = useState<number | null>(null);
