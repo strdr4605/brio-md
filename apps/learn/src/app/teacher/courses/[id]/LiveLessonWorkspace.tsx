@@ -53,7 +53,9 @@ export function LiveLessonWorkspace({ courseId }: Props) {
 
   const submissionsByStudent = new Map<number, StudentSubmissionData>();
   for (const sub of lessonSubmissions) {
-    submissionsByStudent.set(sub.studentId, sub as StudentSubmissionData);
+    if (!submissionsByStudent.has(sub.studentId)) {
+      submissionsByStudent.set(sub.studentId, sub as StudentSubmissionData);
+    }
   }
 
   const markMutation = trpc.attendance.markLessonAttendance.useMutation({

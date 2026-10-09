@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { SessionResourceItem } from "./SessionResourceBroadcastBar";
 
@@ -43,10 +44,25 @@ export function StudentResourceAssigner({
 }: Props) {
   const utils = trpc.useUtils();
 
+  const [selectedResourceId, setSelectedResourceId] = useState<string>(
+    currentSubmission?.resourceId ? String(currentSubmission.resourceId) : ""
+  );
+
+  useEffect(() => {
+    setSelectedResourceId(
+      currentSubmission?.resourceId ? String(currentSubmission.resourceId) : ""
+    );
+  }, [currentSubmission?.resourceId]);
+
   const assignMutation = trpc.lesson.assignIndividualResource.useMutation({
     onSuccess: () => {
       utils.lesson.getLessonSubmissions.invalidate({ courseId, groupId });
       utils.attendance.getLessonAttendance.invalidate({ courseId });
+    },
+    onError: () => {
+      setSelectedResourceId(
+        currentSubmission?.resourceId ? String(currentSubmission.resourceId) : ""
+      );
     },
   });
 
@@ -59,6 +75,7 @@ export function StudentResourceAssigner({
   });
 
   const handleSelectResource = (resourceIdStr: string) => {
+    setSelectedResourceId(resourceIdStr);
     const resourceId = parseInt(resourceIdStr, 10);
     if (isNaN(resourceId) || resourceId === 0) return;
     assignMutation.mutate({
@@ -94,7 +111,7 @@ export function StudentResourceAssigner({
       {/* Task Selector Dropdown (Individual Assignment) */}
       <div className="relative min-w-[130px] max-w-[170px]">
         <select
-          value={currentSubmission?.resourceId || ""}
+          value={selectedResourceId}
           disabled={!canAssign || assignMutation.isPending}
           onChange={(e) => handleSelectResource(e.target.value)}
           className={`w-full py-1.5 px-2 text-[11px] font-medium rounded-[4px] border transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-900 truncate ${

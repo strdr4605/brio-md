@@ -153,6 +153,14 @@ describe("submissionRouter & submissionService", () => {
         }),
       });
 
+      (db.update as any).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([existing]),
+          }),
+        }),
+      });
+
       const caller = submissionRouter.createCaller({ user: teacherUser });
       const result = await caller.assignIndividualResource({
         studentId: 101,
@@ -288,7 +296,9 @@ describe("submissionRouter & submissionService", () => {
       (db.select as any).mockReturnValue({
         from: vi.fn().mockReturnValue({
           innerJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue(mockSubmissions),
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockResolvedValue(mockSubmissions),
+            }),
           }),
         }),
       });
@@ -322,7 +332,9 @@ describe("submissionRouter & submissionService", () => {
       (db.select as any).mockReturnValue({
         from: vi.fn().mockReturnValue({
           innerJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue(mockSubmissions),
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockResolvedValue(mockSubmissions),
+            }),
           }),
         }),
       });

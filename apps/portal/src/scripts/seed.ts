@@ -250,6 +250,30 @@ async function seed() {
     .set({ courseIds: [courseEnglish.id, courseRobotics.id, courseWeb.id] })
     .where(eq(users.id, teacher.id));
 
+  // Create Student User (Alex Popescu)
+  await db
+    .insert(users)
+    .values({
+      email: "student@vibe.md",
+      passwordHash: teacherHash,
+      name: student1.name,
+      role: "student",
+      permissions: [],
+      studentId: student1.id,
+      courseIds: [courseEnglish.id, courseRobotics.id],
+      schoolId: school.id,
+    })
+    .onConflictDoUpdate({
+      target: users.email,
+      set: {
+        name: student1.name,
+        studentId: student1.id,
+        courseIds: [courseEnglish.id, courseRobotics.id],
+        schoolId: school.id,
+      },
+    });
+  console.log("✅ Configured Student User linked to Alex Popescu (student@vibe.md)");
+
   // Create Course Materials (idempotent)
   const sampleMaterials = [
     {

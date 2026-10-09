@@ -6,7 +6,7 @@ import {
   invoices,
   learningResources,
 } from "@brio-md/db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export type SessionUserInfo = {
@@ -62,6 +62,7 @@ export async function assignIndividualResourceService(params: {
 }) {
   const { studentId, courseId, resourceId, groupId, user } = params;
   const teacherId = parseInt(user.id, 10);
+  const now = new Date();
 
   const [existing] = await db
     .select()
@@ -73,7 +74,19 @@ export async function assignIndividualResourceService(params: {
     ))
     .limit(1);
 
-  if (existing) return existing;
+  if (existing) {
+    const [updated] = await db
+      .update(studentResourceSubmissions)
+      .set({
+        createdAt: now,
+        groupId: groupId ?? existing.groupId,
+        teacherId: isNaN(teacherId) ? existing.teacherId : teacherId,
+        status: existing.status === "completed" || existing.status === "reviewed" ? existing.status : "assigned",
+      })
+      .where(eq(studentResourceSubmissions.id, existing.id))
+      .returning();
+    return updated;
+  }
 
   const [submission] = await db
     .insert(studentResourceSubmissions)
@@ -82,6 +95,7 @@ export async function assignIndividualResourceService(params: {
       groupId: groupId ?? null,
       teacherId: isNaN(teacherId) ? null : teacherId,
       status: "assigned",
+      createdAt: now,
     })
     .returning();
 
@@ -179,16 +193,10 @@ export async function recordStudentSubmissionService(params: {
     const [inserted] = await db
       .insert(studentResourceSubmissions)
       .values({
-        studentId: targetStudentId,
-        resourceId,
-        courseId,
-        groupId: groupId ?? null,
-        teacherId: isNaN(teacherId) ? null : teacherId,
-        status,
-        score: isStudent ? null : (score ?? null),
-        maxScore: isStudent ? null : (maxScore ?? null),
-        teacherFeedback: isStudent ? null : (teacherFeedback ?? null),
-        completedAt,
+        studentId: targetStudentId, resourceId, courseId, groupId: groupId ?? null,
+        teacherId: isNaN(teacherId) ? null : teacherId, status,
+        score: isStudent ? null : (score ?? null), maxScore: isStudent ? null : (maxScore ?? null),
+        teacherFeedback: isStudent ? null : (teacherFeedback ?? null), completedAt,
       })
       .returning();
     savedSubmission = inserted;
@@ -198,45 +206,33 @@ export async function recordStudentSubmissionService(params: {
   if (status === "completed") {
     let attendanceGroupId = groupId;
     if (!attendanceGroupId) {
-      const [enrollment] = await db
-        .select({ groupId: studentGroupEnrollments.groupId })
+      const [enrollment] = await db.select({ groupId: studentGroupEnrollments.groupId })
         .from(studentGroupEnrollments)
         .where(and(
           eq(studentGroupEnrollments.studentId, targetStudentId),
           eq(studentGroupEnrollments.courseId, courseId),
           eq(studentGroupEnrollments.status, "active"),
-        ))
-        .limit(1);
+        )).limit(1);
       attendanceGroupId = enrollment?.groupId;
     }
 
     if (attendanceGroupId) {
       const today = date || new Date().toISOString().split("T")[0];
-      const [existingAttendance] = await db
-        .select()
-        .from(attendanceRecords)
+      const [existingAttendance] = await db.select().from(attendanceRecords)
         .where(and(
           eq(attendanceRecords.groupId, attendanceGroupId),
           eq(attendanceRecords.studentId, targetStudentId),
           eq(attendanceRecords.date, today),
-        ))
-        .limit(1);
+        )).limit(1);
 
       if (existingAttendance) {
         if (existingAttendance.status !== "present") {
-          await db
-            .update(attendanceRecords)
-            .set({ status: "present", updatedAt: now })
-            .where(eq(attendanceRecords.id, existingAttendance.id));
+          await db.update(attendanceRecords).set({ status: "present", updatedAt: now }).where(eq(attendanceRecords.id, existingAttendance.id));
         }
       } else {
         await db.insert(attendanceRecords).values({
-          groupId: attendanceGroupId,
-          studentId: targetStudentId,
-          courseId,
-          date: today,
-          status: "present",
-          comment: "Prezență marcată automat la predarea sarcinii",
+          groupId: attendanceGroupId, studentId: targetStudentId, courseId,
+          date: today, status: "present", comment: "Prezență marcată automat la predarea sarcinii",
         });
       }
     }
@@ -246,15 +242,10 @@ export async function recordStudentSubmissionService(params: {
 }
 
 export async function bulkFinalizeLessonSubmissionsService(params: {
-  courseId: number;
-  groupId: number;
+  courseId: number; groupId: number;
   submissions: Array<{
-    studentId: number;
-    resourceId: number;
-    score?: number | null;
-    maxScore?: number | null;
-    teacherFeedback?: string | null;
-    status?: "assigned" | "in_progress" | "completed" | "reviewed";
+    studentId: number; resourceId: number; score?: number | null; maxScore?: number | null;
+    teacherFeedback?: string | null; status?: "assigned" | "in_progress" | "completed" | "reviewed";
   }>;
   user: SessionUserInfo;
 }) {
@@ -264,27 +255,18 @@ export async function bulkFinalizeLessonSubmissionsService(params: {
 
   for (const sub of submissions) {
     const subStatus = sub.status ?? "completed";
-    const [existing] = await db
-      .select()
-      .from(studentResourceSubmissions)
+    const [existing] = await db.select().from(studentResourceSubmissions)
       .where(and(
         eq(studentResourceSubmissions.studentId, sub.studentId),
         eq(studentResourceSubmissions.resourceId, sub.resourceId),
         eq(studentResourceSubmissions.courseId, courseId),
-      ))
-      .limit(1);
+      )).limit(1);
 
     if (existing) {
-      await db
-        .update(studentResourceSubmissions)
-        .set({
-          score: sub.score ?? existing.score,
-          maxScore: sub.maxScore ?? existing.maxScore,
-          status: subStatus,
-          teacherFeedback: sub.teacherFeedback ?? existing.teacherFeedback,
-          completedAt: now,
-        })
-        .where(eq(studentResourceSubmissions.id, existing.id));
+      await db.update(studentResourceSubmissions).set({
+        score: sub.score ?? existing.score, maxScore: sub.maxScore ?? existing.maxScore,
+        status: subStatus, teacherFeedback: sub.teacherFeedback ?? existing.teacherFeedback, completedAt: now,
+      }).where(eq(studentResourceSubmissions.id, existing.id));
     } else {
       await db.insert(studentResourceSubmissions).values({
         studentId: sub.studentId, resourceId: sub.resourceId, courseId, groupId,
@@ -325,7 +307,8 @@ export async function getLessonSubmissionsService(params: {
     })
     .from(studentResourceSubmissions)
     .innerJoin(learningResources, eq(studentResourceSubmissions.resourceId, learningResources.id))
-    .where(and(...conditions));
+    .where(and(...conditions))
+    .orderBy(desc(studentResourceSubmissions.createdAt), desc(studentResourceSubmissions.id));
 }
 
 export async function getMySubmissionsService(params: {
