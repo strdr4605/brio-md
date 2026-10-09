@@ -112,12 +112,14 @@ export const submissionRouter = router({
       z.object({
         courseId: z.number(),
         groupId: z.number().optional(),
+        studentId: z.number().optional(),
       }),
     )
     .query(async ({ input }) => {
       return getLessonSubmissionsService({
         courseId: input.courseId,
         groupId: input.groupId,
+        studentId: input.studentId,
       });
     }),
 

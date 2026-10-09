@@ -110,11 +110,21 @@ export async function recordStudentSubmissionService(params: {
   date?: string;
   user: SessionUserInfo;
 }) {
-  const { user, resourceId, courseId, groupId, score, maxScore, teacherFeedback, date } = params;
+  const { user, resourceId, courseId, groupId, date } = params;
+  let { score, maxScore, teacherFeedback } = params;
   const status = params.status ?? "completed";
 
+  const isStudent = user.role === "student";
+
+  // Critical security guard: Students cannot grade their own submissions or forge teacher feedback
+  if (isStudent) {
+    score = null;
+    maxScore = null;
+    teacherFeedback = null;
+  }
+
   let targetStudentId = params.studentId;
-  if (user.role === "student") {
+  if (isStudent) {
     if (!user.studentId) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Student account not linked." });
     }
@@ -165,10 +175,10 @@ export async function recordStudentSubmissionService(params: {
     const [updated] = await db
       .update(studentResourceSubmissions)
       .set({
-        score: score ?? existingSubmission.score,
-        maxScore: maxScore ?? existingSubmission.maxScore,
+        score: isStudent ? existingSubmission.score : (score ?? existingSubmission.score),
+        maxScore: isStudent ? existingSubmission.maxScore : (maxScore ?? existingSubmission.maxScore),
         status,
-        teacherFeedback: teacherFeedback ?? existingSubmission.teacherFeedback,
+        teacherFeedback: isStudent ? existingSubmission.teacherFeedback : (teacherFeedback ?? existingSubmission.teacherFeedback),
         completedAt: completedAt ?? existingSubmission.completedAt,
       })
       .where(eq(studentResourceSubmissions.id, existingSubmission.id))
@@ -185,9 +195,9 @@ export async function recordStudentSubmissionService(params: {
         groupId: groupId ?? null,
         teacherId: isNaN(teacherId) ? null : teacherId,
         status,
-        score: score ?? null,
-        maxScore: maxScore ?? null,
-        teacherFeedback: teacherFeedback ?? null,
+        score: isStudent ? null : (score ?? null),
+        maxScore: isStudent ? null : (maxScore ?? null),
+        teacherFeedback: isStudent ? null : (teacherFeedback ?? null),
         completedAt,
       })
       .returning();
@@ -304,10 +314,15 @@ export async function bulkFinalizeLessonSubmissionsService(params: {
   return { success: true, count: submissions.length };
 }
 
-export async function getLessonSubmissionsService(params: { courseId: number; groupId?: number }) {
-  const { courseId, groupId } = params;
+export async function getLessonSubmissionsService(params: {
+  courseId: number;
+  groupId?: number;
+  studentId?: number;
+}) {
+  const { courseId, groupId, studentId } = params;
   const conditions = [eq(studentResourceSubmissions.courseId, courseId)];
   if (groupId) conditions.push(eq(studentResourceSubmissions.groupId, groupId));
+  if (studentId) conditions.push(eq(studentResourceSubmissions.studentId, studentId));
 
   return await db
     .select({

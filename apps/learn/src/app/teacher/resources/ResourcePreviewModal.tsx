@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { normalizeGameUrl } from "@/lib/gameUrlHelper";
 import { VideoPlayer } from "@/components/resources/VideoPlayer";
 import { parseVideoSource } from "@/lib/videoUtils";
 import { DocumentDownloadCard } from "@/components/resources/DocumentDownloadCard";
+
+export type ResourceCompletionState = {
+  isCompleted: boolean;
+  studentName?: string;
+  onToggleComplete: () => Promise<void> | void;
+  isUpdating?: boolean;
+};
 
 type ResourcePreviewItem = {
   id: number;
@@ -19,12 +26,37 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   resource: ResourcePreviewItem | null;
+  completionState?: ResourceCompletionState;
+  promptOnClose?: boolean;
 };
 
-export function ResourcePreviewModal({ isOpen, onClose, resource }: Props) {
+export function ResourcePreviewModal({
+  isOpen,
+  onClose,
+  resource,
+  completionState,
+  promptOnClose,
+}: Props) {
+  const [showClosePrompt, setShowClosePrompt] = useState(false);
+
+  const handleRequestClose = () => {
+    if (promptOnClose && completionState && !completionState.isCompleted && !showClosePrompt) {
+      setShowClosePrompt(true);
+      return;
+    }
+    setShowClosePrompt(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowClosePrompt(false);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleRequestClose();
     };
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
@@ -35,7 +67,7 @@ export function ResourcePreviewModal({ isOpen, onClose, resource }: Props) {
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, handleRequestClose]);
 
   if (!isOpen || !resource) return null;
 
@@ -108,10 +140,56 @@ export function ResourcePreviewModal({ isOpen, onClose, resource }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleRequestClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-6xl h-[92vh] sm:h-[94vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-6xl h-[92vh] sm:h-[94vh] flex flex-col overflow-hidden relative">
+        {/* On-Close Confirmation Prompt Bar */}
+        {showClosePrompt && completionState && (
+          <div className="absolute inset-x-0 top-0 z-30 bg-slate-900/95 text-white p-3 sm:px-6 sm:py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg border-b border-slate-700 animate-in slide-in-from-top duration-150">
+            <div className="text-xs sm:text-sm font-medium text-slate-100 flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">✓</span>
+              <span>Ați finalizat această resursă?</span>
+              {completionState.studentName && (
+                <span className="text-slate-300 font-normal">
+                  (pentru elevul <strong className="text-white">{completionState.studentName}</strong>)
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                disabled={completionState.isUpdating}
+                onClick={async () => {
+                  await completionState.onToggleComplete();
+                  setShowClosePrompt(false);
+                  onClose();
+                }}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition cursor-pointer disabled:opacity-50"
+              >
+                {completionState.isUpdating ? "Se salvează..." : "✓ Da, marchează ca finalizat"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowClosePrompt(false);
+                  onClose();
+                }}
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                Doar închide
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClosePrompt(false)}
+                className="px-2 py-1 text-slate-400 hover:text-white text-xs transition cursor-pointer"
+              >
+                Anulează
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Compact Header */}
         <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0 flex-1">
@@ -157,6 +235,33 @@ export function ResourcePreviewModal({ isOpen, onClose, resource }: Props) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {completionState && (
+              <button
+                type="button"
+                disabled={completionState.isUpdating}
+                onClick={completionState.onToggleComplete}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                  completionState.isCompleted
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                    : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
+                }`}
+              >
+                {completionState.isUpdating ? (
+                  "..."
+                ) : completionState.isCompleted ? (
+                  <>
+                    <span>✓</span>
+                    <span>Finalizat</span>
+                  </>
+                ) : (
+                  <>
+                    <span>✓</span>
+                    <span>Marchează ca Finalizat</span>
+                  </>
+                )}
+              </button>
+            )}
+
             <a
               href={url}
               target="_blank"
@@ -171,7 +276,7 @@ export function ResourcePreviewModal({ isOpen, onClose, resource }: Props) {
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleRequestClose}
               className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
               aria-label="Închide"
             >

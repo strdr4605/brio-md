@@ -1,39 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { CourseResourcesSection } from "./CourseResourcesSection";
+import { CourseOverviewHeaderCard } from "./CourseOverviewHeaderCard";
 
 type Props = {
   courseId: number;
 };
 
-function getLevelBadgeClass(level: string | null | undefined) {
-  switch (level?.toLowerCase()) {
-    case "beginner":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "intermediate":
-      return "bg-blue-50 text-blue-700 border-blue-200";
-    case "advanced":
-      return "bg-purple-50 text-purple-700 border-purple-200";
-    default:
-      return "bg-neutral-100 text-neutral-700 border-neutral-200";
-  }
-}
-
-function formatSchedule(days: string[] | null | undefined, time: string | null | undefined) {
-  const daysText =
-    days && days.length > 0
-      ? days.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
-      : null;
-
-  if (daysText && time) {
-    return `${daysText} • ${time}`;
-  }
-  return daysText || time || "Schedule to be announced";
-}
-
 export function CourseDetailView({ courseId }: Props) {
+  const [selectedSessionNumber, setSelectedSessionNumber] = useState<number | null>(null);
+
   const {
     data: course,
     isLoading,
@@ -139,92 +118,18 @@ export function CourseDetailView({ courseId }: Props) {
       </div>
 
       {/* Course Overview Header Card */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">{course.name}</h1>
-            {course.level && (
-              <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full border capitalize ${getLevelBadgeClass(
-                  course.level,
-                )}`}
-              >
-                {course.level}
-              </span>
-            )}
-          </div>
-          {course.instructorName && (
-            <div className="flex items-center gap-2 text-sm text-neutral-700 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-200/60 shrink-0">
-              <span className="font-semibold text-neutral-500">Instructor:</span>
-              <span className="font-medium text-neutral-900">{course.instructorName}</span>
-            </div>
-          )}
-        </div>
-
-        <p className="text-neutral-600 leading-relaxed max-w-4xl mb-6">
-          {course.description || "In-depth course curriculum with guided sessions and supporting study materials."}
-        </p>
-
-        {/* Schedule & Metadata Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-neutral-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-neutral-500">Session Duration</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {course.sessionDurationMinutes ? `${course.sessionDurationMinutes} minutes` : "60 minutes"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-neutral-500">Weekly Schedule</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {formatSchedule(course.scheduleDays, course.scheduleTime)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-neutral-500">Plan Progress</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {completed} of {total} Sessions ({progressPct}%)
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CourseOverviewHeaderCard
+        name={course.name}
+        level={course.level}
+        instructorName={course.instructorName}
+        description={course.description}
+        sessionDurationMinutes={course.sessionDurationMinutes}
+        scheduleDays={course.scheduleDays}
+        scheduleTime={course.scheduleTime}
+        completed={completed}
+        total={total}
+        progressPct={progressPct}
+      />
 
       {/* Main Grid: Materials (Left/Top) and Timeline (Right/Bottom) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -234,6 +139,9 @@ export function CourseDetailView({ courseId }: Props) {
             courseId={courseId}
             materials={course.materials}
             notes={course.progress?.notes}
+            selectedSessionNumber={selectedSessionNumber}
+            onSelectSession={setSelectedSessionNumber}
+            totalSessions={total}
           />
         </div>
 
@@ -256,6 +164,7 @@ export function CourseDetailView({ courseId }: Props) {
               {sessionsList.map((session) => {
                 const isCompleted = session.status === "completed";
                 const isCurrent = session.status === "current";
+                const isSelected = selectedSessionNumber === session.sessionNumber;
 
                 return (
                   <div key={session.sessionNumber} className="relative flex items-center gap-4">
@@ -283,29 +192,43 @@ export function CourseDetailView({ courseId }: Props) {
                       )}
                     </div>
 
-                    {/* Session Box */}
-                    <div
-                      className={`flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border transition ${
-                        isCurrent
-                          ? "border-blue-400 bg-blue-50/50 shadow-sm"
-                          : isCompleted
-                            ? "border-emerald-100 bg-emerald-50/20"
-                            : "border-neutral-100 bg-neutral-50/60"
+                    {/* Interactive Session Box */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedSessionNumber(
+                          isSelected ? null : session.sessionNumber,
+                        )
+                      }
+                      className={`flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border transition text-left cursor-pointer ${
+                        isSelected
+                          ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
+                          : isCurrent
+                            ? "border-blue-400 bg-blue-50/50 shadow-2xs"
+                            : isCompleted
+                              ? "border-emerald-100 bg-emerald-50/20 hover:bg-emerald-50/40"
+                              : "border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60"
                       }`}
                     >
                       <div>
                         <p
                           className={`text-sm font-semibold ${
-                            isCurrent
-                              ? "text-blue-900 font-bold"
-                              : isCompleted
-                                ? "text-neutral-800"
-                                : "text-neutral-600"
+                            isSelected
+                              ? "text-white font-bold"
+                              : isCurrent
+                                ? "text-blue-900 font-bold"
+                                : isCompleted
+                                  ? "text-neutral-800"
+                                  : "text-neutral-600"
                           }`}
                         >
                           Session {session.sessionNumber}
                         </p>
-                        <p className="text-xs text-neutral-500">
+                        <p
+                          className={`text-xs ${
+                            isSelected ? "text-slate-300" : "text-neutral-500"
+                          }`}
+                        >
                           {isCompleted
                             ? "Completed lesson"
                             : isCurrent
@@ -315,23 +238,25 @@ export function CourseDetailView({ courseId }: Props) {
                       </div>
 
                       <div>
-                        {isCompleted && (
+                        {isSelected ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white">
+                            Selectat
+                          </span>
+                        ) : isCompleted ? (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
                             Completed
                           </span>
-                        )}
-                        {isCurrent && (
+                        ) : isCurrent ? (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">
                             Current
                           </span>
-                        )}
-                        {!isCompleted && !isCurrent && (
+                        ) : (
                           <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-neutral-200 text-neutral-600">
                             Upcoming
                           </span>
                         )}
                       </div>
-                    </div>
+                    </button>
                   </div>
                 );
               })}
