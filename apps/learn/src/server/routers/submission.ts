@@ -49,6 +49,27 @@ export const submissionRouter = router({
       });
     }),
 
+  unassignIndividualResource: teacherProcedure
+    .input(
+      z.object({
+        studentId: z.number(),
+        resourceId: z.number(),
+        courseId: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .delete(studentResourceSubmissions)
+        .where(
+          and(
+            eq(studentResourceSubmissions.studentId, input.studentId),
+            eq(studentResourceSubmissions.resourceId, input.resourceId),
+            eq(studentResourceSubmissions.courseId, input.courseId),
+          ),
+        );
+      return { success: true };
+    }),
+
   recordStudentSubmission: protectedProcedure
     .input(
       z.object({

@@ -32,7 +32,7 @@ type Props = {
   courseId: number;
   groupId?: number;
   availableResources: SessionResourceItem[];
-  currentSubmission?: StudentSubmissionData;
+  submissions?: StudentSubmissionData[];
   onStatusChange: (studentId: number, nextStatus: AttendanceStatus) => void;
   onCommentChange: (studentId: number, comment: string | null) => void;
   onWorksheetSubmit: (studentId: number) => void;
@@ -46,7 +46,7 @@ export function LiveLessonStudentRow({
   courseId,
   groupId,
   availableResources,
-  currentSubmission,
+  submissions = [],
   onStatusChange,
   onCommentChange,
   onWorksheetSubmit,
@@ -117,7 +117,7 @@ export function LiveLessonStudentRow({
             isRestricted={student.isRestricted}
             restrictionReason={student.restrictionReason}
             availableResources={availableResources}
-            currentSubmission={currentSubmission}
+            submissions={submissions}
             onWorksheetSubmit={onWorksheetSubmit}
             isWorksheetSubmitting={isWorksheetSubmitting}
           />

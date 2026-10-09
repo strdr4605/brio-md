@@ -12,6 +12,9 @@ vi.mock("@/lib/db", () => ({
       }),
     }),
     insert: vi.fn(),
+    delete: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue([]),
+    }),
   },
 }));
 
@@ -170,6 +173,20 @@ describe("submissionRouter & submissionService", () => {
 
       expect(result.id).toBe(99);
       expect(db.insert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("unassignIndividualResource", () => {
+    it("deletes student resource submission record", async () => {
+      const caller = submissionRouter.createCaller({ user: teacherUser });
+      const result = await caller.unassignIndividualResource({
+        studentId: 101,
+        courseId: 1,
+        resourceId: 8,
+      });
+
+      expect(result.success).toBe(true);
+      expect(db.delete).toHaveBeenCalled();
     });
   });
 

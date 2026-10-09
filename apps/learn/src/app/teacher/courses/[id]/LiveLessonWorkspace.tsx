@@ -51,11 +51,11 @@ export function LiveLessonWorkspace({ courseId }: Props) {
     { enabled: Boolean(group?.id), refetchInterval: 5000, staleTime: 2000 },
   );
 
-  const submissionsByStudent = new Map<number, StudentSubmissionData>();
+  const submissionsByStudent = new Map<number, StudentSubmissionData[]>();
   for (const sub of lessonSubmissions) {
-    if (!submissionsByStudent.has(sub.studentId)) {
-      submissionsByStudent.set(sub.studentId, sub as StudentSubmissionData);
-    }
+    const list = submissionsByStudent.get(sub.studentId) || [];
+    list.push(sub as StudentSubmissionData);
+    submissionsByStudent.set(sub.studentId, list);
   }
 
   const markMutation = trpc.attendance.markLessonAttendance.useMutation({
@@ -282,7 +282,7 @@ export function LiveLessonWorkspace({ courseId }: Props) {
                   courseId={courseId}
                   groupId={group?.id}
                   availableResources={courseResources}
-                  currentSubmission={submissionsByStudent.get(student.studentId)}
+                  submissions={submissionsByStudent.get(student.studentId) || []}
                   onStatusChange={(id, next) => markMutation.mutate({
                     courseId, groupId: group?.id, studentId: id, date: selectedDate, status: next,
                     comment: next === "absent" ? student.comment : null,
