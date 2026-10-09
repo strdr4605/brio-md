@@ -1,0 +1,3 @@
+# Auto-generated Drizzle ORM migration files
+packages/db/drizzle/meta/** linguist-generated=true
+packages/db/drizzle/*.sql linguist-generated=true

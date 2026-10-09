@@ -1,4 +1,4 @@
-import { router, teacherProcedure, protectedProcedure } from "../trpc";
+import { router, teacherProcedure, protectedProcedure, mergeRouters } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import {
   learningResources,
@@ -8,6 +8,7 @@ import {
 import { and, eq, ilike, or, desc, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { curriculumRouter } from "./curriculum";
 
 import {
   createResourceInputSchema,
@@ -15,7 +16,7 @@ import {
   getLibraryResourcesInputSchema,
 } from "./resourceSchemas";
 
-export const resourceRouter = router({
+const resourceCoreRouter = router({
   createLearningResource: teacherProcedure
     .input(createResourceInputSchema)
     .mutation(async ({ ctx, input }) => {
@@ -183,6 +184,7 @@ export const resourceRouter = router({
           resourceId: courseLearningResources.resourceId,
           sessionNumber: courseLearningResources.sessionNumber,
           orderIndex: courseLearningResources.orderIndex,
+          settings: courseLearningResources.settings,
           createdAt: courseLearningResources.createdAt,
           resource: {
             id: learningResources.id,
@@ -203,83 +205,6 @@ export const resourceRouter = router({
         .orderBy(courseLearningResources.orderIndex, courseLearningResources.id);
 
       return rows;
-    }),
-
-  getNextCourseSession: teacherProcedure
-    .input(z.object({ courseId: z.number() }))
-    .query(async ({ input }) => {
-      const rows = await db
-        .select({ sessionNumber: courseLearningResources.sessionNumber })
-        .from(courseLearningResources)
-        .where(eq(courseLearningResources.courseId, input.courseId));
-
-      const numbers = rows
-        .map((r) => r.sessionNumber)
-        .filter((n): n is number => n !== null && n !== undefined);
-
-      const maxSession = numbers.length > 0 ? Math.max(...numbers) : 0;
-      const uniqueExisting = Array.from(new Set(numbers)).sort((a, b) => a - b);
-
-      return {
-        nextSessionNumber: maxSession + 1,
-        existingSessions: uniqueExisting,
-      };
-    }),
-
-  assignResourceToSession: teacherProcedure
-    .input(
-      z.object({
-        courseId: z.number(),
-        resourceId: z.number(),
-        sessionNumber: z.number().nullable().optional(),
-        orderIndex: z.number().default(0),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const sessionCondition =
-        input.sessionNumber !== undefined
-          ? input.sessionNumber === null
-            ? isNull(courseLearningResources.sessionNumber)
-            : eq(courseLearningResources.sessionNumber, input.sessionNumber)
-          : undefined;
-
-      const whereConditions = [
-        eq(courseLearningResources.courseId, input.courseId),
-        eq(courseLearningResources.resourceId, input.resourceId),
-      ];
-      if (sessionCondition) {
-        whereConditions.push(sessionCondition);
-      }
-
-      const [existing] = await db
-        .select()
-        .from(courseLearningResources)
-        .where(and(...whereConditions))
-        .limit(1);
-
-      if (existing) {
-        const [updated] = await db
-          .update(courseLearningResources)
-          .set({
-            sessionNumber: input.sessionNumber ?? null,
-            orderIndex: input.orderIndex,
-          })
-          .where(eq(courseLearningResources.id, existing.id))
-          .returning();
-        return updated;
-      }
-
-      const [created] = await db
-        .insert(courseLearningResources)
-        .values({
-          courseId: input.courseId,
-          resourceId: input.resourceId,
-          sessionNumber: input.sessionNumber ?? null,
-          orderIndex: input.orderIndex,
-        })
-        .returning();
-
-      return created;
     }),
 
   getResourceAssignments: teacherProcedure.query(async ({ ctx }) => {
@@ -303,3 +228,5 @@ export const resourceRouter = router({
     return query;
   }),
 });
+
+export const resourceRouter = mergeRouters(resourceCoreRouter, curriculumRouter);

@@ -85,6 +85,13 @@
       "when": 1791204676713,
       "tag": "0011_great_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791478739310,
+      "tag": "0012_faulty_elektra",
+      "breakpoints": true
     }
   ]
 }
