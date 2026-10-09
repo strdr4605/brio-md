@@ -5,6 +5,8 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { CourseResourcesSection } from "./CourseResourcesSection";
 import { CourseOverviewHeaderCard } from "./CourseOverviewHeaderCard";
+import { StudentActiveTaskCard } from "./StudentActiveTaskCard";
+import { StudentSubmissionsHistory } from "./StudentSubmissionsHistory";
 
 type Props = {
   courseId: number;
@@ -12,10 +14,11 @@ type Props = {
 
 export function CourseDetailView({ courseId }: Props) {
   const [selectedSessionNumber, setSelectedSessionNumber] = useState<number | null>(null);
+  const utils = trpc.useUtils();
 
   const {
     data: course,
-    isLoading,
+    isLoading: isCourseLoading,
     error,
   } = trpc.course.getById.useQuery(
     { id: courseId },
@@ -26,26 +29,32 @@ export function CourseDetailView({ courseId }: Props) {
     },
   );
 
-  if (isLoading) {
+  const { data: courseResources = [] } = trpc.course.getCourseResources.useQuery(
+    { courseId },
+    { enabled: !!courseId },
+  );
+
+  const { data: mySubmissions = [], isLoading: isSubmissionsLoading } =
+    trpc.lesson.getMySubmissions.useQuery(
+      { courseId },
+      { enabled: !!courseId },
+    );
+
+  const recordSubmissionMutation = trpc.lesson.recordStudentSubmission.useMutation({
+    onSuccess: () => {
+      utils.lesson.getMySubmissions.invalidate({ courseId });
+      utils.course.getById.invalidate({ id: courseId });
+    },
+  });
+
+  if (isCourseLoading) {
     return (
       <div className="space-y-8 animate-pulse">
-        <div className="h-6 bg-neutral-200 rounded w-48 mb-6" />
-        <div className="bg-white rounded-2xl border border-neutral-200 p-8 space-y-4">
-          <div className="h-8 bg-neutral-200 rounded w-1/3" />
-          <div className="h-4 bg-neutral-200 rounded w-2/3" />
-          <div className="h-20 bg-neutral-100 rounded" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 space-y-4">
-            <div className="h-6 bg-neutral-200 rounded w-1/3" />
-            <div className="h-16 bg-neutral-100 rounded" />
-            <div className="h-16 bg-neutral-100 rounded" />
-          </div>
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 space-y-4">
-            <div className="h-6 bg-neutral-200 rounded w-1/3" />
-            <div className="h-16 bg-neutral-100 rounded" />
-            <div className="h-16 bg-neutral-100 rounded" />
-          </div>
+        <div className="h-6 bg-slate-200 rounded w-48 mb-6" />
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-4">
+          <div className="h-8 bg-slate-200 rounded w-1/3" />
+          <div className="h-4 bg-slate-200 rounded w-2/3" />
+          <div className="h-20 bg-slate-100 rounded" />
         </div>
       </div>
     );
@@ -53,26 +62,21 @@ export function CourseDetailView({ courseId }: Props) {
 
   if (error || !course) {
     return (
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-12 text-center max-w-lg mx-auto mt-8">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-12 text-center max-w-lg mx-auto mt-8">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h3 className="text-lg font-bold text-neutral-900 mb-2">Course Unavailable</h3>
-        <p className="text-sm text-neutral-600 mb-6">
-          {error?.message || "You may not be enrolled in this course or it does not exist."}
+        <h3 className="text-lg font-bold text-slate-900 mb-2">Curs Indisponibil</h3>
+        <p className="text-sm text-slate-600 mb-6">
+          {error?.message || "Este posibil să nu fii înrolat în acest curs sau cursul nu există."}
         </p>
         <Link
           href="/courses"
-          className="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-medium rounded-lg transition cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition"
         >
-          ← Back to All Courses
+          ← Înapoi la Cursuri
         </Link>
       </div>
     );
@@ -83,11 +87,9 @@ export function CourseDetailView({ courseId }: Props) {
   const currentSession = course.progress?.currentSession || 1;
   const progressPct = Math.min(100, Math.round((completed / total) * 100));
 
-  // Generate sessions list from 1 to total
   const sessionsList = Array.from({ length: total }, (_, i) => {
     const sessionNum = i + 1;
     let status: "completed" | "current" | "upcoming";
-
     if (sessionNum <= completed) {
       status = "completed";
     } else if (sessionNum === currentSession) {
@@ -95,25 +97,37 @@ export function CourseDetailView({ courseId }: Props) {
     } else {
       status = "upcoming";
     }
-
-    return {
-      sessionNumber: sessionNum,
-      status,
-    };
+    return { sessionNumber: sessionNum, status };
   });
+
+  const latestActiveSubmission = mySubmissions[0] || null;
+
+  async function handleStudentSubmitTask(resourceId: number, notes?: string, fileUrl?: string) {
+    let combinedFeedback = notes || "";
+    if (fileUrl) {
+      combinedFeedback = combinedFeedback ? `${combinedFeedback}\n[Link]: ${fileUrl}` : fileUrl;
+    }
+
+    await recordSubmissionMutation.mutateAsync({
+      courseId,
+      resourceId,
+      status: "completed",
+      teacherFeedback: combinedFeedback || undefined,
+    });
+  }
 
   return (
     <div className="space-y-8">
-      {/* Back navigation */}
+      {/* Navigation breadcrumb */}
       <div>
         <Link
           href="/courses"
-          className="inline-flex items-center text-sm font-medium text-neutral-600 hover:text-neutral-900 transition gap-1"
+          className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition gap-1.5"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to all courses
+          Înapoi la toate cursurile
         </Link>
       </div>
 
@@ -131,10 +145,21 @@ export function CourseDetailView({ courseId }: Props) {
         progressPct={progressPct}
       />
 
-      {/* Main Grid: Materials (Left/Top) and Timeline (Right/Bottom) */}
+      {/* Active Session Interactive Task Banner */}
+      {courseResources.length > 0 && (
+        <StudentActiveTaskCard
+          currentSession={currentSession}
+          resources={courseResources}
+          existingSubmission={latestActiveSubmission}
+          onSubmitTask={handleStudentSubmitTask}
+          isSubmitting={recordSubmissionMutation.isPending}
+        />
+      )}
+
+      {/* Main Grid: Materials & History (Left) and Interactive Timeline (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Course Resources & Minigames Section (5 columns on large screens) */}
-        <div className="lg:col-span-5">
+        {/* Left Column: Resources, Materials & Submissions */}
+        <div className="lg:col-span-5 space-y-6">
           <CourseResourcesSection
             courseId={courseId}
             materials={course.materials}
@@ -143,9 +168,14 @@ export function CourseDetailView({ courseId }: Props) {
             onSelectSession={setSelectedSessionNumber}
             totalSessions={total}
           />
+
+          <StudentSubmissionsHistory
+            submissions={mySubmissions}
+            isLoading={isSubmissionsLoading}
+          />
         </div>
 
-        {/* Session Timeline Section (7 columns on large screens) */}
+        {/* Right Column: Interactive Session Plan & Timeline */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">

@@ -337,4 +337,46 @@ describe("submissionRouter & submissionService", () => {
       expect(result[0].studentId).toBe(101);
     });
   });
+
+  describe("getMySubmissions", () => {
+    it("retrieves current student's submissions for course", async () => {
+      const mockSubmissions = [
+        {
+          id: 1,
+          studentId: 101,
+          resourceId: 5,
+          status: "completed",
+          score: 88,
+          maxScore: 100,
+          teacherFeedback: "Bine lucrat!",
+          resourceTitle: "Matematica - Exercitii",
+          resourceType: "worksheet",
+          resourceUrl: "https://example.com/math.pdf",
+        },
+      ];
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(mockSubmissions),
+          }),
+        }),
+      });
+
+      const caller = submissionRouter.createCaller({ user: studentUser });
+      const result = await caller.getMySubmissions({ courseId: 1 });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].score).toBe(88);
+      expect(result[0].teacherFeedback).toBe("Bine lucrat!");
+    });
+
+    it("returns empty array if user has no studentId", async () => {
+      const nonStudentUser = { ...studentUser, studentId: null };
+      const caller = submissionRouter.createCaller({ user: nonStudentUser });
+      const result = await caller.getMySubmissions({ courseId: 1 });
+
+      expect(result).toEqual([]);
+    });
+  });
 });

@@ -9,6 +9,7 @@ import {
   recordStudentSubmissionService,
   bulkFinalizeLessonSubmissionsService,
   getLessonSubmissionsService,
+  getMySubmissionsService,
 } from "../submissionService";
 
 export const submissionRouter = router({
@@ -137,5 +138,19 @@ export const submissionRouter = router({
             eq(studentResourceSubmissions.courseId, input.courseId),
           ),
         );
+    }),
+
+  getMySubmissions: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return getMySubmissionsService({
+        courseId: input.courseId,
+        user: ctx.user,
+      });
+    }),
     }),
 });
