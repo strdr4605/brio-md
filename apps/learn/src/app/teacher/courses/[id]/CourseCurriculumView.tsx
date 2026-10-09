@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { CourseSessionCard } from "./CourseSessionCard";
 import { CurriculumWeekSection } from "./CurriculumWeekSection";
 import { CurriculumOverviewBanner } from "./CurriculumOverviewBanner";
 import { CurriculumHeader } from "./CurriculumHeader";
-import { AttachResourceDrawer } from "./AttachResourceDrawer";
-import { ResourceSettingsModal } from "./ResourceSettingsModal";
-import { ConfirmDetachModal } from "./ConfirmDetachModal";
-import { ResourcePreviewModal } from "@/app/teacher/resources/ResourcePreviewModal";
+import { CurriculumModals } from "./CurriculumModals";
+import {
+  CurriculumLoadingSkeleton,
+  CurriculumErrorBanner,
+} from "./CurriculumStateFeedback";
 import { type AttachedResource } from "./types";
 
 type Props = {
@@ -31,6 +32,19 @@ export function CourseCurriculumView({ courseId }: Props) {
   } | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
   const [customSessionsPerWeek, setCustomSessionsPerWeek] = useState<number | null>(null);
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<number>>(new Set());
+
+  // Load collapsed weeks preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`course_${courseId}_collapsed_weeks`);
+      if (saved) {
+        setCollapsedWeeks(new Set(JSON.parse(saved)));
+      }
+    } catch {
+      // ignore
+    }
+  }, [courseId]);
 
   const utils = trpc.useUtils();
 
@@ -69,42 +83,18 @@ export function CourseCurriculumView({ courseId }: Props) {
   });
 
   if (isCourseLoading || isResourcesLoading) {
-    return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-10 bg-slate-200 rounded-xl w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-24 bg-white rounded-2xl border border-slate-200" />
-          <div className="h-24 bg-white rounded-2xl border border-slate-200" />
-          <div className="h-24 bg-white rounded-2xl border border-slate-200" />
-        </div>
-        <div className="h-64 bg-white rounded-2xl border border-slate-200" />
-      </div>
-    );
+    return <CurriculumLoadingSkeleton />;
   }
 
   if (courseError || resourcesError) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center max-w-lg mx-auto shadow-2xs my-8">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 font-bold border border-rose-100">
-          ⚠️
-        </div>
-        <h3 className="text-base font-bold text-slate-900 mb-1">
-          Eroare la încărcarea resurselor cursului
-        </h3>
-        <p className="text-xs text-slate-500 mb-4">
-          {resourcesError?.message || courseError?.message || "Nu s-au putut prelua materialele de curs."}
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            utils.resource.getCourseResources.invalidate({ courseId });
-            utils.teacher.getCourseStudentsProgress.invalidate({ courseId });
-          }}
-          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer shadow-2xs"
-        >
-          Reîncearcă
-        </button>
-      </div>
+      <CurriculumErrorBanner
+        message={resourcesError?.message || courseError?.message}
+        onRetry={() => {
+          utils.resource.getCourseResources.invalidate({ courseId });
+          utils.teacher.getCourseStudentsProgress.invalidate({ courseId });
+        }}
+      />
     );
   }
 
@@ -165,6 +155,33 @@ export function CourseCurriculumView({ courseId }: Props) {
     .filter((s) => (resourcesBySession.get(s.number) || []).length > 0).length;
   const syllabusCoveragePercent = Math.round((coveredSessionsCount / effectiveTotalSessions) * 100);
 
+  const toggleWeekCollapse = (weekNum: number) => {
+    setCollapsedWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(weekNum)) next.delete(weekNum);
+      else next.add(weekNum);
+      try {
+        localStorage.setItem(`course_${courseId}_collapsed_weeks`, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+  };
+
+  const toggleAllCollapse = (collapseAll: boolean) => {
+    if (collapseAll) {
+      const all = new Set(weeks.map((w) => w.weekNumber));
+      setCollapsedWeeks(all);
+      try {
+        localStorage.setItem(`course_${courseId}_collapsed_weeks`, JSON.stringify(Array.from(all)));
+      } catch {}
+    } else {
+      setCollapsedWeeks(new Set());
+      try {
+        localStorage.removeItem(`course_${courseId}_collapsed_weeks`);
+      } catch {}
+    }
+  };
+
   const handleConfirmDetach = () => {
     if (!detachingItem) return;
     detachMutation.mutate(
@@ -220,6 +237,8 @@ export function CourseCurriculumView({ courseId }: Props) {
         syllabusCoveragePercent={syllabusCoveragePercent}
         scheduleDays={course?.scheduleDays}
         onSessionsPerWeekChange={(val) => setCustomSessionsPerWeek(val)}
+        onToggleAllCollapse={toggleAllCollapse}
+        allCollapsed={weeks.length > 0 && collapsedWeeks.size === weeks.length}
       />
 
       {feedbackMsg && (
@@ -228,7 +247,7 @@ export function CourseCurriculumView({ courseId }: Props) {
         </div>
       )}
 
-      {/* Session List Grouped By Week */}
+      {/* Session List Grouped By Week (Collapsible Dropdowns) */}
       <div className="space-y-6">
         {weeks.map((week) => (
           <CurriculumWeekSection
@@ -238,6 +257,8 @@ export function CourseCurriculumView({ courseId }: Props) {
             endSession={week.endSession}
             sessions={week.sessions}
             resourcesBySession={resourcesBySession}
+            isCollapsed={collapsedWeeks.has(week.weekNumber)}
+            onToggleCollapse={() => toggleWeekCollapse(week.weekNumber)}
             onAttachClick={(sNum) => {
               setSelectedSessionForAttach(sNum);
               setIsAttachDrawerOpen(true);
@@ -281,7 +302,7 @@ export function CourseCurriculumView({ courseId }: Props) {
                 onDetachClick={(id, title) => setDetachingItem({ id, title })}
                 onMoveUp={(idx, list) => handleMove(idx, "up", list)}
                 onMoveDown={(idx, list) => handleMove(idx, "down", list)}
-                onPreviewClick={(item: AttachedResource) =>
+                onPreviewClick={(item) =>
                   setPreviewResource({
                     id: item.resource.id,
                     title: item.resource.title,
@@ -298,41 +319,23 @@ export function CourseCurriculumView({ courseId }: Props) {
       </div>
 
       {/* Modals & Drawers */}
-      <AttachResourceDrawer
-        isOpen={isAttachDrawerOpen}
-        onClose={() => setIsAttachDrawerOpen(false)}
+      <CurriculumModals
         courseId={courseId}
-        initialSessionNumber={selectedSessionForAttach}
+        isAttachDrawerOpen={isAttachDrawerOpen}
+        onCloseAttachDrawer={() => setIsAttachDrawerOpen(false)}
+        selectedSessionForAttach={selectedSessionForAttach}
         totalSessions={effectiveTotalSessions}
-        onSuccess={() => {
+        editingResource={editingResource}
+        onCloseSettingsModal={() => setEditingResource(null)}
+        detachingItem={detachingItem}
+        onCloseDetachModal={() => setDetachingItem(null)}
+        onConfirmDetach={handleConfirmDetach}
+        isDetachPending={detachMutation.isPending}
+        previewResource={previewResource}
+        onClosePreviewModal={() => setPreviewResource(null)}
+        onMutationSuccess={() => {
           utils.resource.getCourseResources.invalidate({ courseId });
         }}
-      />
-
-      {editingResource && (
-        <ResourceSettingsModal
-          isOpen={Boolean(editingResource)}
-          onClose={() => setEditingResource(null)}
-          courseId={courseId}
-          resource={editingResource}
-          onSuccess={() => {
-            utils.resource.getCourseResources.invalidate({ courseId });
-          }}
-        />
-      )}
-
-      <ConfirmDetachModal
-        isOpen={Boolean(detachingItem)}
-        onClose={() => setDetachingItem(null)}
-        onConfirm={handleConfirmDetach}
-        title={detachingItem?.title || "Resursă"}
-        isPending={detachMutation.isPending}
-      />
-
-      <ResourcePreviewModal
-        isOpen={Boolean(previewResource)}
-        onClose={() => setPreviewResource(null)}
-        resource={previewResource}
       />
     </div>
   );
