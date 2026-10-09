@@ -5,6 +5,8 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { CourseSessionCard } from "./CourseSessionCard";
 import { AttachResourceDrawer } from "./AttachResourceDrawer";
+import { ResourceSettingsModal } from "./ResourceSettingsModal";
+import { ConfirmDetachModal } from "./ConfirmDetachModal";
 import { type AttachedResource } from "./types";
 
 type Props = {
@@ -14,6 +16,8 @@ type Props = {
 export function CourseCurriculumView({ courseId }: Props) {
   const [selectedSessionForAttach, setSelectedSessionForAttach] = useState<number | null>(null);
   const [isAttachDrawerOpen, setIsAttachDrawerOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<AttachedResource | null>(null);
+  const [detachingItem, setDetachingItem] = useState<{ id: number; title: string } | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
@@ -103,12 +107,6 @@ export function CourseCurriculumView({ courseId }: Props) {
   const handleOpenAttachDrawer = (sessionNumber?: number | null) => {
     setSelectedSessionForAttach(sessionNumber ?? 1);
     setIsAttachDrawerOpen(true);
-  };
-
-  const handleDetach = (assignmentId: number, title: string) => {
-    if (confirm(`Sigur doriți să detașați «${title}» din această sesiune?`)) {
-      detachMutation.mutate({ id: assignmentId });
-    }
   };
 
   const handleMove = (index: number, direction: "up" | "down", sessionResources: AttachedResource[]) => {
@@ -235,8 +233,8 @@ export function CourseCurriculumView({ courseId }: Props) {
               title={session.title}
               resources={sessionItems}
               onAttachClick={handleOpenAttachDrawer}
-              onEditSettingsClick={() => {}}
-              onDetachClick={handleDetach}
+              onEditSettingsClick={(res) => setEditingResource(res)}
+              onDetachClick={(id, title) => setDetachingItem({ id, title })}
               onMoveUp={(idx, list) => handleMove(idx, "up", list)}
               onMoveDown={(idx, list) => handleMove(idx, "down", list)}
             />
@@ -254,6 +252,35 @@ export function CourseCurriculumView({ courseId }: Props) {
         onSuccess={() => {
           utils.resource.getCourseResources.invalidate({ courseId });
         }}
+      />
+
+      {/* Resource Settings Modal */}
+      {editingResource && (
+        <ResourceSettingsModal
+          isOpen={Boolean(editingResource)}
+          onClose={() => setEditingResource(null)}
+          courseId={courseId}
+          resource={editingResource}
+          onSuccess={() => {
+            utils.resource.getCourseResources.invalidate({ courseId });
+          }}
+        />
+      )}
+
+      {/* Detach Confirmation Modal */}
+      <ConfirmDetachModal
+        isOpen={Boolean(detachingItem)}
+        title={detachingItem?.title || ""}
+        onClose={() => setDetachingItem(null)}
+        onConfirm={() => {
+          if (detachingItem) {
+            detachMutation.mutate(
+              { id: detachingItem.id },
+              { onSettled: () => setDetachingItem(null) },
+            );
+          }
+        }}
+        isPending={detachMutation.isPending}
       />
     </div>
   );
