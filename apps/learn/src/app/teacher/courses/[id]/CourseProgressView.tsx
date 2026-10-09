@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-<<<<<<< HEAD
 import { StudentDossierDrawer } from "./StudentDossierDrawer";
-=======
-import { TeacherNotesModal } from "./TeacherNotesModal";
-import { StudentSubmissionsDrawer } from "./StudentSubmissionsDrawer";
->>>>>>> origin/feat/learn-teacher-grading-drawer
 
 type Props = {
   courseId: number;
@@ -43,22 +38,7 @@ function getStatusBadge(status: string) {
 export function CourseProgressView({ courseId }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProgressStatus>("all");
-<<<<<<< HEAD
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-=======
-  const [editingStudent, setEditingStudent] = useState<{
-    id: number;
-    name: string;
-    notes: string | null;
-    currentSession: number;
-  } | null>(null);
-  const [drawerStudent, setDrawerStudent] = useState<{
-    id: number;
-    name: string;
-  } | null>(null);
-
-  const utils = trpc.useUtils();
->>>>>>> origin/feat/learn-teacher-grading-drawer
 
   const { data, isLoading, error } = trpc.teacher.getCourseStudentsProgress.useQuery(
     { courseId },

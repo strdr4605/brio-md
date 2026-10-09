@@ -44,6 +44,7 @@ export async function uploadFileToStorage(
   const key = `resources/${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
 
   if (STORAGE_DRIVER === "s3" && S3_ENDPOINT && S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY) {
+    // @ts-ignore - optional dynamic s3 driver
     const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
     const client = new S3Client({
       endpoint: S3_ENDPOINT,

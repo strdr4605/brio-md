@@ -152,5 +152,4 @@ export const submissionRouter = router({
         user: ctx.user,
       });
     }),
-    }),
 });
