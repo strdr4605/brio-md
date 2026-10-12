@@ -5,13 +5,6 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { z } from "zod";
 
-export type CourseMaterialItem = {
-  id?: number;
-  title: string;
-  type: "manual" | "textbook" | "link" | "file";
-  url: string;
-};
-
 export type CourseFormData = {
   id?: number;
   name: string;
@@ -24,7 +17,6 @@ export type CourseFormData = {
   teacherId?: number | null;
   schoolId?: number | null;
   active: boolean;
-  materials?: CourseMaterialItem[];
 };
 
 type Props = {
@@ -47,14 +39,9 @@ const courseSchema = z.object({
   name: z.string().trim().min(1, "Numele cursului este obligatoriu"),
   totalSessions: z.number().int().min(1, "Numărul de sesiuni trebuie să fie cel puțin 1"),
   sessionDurationMinutes: z.number().int().min(1, "Durata sesiunii trebuie să fie cel puțin 1 minut"),
-  materials: z.array(
-    z.object({
-      title: z.string().trim().min(1, "Titlul materialului este obligatoriu"),
-      type: z.enum(["manual", "textbook", "link", "file"]),
-      url: z.string().trim().url("URL-ul materialului trebuie să fie valid (ex. https://...)"),
-    }),
-  ),
 });
+
+const LEARN_BASE_URL = process.env.NEXT_PUBLIC_LEARN_URL || "http://localhost:3003";
 
 export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Props) {
   const utils = trpc.useUtils();
@@ -77,7 +64,6 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
   const [endTime, setEndTime] = useState("");
   const [teacherId, setTeacherId] = useState<number | null>(null);
   const [active, setActive] = useState(true);
-  const [materials, setMaterials] = useState<CourseMaterialItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -89,9 +75,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
     if (existingCourse) {
       setName(existingCourse.name);
       setDescription(existingCourse.description || "");
-      setLevel(
-        (existingCourse.level as "beginner" | "intermediate" | "advanced") || "beginner",
-      );
+      setLevel((existingCourse.level as "beginner" | "intermediate" | "advanced") || "beginner");
       setTotalSessions(existingCourse.totalSessions || 1);
       setSessionDurationMinutes(existingCourse.sessionDurationMinutes || 60);
       setScheduleDays(existingCourse.scheduleDays || []);
@@ -102,14 +86,6 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
       }
       setTeacherId(existingCourse.teacherId ?? null);
       setActive(existingCourse.active ?? true);
-      setMaterials(
-        existingCourse.materials.map((m) => ({
-          id: m.id,
-          title: m.title,
-          type: m.type as "manual" | "textbook" | "link" | "file",
-          url: m.url,
-        })),
-      );
     }
   }, [existingCourse]);
 
@@ -136,22 +112,6 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
     );
   };
 
-  const addMaterial = () => {
-    setMaterials((prev) => [...prev, { title: "", type: "manual", url: "" }]);
-  };
-
-  const removeMaterial = (index: number) => {
-    setMaterials((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateMaterial = (index: number, field: keyof CourseMaterialItem, value: string) => {
-    setMaterials((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
-      return copy;
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -160,7 +120,6 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
       name,
       totalSessions: Number(totalSessions),
       sessionDurationMinutes: Number(sessionDurationMinutes),
-      materials,
     });
 
     if (!validation.success) {
@@ -169,74 +128,51 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
     }
 
     const scheduleTime =
-      startTime && endTime
-        ? `${startTime} - ${endTime}`
-        : startTime || endTime || null;
+      startTime && endTime ? `${startTime} - ${endTime}` : startTime || endTime || null;
+
+    const payload = {
+      name,
+      description: description || null,
+      level,
+      totalSessions: Number(totalSessions),
+      sessionDurationMinutes: Number(sessionDurationMinutes),
+      scheduleDays,
+      scheduleTime,
+      teacherId: teacherId || null,
+      active,
+    };
 
     if (isEditing) {
-      updateMutation.mutate({
-        id: courseId!,
-        name,
-        description: description || null,
-        level,
-        totalSessions: Number(totalSessions),
-        sessionDurationMinutes: Number(sessionDurationMinutes),
-        scheduleDays,
-        scheduleTime,
-        teacherId: teacherId || null,
-        active,
-        materials: materials.map((m, idx) => ({
-          title: m.title,
-          type: m.type,
-          url: m.url,
-          orderIndex: idx,
-        })),
-      });
+      updateMutation.mutate({ id: courseId!, ...payload });
     } else {
-      createMutation.mutate({
-        name,
-        description: description || null,
-        level,
-        totalSessions: Number(totalSessions),
-        sessionDurationMinutes: Number(sessionDurationMinutes),
-        scheduleDays,
-        scheduleTime,
-        teacherId: teacherId || null,
-        schoolId: currentUserSchoolId || null,
-        active,
-        materials: materials.map((m, idx) => ({
-          title: m.title,
-          type: m.type,
-          url: m.url,
-          orderIndex: idx,
-        })),
-      });
+      createMutation.mutate({ ...payload, schoolId: currentUserSchoolId || null });
     }
   };
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const learnCourseUrl =
+    isEditing && courseId
+      ? `${LEARN_BASE_URL}/teacher/courses/${courseId}`
+      : `${LEARN_BASE_URL}/teacher/resources`;
 
   if (!mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex justify-end">
-      {/* Full-viewport backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Drawer panel with pinned header, scrollable body, and pinned sticky footer */}
       <div className="relative z-10 w-full max-w-xl bg-white h-full shadow-2xl flex flex-col overflow-hidden">
-        {/* Header - Pinned */}
         <div className="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
               {isEditing ? "Editează Curs" : "Adaugă Curs Nou"}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {isEditing ? "Actualizează detaliile cursului, orarul și materialele" : "Configurează un nou curs academic"}
+              {isEditing ? "Actualizează detaliile cursului și orarul" : "Configurează un nou curs academic"}
             </p>
           </div>
           <button
@@ -249,19 +185,17 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoadingCourse ? (
             <div className="py-12 text-center text-slate-400 text-sm">Se încarcă datele cursului...</div>
           ) : (
             <form id="course-form" onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg">
                   {error}
                 </div>
               )}
 
-              {/* Informații Generale */}
               <div className="space-y-4">
                 <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Informații Generale
@@ -293,9 +227,7 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nivel dificultate *</label>
                   <select
                     value={level}
-                    onChange={(e) =>
-                      setLevel(e.target.value as "beginner" | "intermediate" | "advanced")
-                    }
+                    onChange={(e) => setLevel(e.target.value as "beginner" | "intermediate" | "advanced")}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
                   >
                     <option value="beginner">Începător (Beginner)</option>
@@ -305,11 +237,8 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                 </div>
               </div>
 
-              {/* Sesiuni & Durată */}
               <div className="space-y-4">
-                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-                  Sesiuni & Durată
-                </h3>
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Sesiuni & Durată</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Total sesiuni *</label>
@@ -336,13 +265,14 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                 </div>
               </div>
 
-              {/* Orar / Program */}
               <div className="space-y-4">
                 <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Program & Orar
                 </h3>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Zile din săptămână</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Zile din săptămână
+                  </label>
                   <div className="grid grid-cols-4 gap-2">
                     {DAYS_OF_WEEK.map((day) => (
                       <label
@@ -367,7 +297,9 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ora început</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Ora început
+                    </label>
                     <input
                       type="time"
                       value={startTime}
@@ -376,7 +308,9 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ora sfârșit</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Ora sfârșit
+                    </label>
                     <input
                       type="time"
                       value={endTime}
@@ -387,102 +321,43 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                 </div>
               </div>
 
-              {/* Profesor / Instructor */}
               <div className="space-y-4">
                 <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
                   Profesor Asignat
                 </h3>
-                <div>
-                  <select
-                    value={teacherId ?? ""}
-                    onChange={(e) =>
-                      setTeacherId(e.target.value ? Number(e.target.value) : null)
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
-                  >
-                    <option value="">-- Fără profesor asignat --</option>
-                    {teachers.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  value={teacherId ?? ""}
+                  onChange={(e) => setTeacherId(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
+                >
+                  <option value="">-- Fără profesor asignat --</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.email})
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Materiale Didactice */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-                    Materiale Didactice
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={addMaterial}
-                    className="text-xs px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 font-semibold transition"
-                  >
-                    + Adaugă material
-                  </button>
-                </div>
-
-                {materials.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">
-                    Nu au fost adăugate materiale didactice.
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+                  Materiale Didactice & Curriculum
+                </h3>
+                <div className="p-4 border border-slate-200/80 rounded-xl bg-slate-50 space-y-3">
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Resursele educaționale (lecții video, documente PDF, prezentări, activități interactive și maparea pe sesiuni) sunt gestionate centralizat în platforma LMS Brio Learn.
                   </p>
-                ) : (
-                  <div className="space-y-3">
-                    {materials.map((m, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3.5 border border-slate-200/80 rounded-xl bg-slate-50 space-y-2.5"
-                      >
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Titlu material (ex: Ghid Laborator)"
-                            value={m.title}
-                            onChange={(e) => updateMaterial(idx, "title", e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
-                          />
-                          <select
-                            value={m.type}
-                            onChange={(e) =>
-                              updateMaterial(
-                                idx,
-                                "type",
-                                e.target.value as CourseMaterialItem["type"],
-                              )
-                            }
-                            className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-semibold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
-                          >
-                            <option value="manual">Manual</option>
-                            <option value="textbook">Manual școlar</option>
-                            <option value="link">Link extern</option>
-                            <option value="file">Fișier</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => removeMaterial(idx)}
-                            className="text-rose-600 hover:text-rose-700 px-2 text-sm transition"
-                            title="Șterge"
-                          >
-                            🗑
-                          </button>
-                        </div>
-                        <input
-                          type="url"
-                          placeholder="https://example.com/material.pdf"
-                          value={m.url}
-                          onChange={(e) => updateMaterial(idx, "url", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 transition"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  <a
+                    href={learnCourseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-900 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100 rounded-xl shadow-2xs transition"
+                  >
+                    Manage course curriculum and study materials in Brio Learn ↗
+                  </a>
+                </div>
               </div>
 
-              {/* Status Activ */}
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
@@ -496,12 +371,10 @@ export function CourseFormDrawer({ courseId, onClose, currentUserSchoolId }: Pro
                   </span>
                 </label>
               </div>
-
             </form>
           )}
         </div>
 
-        {/* Footer - Pinned at Bottom */}
         <div className="p-4 px-6 border-t border-slate-200/80 bg-slate-50/95 flex items-center justify-end gap-3 shrink-0">
           <button
             type="button"

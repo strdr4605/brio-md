@@ -221,29 +221,21 @@ export default function CourseDetailPage({ params }: PageProps) {
             </p>
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <h3 className="text-base font-bold text-slate-900 mb-2">Materiale Didactice</h3>
-            {course.materials && course.materials.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {course.materials.map((m: any) => (
-                  <a
-                    key={m.id}
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 border border-slate-200/80 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="text-sm font-semibold text-slate-900">{m.title}</div>
-                      <div className="text-xs text-slate-400 capitalize">{m.type}</div>
-                    </div>
-                    <span className="text-xs text-slate-900 font-bold group-hover:text-slate-700">Deschide &rarr;</span>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400 italic">Nu sunt atașate materiale pentru acest curs.</p>
-            )}
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <h3 className="text-base font-bold text-slate-900">Materiale Didactice & Curriculum</h3>
+            <div className="p-4 border border-slate-200/80 rounded-xl bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Resursele educaționale, lecțiile video, documentele PDF și activitățile interactive sunt administrate centralizat în Brio Learn.
+              </p>
+              <a
+                href={`${process.env.NEXT_PUBLIC_LEARN_URL || "http://localhost:3003"}/teacher/courses/${courseId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-900 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100 rounded-xl shadow-2xs transition shrink-0"
+              >
+                Manage course curriculum and study materials in Brio Learn ↗
+              </a>
+            </div>
           </div>
         </div>
       )}
