@@ -27,6 +27,7 @@ type AuthUser = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || "+vlyups9ne/PEowaxU/hrmUHY7LxJA31Gv7YiSUZNlo=",
   providers: [
     Credentials({
       credentials: {

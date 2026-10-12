@@ -32,6 +32,30 @@ export function FileTypeIcon({ type, className = "w-5 h-5" }: FileTypeIconProps)
         </div>
       );
 
+    case "presentation":
+    case "pptx":
+    case "ppt":
+      return (
+        <div className="relative inline-flex items-center justify-center shrink-0">
+          <svg
+            className={`${className} text-amber-600`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M2 3h20" />
+            <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3" />
+            <path d="m7 21 5-5 5 5" />
+          </svg>
+          <span className="absolute -bottom-1 -right-1 text-[8px] font-black uppercase tracking-tighter bg-amber-600 text-white px-1 py-0.2 rounded-xs shadow-2xs leading-tight">
+            PPT
+          </span>
+        </div>
+      );
+
     case "worksheet":
       return (
         <svg

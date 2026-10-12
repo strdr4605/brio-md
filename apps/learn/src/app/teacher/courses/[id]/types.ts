@@ -16,7 +16,7 @@ export type AttachedResource = {
     id: number;
     title: string;
     description: string | null;
-    type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr";
+    type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr" | "presentation";
     url: string;
     metadata: unknown;
     schoolId: number | null;
@@ -27,7 +27,7 @@ export type LibraryResourceItem = {
   id: number;
   title: string;
   description: string | null;
-  type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr";
+  type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr" | "presentation";
   url: string;
   metadata: {
     maxScore?: number;

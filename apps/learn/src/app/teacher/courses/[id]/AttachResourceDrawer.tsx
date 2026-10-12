@@ -13,14 +13,15 @@ type Props = {
   onSuccess: () => void;
 };
 
-type ResourceTypeFilter = "all" | "worksheet" | "minigame" | "textbook" | "pdf" | "video" | "link";
+type ResourceTypeFilter = "all" | "worksheet" | "minigame" | "textbook" | "pdf" | "presentation" | "video" | "link";
 
 const FILTER_ITEMS = [
   { id: "all", label: "Toate" },
   { id: "worksheet", label: "Fișe" },
   { id: "minigame", label: "Minijocuri" },
-  { id: "textbook", label: "Manuale" },
   { id: "pdf", label: "PDF" },
+  { id: "presentation", label: "PPTX" },
+  { id: "textbook", label: "Manuale" },
   { id: "video", label: "Video" },
 ] as const;
 
@@ -227,7 +228,17 @@ export function AttachResourceDrawer({
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 font-bold truncate">
-                            <span>{res.type === "minigame" ? "🎮" : res.type === "worksheet" ? "📝" : "📄"}</span>
+                            <span>
+                              {res.type === "minigame"
+                                ? "🎮"
+                                : res.type === "worksheet"
+                                  ? "📝"
+                                  : res.type === "presentation"
+                                    ? "📽️"
+                                    : res.type === "pdf"
+                                      ? "📑"
+                                      : "📄"}
+                            </span>
                             <span className="truncate">{res.title}</span>
                           </div>
                           {res.description && (
@@ -238,10 +249,16 @@ export function AttachResourceDrawer({
                         </div>
                         <span
                           className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md shrink-0 border ${
-                            isSelected ? "bg-slate-800 text-slate-200 border-slate-700" : "bg-white text-slate-600 border-slate-200"
+                            isSelected
+                              ? "bg-slate-800 text-slate-200 border-slate-700"
+                              : res.type === "presentation"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : res.type === "pdf"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : "bg-white text-slate-600 border-slate-200"
                           }`}
                         >
-                          {res.type}
+                          {res.type === "presentation" ? "PPTX" : res.type}
                         </span>
                       </div>
                     );

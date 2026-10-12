@@ -129,6 +129,32 @@ describe("POST /api/upload", () => {
     expect(data.originalName).toBe("exercitii.doc");
   });
 
+  it("accepts .pptx PowerPoint presentations for teachers", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "2", role: "teacher", permissions: ["teach"] },
+    } as any);
+
+    const formData = new FormData();
+    const blob = new Blob(["pptx binary content"], {
+      type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    });
+    const file = new File([blob], "curs_modul_1.pptx", {
+      type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    });
+    formData.append("file", file);
+
+    const req = new NextRequest("http://localhost:3003/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.originalName).toBe("curs_modul_1.pptx");
+  });
+
   it("rejects dangerous or disallowed extensions even with a valid mime type", async () => {
     vi.mocked(auth).mockResolvedValue({
       user: { id: "2", role: "teacher", permissions: ["teach"] },

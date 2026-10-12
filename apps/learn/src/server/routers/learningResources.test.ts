@@ -85,6 +85,51 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
       expect(result.title).toBe("Fisa de lucru Matematica");
     });
 
+    it("creates a presentation resource (PPTX) successfully", async () => {
+      const mockPresentation = {
+        id: 2,
+        schoolId: 1,
+        title: "Lectie Prezentare Curs",
+        description: "Slide-uri capitol 1",
+        type: "presentation",
+        url: "https://example.com/lectie.pptx",
+        metadata: {
+          fileSize: 2048576,
+          mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          originalName: "lectie.pptx",
+          maxScore: 100,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      (db.insert as any).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockPresentation]),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+
+      const result = await caller.createLearningResource({
+        title: "Lectie Prezentare Curs",
+        description: "Slide-uri capitol 1",
+        type: "presentation",
+        url: "https://example.com/lectie.pptx",
+        metadata: {
+          fileSize: 2048576,
+          mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          originalName: "lectie.pptx",
+          maxScore: 100,
+        },
+        courseId: 1,
+      });
+
+      expect(result.id).toBe(2);
+      expect(result.type).toBe("presentation");
+      expect(result.title).toBe("Lectie Prezentare Curs");
+    });
+
     it("throws Zod validation error when title or URL is empty", async () => {
       const caller = teacherRouter.createCaller({ user: teacherUser });
 

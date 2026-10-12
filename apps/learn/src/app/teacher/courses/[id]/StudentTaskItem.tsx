@@ -27,7 +27,6 @@ export function StudentTaskItem({
 
   const isCompleted = sub.status === "completed" || sub.status === "reviewed";
   const isInProgress = sub.status === "in_progress";
-  const isAssigned = sub.status === "assigned";
   const isMinigame = sub.resourceType === "minigame";
 
   const handleScoreSubmit = (e?: React.FormEvent) => {

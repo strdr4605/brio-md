@@ -13,6 +13,10 @@ export function getMaterialTypeBadge(type: string) {
       return { label: "Lecție Video", className: "bg-blue-50 text-blue-700 border-blue-200" };
     case "pdf":
       return { label: "Document PDF", className: "bg-rose-50 text-rose-700 border-rose-200" };
+    case "presentation":
+    case "pptx":
+    case "ppt":
+      return { label: "Prezentare PPTX", className: "bg-amber-50 text-amber-700 border-amber-200" };
     case "worksheet":
       return { label: "Fișă de Lucru", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
     case "textbook":
