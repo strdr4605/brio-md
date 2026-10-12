@@ -15,6 +15,12 @@ import {
 export const schools = pgTable("schools", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
+  address: text("address"),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  bankName: varchar("bank_name", { length: 255 }),
+  iban: varchar("iban", { length: 100 }),
+  fiscalCode: varchar("fiscal_code", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

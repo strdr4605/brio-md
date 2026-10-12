@@ -6,6 +6,21 @@ import { TRPCError } from "@trpc/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { phoneSchema } from "@/lib/phone";
+import { changeUserPasswordService } from "../userService";
+
+const safeUserColumns = {
+  id: users.id,
+  email: users.email,
+  name: users.name,
+  role: users.role,
+  permissions: users.permissions,
+  courseIds: users.courseIds,
+  schoolId: users.schoolId,
+  phone: users.phone,
+  info: users.info,
+  active: users.active,
+  createdAt: users.createdAt,
+};
 
 export const userRouter = router({
   // Get current user
@@ -80,19 +95,7 @@ export const userRouter = router({
       }
 
       const result = await db
-        .select({
-          id: users.id,
-          email: users.email,
-          name: users.name,
-          role: users.role,
-          permissions: users.permissions,
-          courseIds: users.courseIds,
-          schoolId: users.schoolId,
-          phone: users.phone,
-          info: users.info,
-          active: users.active,
-          createdAt: users.createdAt,
-        })
+        .select(safeUserColumns)
         .from(users)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .limit(input?.limit ?? 50)
@@ -116,19 +119,7 @@ export const userRouter = router({
     }
 
     const [foundUser] = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        role: users.role,
-        permissions: users.permissions,
-        courseIds: users.courseIds,
-        schoolId: users.schoolId,
-        phone: users.phone,
-        info: users.info,
-        active: users.active,
-        createdAt: users.createdAt,
-      })
+      .select(safeUserColumns)
       .from(users)
       .where(eq(users.id, input.id))
       .limit(1);
@@ -334,6 +325,23 @@ export const userRouter = router({
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
+      });
+    }),
+
+  // Change password for authenticated caller
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1, "Parola curentă este obligatorie"),
+        newPassword: z.string().min(6, "Parola nouă trebuie să aibă cel puțin 6 caractere").max(72),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = parseInt(ctx.user.id, 10);
+      return changeUserPasswordService({
+        userId,
+        currentPassword: input.currentPassword,
+        newPassword: input.newPassword,
       });
     }),
 });
