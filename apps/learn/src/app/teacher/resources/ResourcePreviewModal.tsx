@@ -28,6 +28,7 @@ type Props = {
   resource: ResourcePreviewItem | null;
   completionState?: ResourceCompletionState;
   promptOnClose?: boolean;
+  onDelete?: (resource: ResourcePreviewItem) => void;
 };
 
 export function ResourcePreviewModal({
@@ -36,6 +37,7 @@ export function ResourcePreviewModal({
   resource,
   completionState,
   promptOnClose,
+  onDelete,
 }: Props) {
   const [showClosePrompt, setShowClosePrompt] = useState(false);
 
@@ -262,6 +264,21 @@ export function ResourcePreviewModal({
               </button>
             )}
 
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(resource)}
+                title="Șterge resursa didactică"
+                aria-label="Șterge resursă"
+                className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Șterge</span>
+              </button>
+            )}
+
             <a
               href={url}
               target="_blank"
@@ -298,17 +315,9 @@ export function ResourcePreviewModal({
               className="w-full h-full"
             />
           ) : isPdf ? (
-            <iframe
-              src={embedUrl}
-              title={resource.title}
-              className="w-full h-full border-none"
-            />
+            <iframe src={embedUrl} title={resource.title} className="w-full h-full border-none" />
           ) : isVideo ? (
-            <VideoPlayer
-              url={url}
-              title={resource.title}
-              className="w-full h-full p-2 sm:p-4"
-            />
+            <VideoPlayer url={url} title={resource.title} className="w-full h-full p-2 sm:p-4" />
           ) : isMinigame ? (
             <iframe
               src={embedUrl}

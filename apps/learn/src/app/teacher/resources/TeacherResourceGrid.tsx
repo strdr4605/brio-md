@@ -25,6 +25,7 @@ type Props = {
   onPreview: (resource: ResourceItem) => void;
   onUseInCourse: (resource: ResourceItem) => void;
   onEdit?: (resource: ResourceItem) => void;
+  onDelete?: (resource: ResourceItem) => void;
 };
 
 function getTypeBadge(type: string) {
@@ -75,6 +76,7 @@ export function TeacherResourceGrid({
   onPreview,
   onUseInCourse,
   onEdit,
+  onDelete,
 }: Props) {
   const assignmentsByResource = new Map<number, AssignmentItem[]>();
   for (const a of assignments) {
@@ -139,6 +141,30 @@ export function TeacherResourceGrid({
                           strokeLinejoin="round"
                           strokeWidth={1.75}
                           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </button>
+                  )}
+
+                  {onDelete && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(res)}
+                      title="Șterge resursa didactică"
+                      aria-label={`Șterge ${res.title}`}
+                      className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                    >
+                      <svg
+                        className="w-4 h-4 text-slate-500 hover:text-rose-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.75}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         />
                       </svg>
                     </button>

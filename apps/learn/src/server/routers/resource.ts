@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import {
   learningResources,
   courseLearningResources,
+  studentResourceSubmissions,
   courses,
 } from "@brio-md/db";
 import { and, eq, ilike, or, desc, isNull } from "drizzle-orm";
@@ -122,6 +123,54 @@ const resourceCoreRouter = router({
       }
 
       return updated;
+    }),
+
+  deleteLearningResource: teacherProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await db
+        .select()
+        .from(learningResources)
+        .where(eq(learningResources.id, input.id))
+        .limit(1);
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Resursa nu a fost găsită.",
+        });
+      }
+
+      const isSuper =
+        ctx.user.role === "superadmin" ||
+        ctx.user.permissions?.includes("super");
+
+      if (
+        !isSuper &&
+        existing.schoolId &&
+        ctx.user.schoolId &&
+        existing.schoolId !== ctx.user.schoolId
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu aveți permisiunea de a șterge această resursă.",
+        });
+      }
+
+      // Safe cascade deletion of associations
+      await db
+        .delete(courseLearningResources)
+        .where(eq(courseLearningResources.resourceId, input.id));
+
+      await db
+        .delete(studentResourceSubmissions)
+        .where(eq(studentResourceSubmissions.resourceId, input.id));
+
+      await db
+        .delete(learningResources)
+        .where(eq(learningResources.id, input.id));
+
+      return { success: true, id: input.id };
     }),
 
   getLibraryResources: teacherProcedure

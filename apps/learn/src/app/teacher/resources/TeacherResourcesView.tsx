@@ -10,6 +10,7 @@ import { ResourcePreviewModal } from "./ResourcePreviewModal";
 import { CreateResourceModal } from "./CreateResourceModal";
 import { AssignToCourseModal } from "./AssignToCourseModal";
 import { EditResourceModal, type EditableResource } from "./EditResourceModal";
+import { DeleteResourceConfirmModal } from "./DeleteResourceConfirmModal";
 import {
   TeacherResourceFilterBar,
   TabType,
@@ -46,6 +47,7 @@ export function TeacherResourcesView() {
   const [previewResource, setPreviewResource] = useState<ResourceItem | null>(null);
   const [assignResource, setAssignResource] = useState<ResourceItem | null>(null);
   const [editingResource, setEditingResource] = useState<EditableResource | null>(null);
+  const [deletingResource, setDeletingResource] = useState<ResourceItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Queries
@@ -294,6 +296,7 @@ export function TeacherResourcesView() {
               assignedOrderIndex: firstAssigned?.orderIndex ?? 10,
             });
           }}
+          onDelete={(res) => setDeletingResource(res)}
         />
       )}
 
@@ -302,6 +305,7 @@ export function TeacherResourcesView() {
         isOpen={!!previewResource}
         onClose={() => setPreviewResource(null)}
         resource={previewResource}
+        onDelete={(res) => setDeletingResource(res as ResourceItem)}
       />
 
       {/* Create Resource Modal */}
@@ -322,6 +326,18 @@ export function TeacherResourcesView() {
         isOpen={!!editingResource}
         onClose={() => setEditingResource(null)}
         resource={editingResource}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteResourceConfirmModal
+        isOpen={!!deletingResource}
+        onClose={() => setDeletingResource(null)}
+        resource={deletingResource}
+        onDeleted={(deletedId) => {
+          if (previewResource?.id === deletedId) {
+            setPreviewResource(null);
+          }
+        }}
       />
     </div>
   );
