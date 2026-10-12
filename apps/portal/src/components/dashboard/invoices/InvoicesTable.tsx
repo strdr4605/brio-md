@@ -25,6 +25,7 @@ export type InvoicesTableProps = {
   isLoading?: boolean;
   onRecordPayment?: (invoice: InvoiceRowData) => void;
   onCancelInvoice?: (invoice: InvoiceRowData) => void;
+  onPrintReceipt?: (invoice: InvoiceRowData) => void;
 };
 
 export function InvoicesTable({
@@ -32,6 +33,7 @@ export function InvoicesTable({
   isLoading = false,
   onRecordPayment,
   onCancelInvoice,
+  onPrintReceipt,
 }: InvoicesTableProps) {
   const formatMdl = (amount: number) => {
     return new Intl.NumberFormat("ro-MD", {
@@ -198,6 +200,7 @@ export function InvoicesTable({
             formatDate={formatDate}
             onRecordPayment={onRecordPayment}
             onCancelInvoice={onCancelInvoice}
+            onPrintReceipt={onPrintReceipt}
           />
         ))}
       </div>
@@ -213,6 +216,7 @@ export function InvoicesTable({
           getStatusBadge={getStatusBadge}
           onRecordPayment={onRecordPayment}
           onCancelInvoice={onCancelInvoice}
+          onPrintReceipt={onPrintReceipt}
         />
       </div>
     </div>

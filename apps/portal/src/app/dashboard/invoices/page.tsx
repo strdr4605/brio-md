@@ -14,6 +14,8 @@ import {
   InvoiceRowData,
 } from "@/components/dashboard/invoices/InvoicesTable";
 import { CancelInvoiceModal } from "@/components/dashboard/invoices/CancelInvoiceModal";
+import { PrintReceiptModal } from "@/components/dashboard/invoices/PrintReceiptModal";
+import { ExportCsvModal } from "@/components/dashboard/invoices/ExportCsvModal";
 
 export default function InvoicesPage() {
   const { data: session, status: sessionStatus } = useSession();
@@ -32,6 +34,7 @@ export default function InvoicesPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [groupIdFilter, setGroupIdFilter] = useState("all");
   const [invoiceToCancel, setInvoiceToCancel] = useState<InvoiceRowData | null>(null);
+  const [invoiceToPrint, setInvoiceToPrint] = useState<InvoiceRowData | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{
     text: string;
     type: "success" | "error" | "info";
@@ -180,6 +183,10 @@ export default function InvoicesPage() {
             Gestiunea centralizată a facturilor, plăților și a datoriilor școlii.
           </p>
         </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <ExportCsvModal invoicesData={rawInvoices} />
+        </div>
       </div>
 
       {/* Feedback Toast */}
@@ -235,6 +242,7 @@ export default function InvoicesPage() {
         isLoading={isLoadingInvoices}
         onRecordPayment={handleRecordPayment}
         onCancelInvoice={handleCancelInvoice}
+        onPrintReceipt={(inv) => setInvoiceToPrint(inv)}
       />
 
       {/* Accessible Cancel Invoice Modal */}
@@ -244,6 +252,13 @@ export default function InvoicesPage() {
         isLoading={cancelMutation.isPending}
         onClose={() => setInvoiceToCancel(null)}
         onConfirm={handleConfirmCancel}
+      />
+
+      {/* Printable Receipt Modal */}
+      <PrintReceiptModal
+        invoice={invoiceToPrint}
+        isOpen={Boolean(invoiceToPrint)}
+        onClose={() => setInvoiceToPrint(null)}
       />
     </div>
   );
