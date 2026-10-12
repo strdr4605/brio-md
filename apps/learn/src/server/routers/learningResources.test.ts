@@ -13,6 +13,9 @@ vi.mock("@/lib/db", () => ({
       }),
     }),
     insert: vi.fn(),
+    delete: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue([]),
+    }),
   },
 }));
 
@@ -45,6 +48,9 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
           returning: vi.fn().mockResolvedValue([]),
         }),
       }),
+    });
+    (db.delete as any).mockReturnValue({
+      where: vi.fn().mockResolvedValue([]),
     });
   });
 
@@ -509,4 +515,108 @@ describe("Learning Resources, Lesson Assignment & Submissions", () => {
       );
     });
   });
+
+  describe("deleteLearningResource", () => {
+    it("deletes a learning resource and its associations for authorized teacher", async () => {
+      const mockResource = {
+        id: 1,
+        schoolId: 1,
+        title: "Test Resource",
+        type: "worksheet",
+        url: "https://example.com/test.pdf",
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockResource]),
+          }),
+        }),
+      });
+
+      const whereDeleteMock = vi.fn().mockResolvedValue([]);
+      (db.delete as any).mockReturnValue({
+        where: whereDeleteMock,
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      const result = await caller.deleteLearningResource({ id: 1 });
+
+      expect(result).toEqual({ success: true, id: 1 });
+      // 3 delete queries: courseLearningResources, studentResourceSubmissions, learningResources
+      expect(db.delete).toHaveBeenCalledTimes(3);
+    });
+
+    it("allows SuperAdmin to delete a resource from any school", async () => {
+      const mockResource = {
+        id: 5,
+        schoolId: 999, // different school
+        title: "SuperAdmin Resource",
+        type: "pdf",
+        url: "https://example.com/file.pdf",
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockResource]),
+          }),
+        }),
+      });
+
+      const superUser = {
+        id: "1",
+        role: "superadmin",
+        permissions: ["super"],
+        courseIds: [],
+        studentId: null,
+        schoolId: 1,
+      };
+
+      const caller = teacherRouter.createCaller({ user: superUser });
+      const result = await caller.deleteLearningResource({ id: 5 });
+
+      expect(result).toEqual({ success: true, id: 5 });
+      expect(db.delete).toHaveBeenCalledTimes(3);
+    });
+
+    it("throws NOT_FOUND when the resource does not exist", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      await expect(caller.deleteLearningResource({ id: 999 })).rejects.toThrow(
+        "Resursa nu a fost găsită.",
+      );
+    });
+
+    it("throws FORBIDDEN when teacher attempts to delete a resource from a different school", async () => {
+      const otherSchoolResource = {
+        id: 2,
+        schoolId: 99, // different school
+        title: "Forbidden Resource",
+        type: "worksheet",
+        url: "https://example.com/forbidden.pdf",
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([otherSchoolResource]),
+          }),
+        }),
+      });
+
+      const caller = teacherRouter.createCaller({ user: teacherUser });
+      await expect(caller.deleteLearningResource({ id: 2 })).rejects.toThrow(
+        "Nu aveți permisiunea de a șterge această resursă.",
+      );
+    });
+  });
 });
+
