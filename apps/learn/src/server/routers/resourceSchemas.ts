@@ -9,6 +9,7 @@ export const resourceTypeSchema = z.enum([
   "link",
   "video",
   "vdr",
+  "presentation",
 ]);
 
 export const resourceMetadataSchema = z
@@ -65,6 +66,7 @@ export const getLibraryResourcesInputSchema = z
         "link",
         "video",
         "vdr",
+        "presentation",
       ])
       .optional(),
     schoolId: z.number().optional(),

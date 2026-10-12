@@ -14,7 +14,7 @@ export type SessionResourceItem = {
     id: number;
     title: string;
     description: string | null;
-    type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr";
+    type: "pdf" | "manual" | "textbook" | "worksheet" | "minigame" | "link" | "video" | "vdr" | "presentation";
     url: string;
     metadata: unknown;
     schoolId: number | null;
@@ -38,7 +38,7 @@ export function SessionResourceBroadcastBar({
   onSelectResource,
   onBroadcastSuccess,
 }: Props) {
-  const [activeFilter, setActiveFilter] = useState<"all" | "worksheet" | "minigame" | "link">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "worksheet" | "minigame" | "pdf" | "presentation" | "link">("all");
   const [broadcastFeedback, setBroadcastFeedback] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -115,11 +115,13 @@ export function SessionResourceBroadcastBar({
 
           {/* Filter Pills + Add Button */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-wrap">
-            {(["all", "worksheet", "minigame", "link"] as const).map((filter) => {
-              const labelMap = {
+            {(["all", "worksheet", "minigame", "pdf", "presentation", "link"] as const).map((filter) => {
+              const labelMap: Record<string, string> = {
                 all: "Toate",
-                worksheet: "Fișe Lucru",
+                worksheet: "Fișe",
                 minigame: "Minijocuri",
+                pdf: "PDF",
+                presentation: "PPTX",
                 link: "Linkuri",
               };
               const count =
@@ -166,6 +168,7 @@ export function SessionResourceBroadcastBar({
               minigame: { bg: "bg-purple-50 text-purple-800 border-purple-200", label: "Minijoc" },
               link: { bg: "bg-blue-50 text-blue-800 border-blue-200", label: "Link" },
               pdf: { bg: "bg-rose-50 text-rose-800 border-rose-200", label: "PDF" },
+              presentation: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "PPTX" },
               manual: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
               textbook: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
               video: { bg: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Video" },

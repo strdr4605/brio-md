@@ -14,7 +14,8 @@ type ResourceType =
   | "minigame"
   | "link"
   | "video"
-  | "vdr";
+  | "vdr"
+  | "presentation";
 
 export type EditableResource = {
   id: number;
@@ -206,6 +207,8 @@ export function EditResourceModal({ isOpen, onClose, resource }: Props) {
                 className="w-full text-sm p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:bg-white"
               >
                 <option value="worksheet">✍️ Fișă & Practică</option>
+                <option value="presentation">📽️ Prezentare PPTX</option>
+                <option value="pdf">📑 Document PDF</option>
                 <option value="manual">📖 Lectură & Teorie</option>
                 <option value="video">🎥 Lecție Video</option>
                 <option value="minigame">🎮 Joc & Interactiv</option>

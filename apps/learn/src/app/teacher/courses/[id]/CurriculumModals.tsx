@@ -4,12 +4,15 @@ import { AttachResourceDrawer } from "./AttachResourceDrawer";
 import { ResourceSettingsModal } from "./ResourceSettingsModal";
 import { ConfirmDetachModal } from "./ConfirmDetachModal";
 import { ResourcePreviewModal } from "@/app/teacher/resources/ResourcePreviewModal";
+import { AddResourceModal } from "./AddResourceModal";
 import type { AttachedResource } from "./types";
 
 type CurriculumModalsProps = {
   courseId: number;
   isAttachDrawerOpen: boolean;
   onCloseAttachDrawer: () => void;
+  isAddModalOpen?: boolean;
+  onCloseAddModal?: () => void;
   selectedSessionForAttach: number | null;
   totalSessions: number;
   editingResource: AttachedResource | null;
@@ -34,6 +37,8 @@ export function CurriculumModals({
   courseId,
   isAttachDrawerOpen,
   onCloseAttachDrawer,
+  isAddModalOpen = false,
+  onCloseAddModal,
   selectedSessionForAttach,
   totalSessions,
   editingResource,
@@ -48,6 +53,16 @@ export function CurriculumModals({
 }: CurriculumModalsProps) {
   return (
     <>
+      {/* Direct Add/Upload Resource Modal */}
+      <AddResourceModal
+        isOpen={isAddModalOpen}
+        onClose={onCloseAddModal || (() => {})}
+        courseId={courseId}
+        initialSessionNumber={selectedSessionForAttach}
+        totalSessions={totalSessions}
+        onSuccess={onMutationSuccess}
+      />
+
       {/* Attach Resource Drawer */}
       <AttachResourceDrawer
         isOpen={isAttachDrawerOpen}

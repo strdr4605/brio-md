@@ -20,6 +20,7 @@ type Props = {
 export function CourseCurriculumView({ courseId }: Props) {
   const [selectedSessionForAttach, setSelectedSessionForAttach] = useState<number | null>(null);
   const [isAttachDrawerOpen, setIsAttachDrawerOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<AttachedResource | null>(null);
   const [detachingItem, setDetachingItem] = useState<{ id: number; title: string } | null>(null);
   const [previewResource, setPreviewResource] = useState<{
@@ -51,13 +52,13 @@ export function CourseCurriculumView({ courseId }: Props) {
   const { data: courseProgressData, isLoading: isCourseLoading, error: courseError } =
     trpc.teacher.getCourseStudentsProgress.useQuery(
       { courseId },
-      { retry: false, staleTime: 30000 },
+      { retry: 1, staleTime: 5000 },
     );
 
   const { data: rawResources = [], isLoading: isResourcesLoading, error: resourcesError } =
     trpc.resource.getCourseResources.useQuery(
       { courseId },
-      { retry: false, staleTime: 30000 },
+      { retry: 1, staleTime: 5000 },
     );
 
   const resources = rawResources as AttachedResource[];
@@ -223,6 +224,10 @@ export function CourseCurriculumView({ courseId }: Props) {
           setSelectedSessionForAttach(1);
           setIsAttachDrawerOpen(true);
         }}
+        onAddResourceClick={() => {
+          setSelectedSessionForAttach(null);
+          setIsAddModalOpen(true);
+        }}
       />
 
       {/* Metrics Banner & Cadence Control */}
@@ -323,6 +328,8 @@ export function CourseCurriculumView({ courseId }: Props) {
         courseId={courseId}
         isAttachDrawerOpen={isAttachDrawerOpen}
         onCloseAttachDrawer={() => setIsAttachDrawerOpen(false)}
+        isAddModalOpen={isAddModalOpen}
+        onCloseAddModal={() => setIsAddModalOpen(false)}
         selectedSessionForAttach={selectedSessionForAttach}
         totalSessions={effectiveTotalSessions}
         editingResource={editingResource}

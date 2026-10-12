@@ -9,7 +9,8 @@ export type ResourceType =
   | "minigame"
   | "link"
   | "video"
-  | "vdr";
+  | "vdr"
+  | "presentation";
 
 export function useResourceForm() {
   const [inputMode, setInputMode] = useState<"upload" | "link">("upload");

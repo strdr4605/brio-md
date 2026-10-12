@@ -7,7 +7,7 @@ export type UploadSuccessData = {
   filename: string;
   size: number;
   contentType: string;
-  detectedType: "pdf" | "video" | "worksheet" | "manual";
+  detectedType: "pdf" | "presentation" | "video" | "worksheet" | "manual";
 };
 
 type Props = {
@@ -28,8 +28,16 @@ export function FileUploadDropzone({ onUploadSuccess, currentFilename }: Props) 
   const detectResourceType = (
     filename: string,
     mimeType: string,
-  ): "pdf" | "video" | "worksheet" | "manual" => {
+  ): "pdf" | "presentation" | "video" | "worksheet" | "manual" => {
     const lower = filename.toLowerCase();
+    if (
+      lower.endsWith(".pptx") ||
+      lower.endsWith(".ppt") ||
+      mimeType.includes("presentationml") ||
+      mimeType.includes("powerpoint")
+    ) {
+      return "presentation";
+    }
     if (mimeType.startsWith("video/") || lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mov")) {
       return "video";
     }
@@ -92,7 +100,7 @@ export function FileUploadDropzone({ onUploadSuccess, currentFilename }: Props) 
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,.mp4,.webm,.mov,.docx,.doc,.xlsx,.xls,.png,.jpg,.jpeg"
+        accept=".pdf,.pptx,.ppt,.mp4,.webm,.mov,.docx,.doc,.xlsx,.xls,.png,.jpg,.jpeg"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -138,7 +146,13 @@ export function FileUploadDropzone({ onUploadSuccess, currentFilename }: Props) 
               {uploadedSize && <span>{(uploadedSize / (1024 * 1024)).toFixed(2)} MB</span>}
               {detectedType && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800 text-[10px]">
-                  {detectedType === "video" ? "Lecție Video" : detectedType === "pdf" ? "Document PDF" : "Fișă de Lucru"}
+                  {detectedType === "video"
+                    ? "Lecție Video"
+                    : detectedType === "pdf"
+                      ? "Document PDF"
+                      : detectedType === "presentation"
+                        ? "Prezentare PPTX"
+                        : "Fișă de Lucru"}
                 </span>
               )}
             </div>
@@ -158,7 +172,7 @@ export function FileUploadDropzone({ onUploadSuccess, currentFilename }: Props) 
                 Trage fișierul aici sau <span className="underline text-slate-900 font-bold">alege din dispozitiv</span>
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                PDF, Word, Video (max 50 MB)
+                PDF, PPTX, Word, Video (max 50 MB)
               </p>
             </div>
           </div>

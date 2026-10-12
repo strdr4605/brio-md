@@ -43,6 +43,14 @@ function getTypeBadge(type: string) {
         className: "bg-blue-50 text-blue-700 border-blue-200",
         icon: "📖",
       };
+    case "presentation":
+    case "pptx":
+    case "ppt":
+      return {
+        label: "Prezentare PPTX",
+        className: "bg-amber-50 text-amber-700 border-amber-200",
+        icon: "📽️",
+      };
     case "video":
     case "vdr":
       return {

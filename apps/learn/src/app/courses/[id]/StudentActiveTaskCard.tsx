@@ -38,6 +38,10 @@ function getResourceBadge(type: string) {
     case "pdf":
     case "manual":
       return { label: "Material / Manual", class: "bg-slate-100 text-slate-700 border-slate-200" };
+    case "presentation":
+    case "pptx":
+    case "ppt":
+      return { label: "Prezentare PPTX", class: "bg-slate-100 text-slate-700 border-slate-200" };
     default:
       return { label: type, class: "bg-slate-100 text-slate-700 border-slate-200" };
   }

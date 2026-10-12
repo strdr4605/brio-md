@@ -7,13 +7,15 @@ type CurriculumHeaderProps = {
   level?: string | null;
   description?: string | null;
   onAttachClick: () => void;
-}
+  onAddResourceClick?: () => void;
+};
 
 export function CurriculumHeader({
   name,
   level,
   description,
   onAttachClick,
+  onAddResourceClick,
 }: CurriculumHeaderProps) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -34,7 +36,7 @@ export function CurriculumHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap">
         <Link
           href="/teacher/resources"
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition border border-slate-200/70"
@@ -45,11 +47,21 @@ export function CurriculumHeader({
         <button
           type="button"
           onClick={onAttachClick}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition border border-slate-200/70 cursor-pointer"
         >
-          <span>+</span>
-          <span>Atașează Resursă</span>
+          <span>🔗</span>
+          <span>Atașează din Bibliotecă</span>
         </button>
+        {onAddResourceClick && (
+          <button
+            type="button"
+            onClick={onAddResourceClick}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-2xs"
+          >
+            <span>+</span>
+            <span>Încarcă PDF / PPTX</span>
+          </button>
+        )}
       </div>
     </div>
   );

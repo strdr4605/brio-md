@@ -107,7 +107,7 @@ export function TeacherResourcesView() {
   const totalCount = resources.length;
   const worksheetsCount = resources.filter((r) => r.type === "worksheet").length;
   const theoryCount = resources.filter(
-    (r) => r.type === "manual" || r.type === "textbook" || r.type === "pdf",
+    (r) => r.type === "manual" || r.type === "textbook" || r.type === "pdf" || r.type === "presentation",
   ).length;
   const interactiveCount = resources.filter(
     (r) =>
@@ -126,7 +126,8 @@ export function TeacherResourcesView() {
         activeTab === "theory" &&
         item.type !== "manual" &&
         item.type !== "textbook" &&
-        item.type !== "pdf"
+        item.type !== "pdf" &&
+        item.type !== "presentation"
       ) {
         return false;
       }

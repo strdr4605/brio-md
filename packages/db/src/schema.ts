@@ -286,7 +286,7 @@ export const learningResources = pgTable("learning_resources", {
   description: text("description"),
   type: varchar("type", {
     length: 50,
-    enum: ["pdf", "manual", "textbook", "worksheet", "minigame", "link", "video", "vdr"],
+    enum: ["pdf", "manual", "textbook", "worksheet", "minigame", "link", "video", "vdr", "presentation"],
   }).notNull(),
   url: text("url").notNull(),
   metadata: jsonb("metadata").$type<LearningResourceMetadata>(),

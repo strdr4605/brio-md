@@ -147,9 +147,31 @@ export function CreateResourceModal({ isOpen, onClose }: Props) {
                     setType(data.detectedType);
                   }}
                 />
-                {uploadedMeta && (type === "worksheet" || type === "manual" || type === "pdf") && (
-                  <div className="flex items-center gap-2 pt-1 text-xs">
+                {uploadedMeta && (type === "worksheet" || type === "manual" || type === "pdf" || type === "presentation") && (
+                  <div className="flex items-center gap-2 pt-1 text-xs flex-wrap">
                     <span className="font-medium text-slate-500">Destinație:</span>
+                    <button
+                      type="button"
+                      onClick={() => setType("presentation")}
+                      className={`px-2.5 py-1 rounded-lg border font-semibold transition cursor-pointer ${
+                        type === "presentation"
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      📽️ Prezentare PPTX
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setType("pdf")}
+                      className={`px-2.5 py-1 rounded-lg border font-semibold transition cursor-pointer ${
+                        type === "pdf"
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      📑 Document PDF
+                    </button>
                     <button
                       type="button"
                       onClick={() => setType("worksheet")}
@@ -165,12 +187,12 @@ export function CreateResourceModal({ isOpen, onClose }: Props) {
                       type="button"
                       onClick={() => setType("manual")}
                       className={`px-2.5 py-1 rounded-lg border font-semibold transition cursor-pointer ${
-                        type === "manual" || type === "pdf"
+                        type === "manual"
                           ? "bg-slate-900 text-white border-slate-900"
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
-                      📖 Lectură & Teorie
+                      📖 Lectură & Ghid
                     </button>
                   </div>
                 )}
