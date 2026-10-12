@@ -14,6 +14,7 @@ export type InvoiceMobileCardProps = {
   formatDate: (dateStr?: string | Date | null) => string;
   onRecordPayment?: (invoice: InvoiceRowData) => void;
   onCancelInvoice?: (invoice: InvoiceRowData) => void;
+  onPrintReceipt?: (invoice: InvoiceRowData) => void;
 };
 
 export function InvoiceMobileCard({
@@ -25,6 +26,7 @@ export function InvoiceMobileCard({
   formatDate,
   onRecordPayment,
   onCancelInvoice,
+  onPrintReceipt,
 }: InvoiceMobileCardProps) {
   const total = invoice.totalAmount ?? 0;
   const paid = invoice.paidAmount ?? 0;
@@ -121,8 +123,19 @@ export function InvoiceMobileCard({
         </div>
 
         {/* Actions Row */}
-        {(canPay || canCancel) && (
+        {(canPay || canCancel || onPrintReceipt) && (
           <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+            {onPrintReceipt && (
+              <button
+                type="button"
+                onClick={() => onPrintReceipt(invoice)}
+                className="py-2 px-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 rounded-xl transition-all active:scale-[0.98] text-center flex items-center justify-center gap-1 shrink-0"
+              >
+                <span>🖨️</span>
+                <span>Chitanță</span>
+              </button>
+            )}
+
             {canPay && onRecordPayment && (
               <button
                 type="button"

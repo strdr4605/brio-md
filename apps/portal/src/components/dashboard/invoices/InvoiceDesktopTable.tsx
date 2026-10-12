@@ -12,6 +12,7 @@ export type InvoiceDesktopTableProps = {
   getStatusBadge: (invoice: InvoiceRowData) => React.ReactNode;
   onRecordPayment?: (invoice: InvoiceRowData) => void;
   onCancelInvoice?: (invoice: InvoiceRowData) => void;
+  onPrintReceipt?: (invoice: InvoiceRowData) => void;
 };
 
 export function InvoiceDesktopTable({
@@ -23,6 +24,7 @@ export function InvoiceDesktopTable({
   getStatusBadge,
   onRecordPayment,
   onCancelInvoice,
+  onPrintReceipt,
 }: InvoiceDesktopTableProps) {
   return (
     <div className="overflow-x-auto scrollbar-thin">
@@ -140,6 +142,18 @@ export function InvoiceDesktopTable({
                 {/* Acțiuni */}
                 <td className="py-3.5 px-4 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1.5">
+                    {onPrintReceipt && (
+                      <button
+                        type="button"
+                        onClick={() => onPrintReceipt(inv)}
+                        title="Tipărește chitanță de plată"
+                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 rounded-lg transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>🖨️</span>
+                        <span>Chitanță</span>
+                      </button>
+                    )}
+
                     {canPay && onRecordPayment && (
                       <button
                         type="button"
@@ -160,7 +174,7 @@ export function InvoiceDesktopTable({
                       </button>
                     )}
 
-                    {!canPay && !canCancel && (
+                    {!canPay && !canCancel && !onPrintReceipt && (
                       <span className="text-slate-400 font-medium">—</span>
                     )}
                   </div>
