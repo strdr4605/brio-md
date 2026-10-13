@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "npm run db:push --workspace=@brio-md/portal && npm run db:seed --workspace=@brio-md/portal",
     "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up",
     "build": "npm run build:landing && npm run build:portal && npm run build:learn",
     "build:landing": "cd apps/landing && npm run build",
