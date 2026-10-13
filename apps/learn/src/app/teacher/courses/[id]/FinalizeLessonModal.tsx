@@ -91,8 +91,10 @@ export function FinalizeLessonModal({
   };
 
   const handleSubmit = () => {
+    if (!groupId) return;
+
     // Persist all student task submissions and scores in bulk
-    if (groupId && lessonSubmissions.length > 0) {
+    if (lessonSubmissions.length > 0) {
       bulkSubmissionsMutation.mutate({
         courseId,
         groupId,

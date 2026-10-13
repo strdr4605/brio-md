@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { courses, groups } from "@brio-md/db";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export type SessionUserInfo = {
@@ -63,8 +63,8 @@ export async function assertCourseTeacherAccess(
     });
   }
 
-  // Multi-tenancy enforcement: School admins cannot manage courses of another school
-  if (isSchoolAdmin && user.schoolId && course.schoolId && course.schoolId !== user.schoolId) {
+  // Multi-tenancy enforcement: non-super users cannot manage courses outside their school
+  if (!isSuper && user.schoolId && course.schoolId && course.schoolId !== user.schoolId) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You are not authorized to manage courses outside your school.",
@@ -87,32 +87,40 @@ export async function assertCourseTeacherAccess(
 
 export async function resolveGroupForCourse(
   courseId: number,
-  teacherUserId?: number | null,
-  schoolId?: number | null,
+  groupId: number,
 ) {
-  const existingGroups = await db
-    .select()
-    .from(groups)
-    .where(eq(groups.courseId, courseId));
-
-  if (existingGroups.length > 0) {
-    if (teacherUserId) {
-      const teacherGroup = existingGroups.find((g) => g.teacherId === teacherUserId);
-      if (teacherGroup) return teacherGroup;
-    }
-    return existingGroups[0];
+  if (!groupId || typeof groupId !== "number" || isNaN(groupId)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Group ID is required to access attendance.",
+    });
   }
 
-  // Create default group for this course if none exists
-  const [createdGroup] = await db
-    .insert(groups)
-    .values({
-      name: `Grupă Curs #${courseId}`,
-      courseId,
-      schoolId: schoolId || null,
-      teacherId: teacherUserId || null,
-    })
-    .returning();
+  const queryResult: any = await db
+    .select()
+    .from(groups)
+    .where(
+      and(
+        eq(groups.id, groupId),
+        eq(groups.courseId, courseId),
+        ne(groups.active, false),
+      ),
+    );
 
-  return createdGroup;
+  let group = null;
+  if (Array.isArray(queryResult)) {
+    group = queryResult[0];
+  } else if (queryResult && typeof queryResult.limit === "function") {
+    const limited = await queryResult.limit(1);
+    group = limited?.[0];
+  }
+
+  if (!group) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Specified group not found or does not belong to this course.",
+    });
+  }
+
+  return group;
 }

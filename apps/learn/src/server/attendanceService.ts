@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import {
-  groups,
   students,
   attendanceRecords,
   studentGroupEnrollments,
@@ -8,7 +7,6 @@ import {
   invoices,
 } from "@brio-md/db";
 import { and, eq, inArray, ne } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
 import {
   SessionUserInfo,
   assertCourseTeacherAccess,
@@ -29,37 +27,18 @@ export {
 
 export async function getLessonAttendanceService(params: {
   courseId: number;
-  groupId?: number;
+  groupId: number;
   date?: string;
   user: SessionUserInfo;
 }) {
-  const { courseId, user } = params;
+  const { courseId, groupId, user } = params;
   const course = await assertCourseTeacherAccess(courseId, user);
   const date = params.date || getLocalDateString();
   const todayStr = getLocalDateString();
-  const userId = parseInt(user.id, 10);
-  const userIdNumber = isNaN(userId) ? null : userId;
 
-  let group = null;
-  if (params.groupId) {
-    const [foundGroup] = await db
-      .select()
-      .from(groups)
-      .where(and(eq(groups.id, params.groupId), eq(groups.courseId, courseId)))
-      .limit(1);
+  const group = await resolveGroupForCourse(courseId, groupId);
 
-    if (!foundGroup) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Specified group does not belong to this course.",
-      });
-    }
-    group = foundGroup;
-  } else {
-    group = await resolveGroupForCourse(courseId, userIdNumber, course.schoolId);
-  }
-
-  // 1. Fetch enrolled students from studentGroupEnrollments AND studentCourseProgress
+  // 1. Fetch course progress records
   const progressList = await db
     .select({
       progressId: studentCourseProgress.id,
@@ -77,25 +56,25 @@ export async function getLessonAttendanceService(params: {
     .innerJoin(students, eq(studentCourseProgress.studentId, students.id))
     .where(eq(studentCourseProgress.courseId, courseId));
 
-  let groupEnrollments: any[] = [];
-  if (group) {
-    groupEnrollments = await db
-      .select({
-        studentId: students.id,
-        studentName: students.name,
-        studentPhone: students.phone,
-        parentName: students.parentName,
-        parentPhone: students.parentPhone,
-      })
-      .from(studentGroupEnrollments)
-      .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
-      .where(
-        and(
-          eq(studentGroupEnrollments.groupId, group.id),
-          eq(studentGroupEnrollments.status, "active"),
-        ),
-      );
-  }
+  // 2. Fetch group enrollments for this specific group
+  const groupEnrollments = await db
+    .select({
+      studentId: students.id,
+      studentName: students.name,
+      studentPhone: students.phone,
+      parentName: students.parentName,
+      parentPhone: students.parentPhone,
+    })
+    .from(studentGroupEnrollments)
+    .innerJoin(students, eq(studentGroupEnrollments.studentId, students.id))
+    .where(
+      and(
+        eq(studentGroupEnrollments.groupId, group.id),
+        inArray(studentGroupEnrollments.status, ["active", "restricted"]),
+      ),
+    );
+
+  const progressByStudent = new Map(progressList.map((p) => [p.studentId, p]));
 
   const studentMap = new Map<number, {
     studentId: number;
@@ -108,32 +87,19 @@ export async function getLessonAttendanceService(params: {
     progressStatus: string;
   }>();
 
-  for (const p of progressList) {
-    studentMap.set(p.studentId, {
-      studentId: p.studentId,
-      studentName: p.studentName,
-      studentPhone: p.studentPhone,
-      parentName: p.parentName,
-      parentPhone: p.parentPhone,
-      currentSession: p.currentSession ?? 1,
-      completedSessions: p.completedSessions ?? 0,
-      progressStatus: p.status ?? "not_started",
-    });
-  }
-
+  // Strictly scope roster to students enrolled in this group
   for (const ge of groupEnrollments) {
-    if (!studentMap.has(ge.studentId)) {
-      studentMap.set(ge.studentId, {
-        studentId: ge.studentId,
-        studentName: ge.studentName,
-        studentPhone: ge.studentPhone,
-        parentName: ge.parentName,
-        parentPhone: ge.parentPhone,
-        currentSession: 1,
-        completedSessions: 0,
-        progressStatus: "in_progress",
-      });
-    }
+    const p = progressByStudent.get(ge.studentId);
+    studentMap.set(ge.studentId, {
+      studentId: ge.studentId,
+      studentName: ge.studentName,
+      studentPhone: ge.studentPhone,
+      parentName: ge.parentName,
+      parentPhone: ge.parentPhone,
+      currentSession: p?.currentSession ?? 1,
+      completedSessions: p?.completedSessions ?? 0,
+      progressStatus: p?.status ?? "in_progress",
+    });
   }
 
   const allStudentIds = Array.from(studentMap.keys());

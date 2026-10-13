@@ -7,8 +7,15 @@ import {
   invoices,
   groups,
 } from "@brio-md/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { TRPCError } from "@trpc/server";
+import {
+  assertCourseTeacherAccess,
+  isSuperAdmin,
+  isPrivilegedUser,
+  getUserCourseIds,
+} from "../attendanceUtils";
 import {
   getLessonAttendanceService,
   markLessonAttendanceService,
@@ -28,15 +35,19 @@ const commentSchema = z
   .nullable()
   .optional();
 
+export const getCourseGroupsSchema = z.object({
+  courseId: z.number().int().positive(),
+});
+
 export const getLessonAttendanceSchema = z.object({
   courseId: z.number().int().positive().optional(),
-  groupId: z.number().int().positive().optional(),
+  groupId: z.number().int().positive(),
   date: z.string().optional(),
 });
 
 export const markLessonAttendanceSchema = z.object({
   courseId: z.number().int().positive(),
-  groupId: z.number().int().positive().optional(),
+  groupId: z.number().int().positive(),
   studentId: z.number().int().positive(),
   date: dateSchema,
   status: z.enum(["present", "late", "absent", "excused"]).nullable(),
@@ -45,14 +56,14 @@ export const markLessonAttendanceSchema = z.object({
 
 export const submitWorksheetSchema = z.object({
   courseId: z.number().int().positive(),
-  groupId: z.number().int().positive().optional(),
+  groupId: z.number().int().positive(),
   studentId: z.number().int().positive(),
   date: dateSchema.optional(),
 });
 
 export const finalizeLessonAttendanceSchema = z.object({
   courseId: z.number().int().positive(),
-  groupId: z.number().int().positive().optional(),
+  groupId: z.number().int().positive(),
   date: dateSchema,
   records: z.array(
     z.object({
@@ -73,6 +84,22 @@ export const updateLessonAttendanceSchema = z.object({
 });
 
 export const attendanceRouter = router({
+  getCourseGroups: teacherProcedure
+    .input(getCourseGroupsSchema)
+    .query(async ({ ctx, input }) => {
+      await assertCourseTeacherAccess(input.courseId, ctx.user);
+      return db
+        .select()
+        .from(groups)
+        .where(
+          and(
+            eq(groups.courseId, input.courseId),
+            ne(groups.active, false),
+          ),
+        )
+        .orderBy(asc(groups.name));
+    }),
+
   getLessonAttendance: teacherProcedure
     .input(getLessonAttendanceSchema)
     .query(
@@ -117,6 +144,24 @@ export const attendanceRouter = router({
 
       if (enrollments.length === 0) {
         return [] as any;
+      }
+
+      // Authorization guard for legacy group attendance query
+      const courseIdForGroup = enrollments[0].courseId;
+      const isSuper = isSuperAdmin(ctx.user);
+      const isPrivileged = isPrivilegedUser(ctx.user);
+      if (!isSuper && !isPrivileged) {
+        const userCourseIds = getUserCourseIds(ctx.user);
+        const hasAccess =
+          courseIdForGroup !== null &&
+          (userCourseIds.includes(courseIdForGroup) ||
+            Boolean(ctx.user.courseIds && ctx.user.courseIds.includes(courseIdForGroup)));
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not authorized to view attendance for this group.",
+          });
+        }
       }
 
       const studentIds = enrollments.map((e) => e.studentId);
@@ -272,6 +317,10 @@ export const attendanceRouter = router({
           .where(eq(groups.id, input.groupId))
           .limit(1);
         courseId = group?.courseId;
+      }
+
+      if (courseId) {
+        await assertCourseTeacherAccess(courseId, ctx.user);
       }
 
       const [created] = await db
