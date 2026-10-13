@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { phoneSchema } from "@/lib/phone";
 import { checkStudentCourseConflicts } from "../conflictChecker";
+import { getStudentLmsAccess, provisionStudentLmsAccess } from "../studentLmsService";
 
 function getStudentRoles(user?: { permissions?: string[]; role?: string; schoolId?: number | null }) {
   const permissions = user?.permissions || [];
@@ -907,5 +908,22 @@ export const studentRouter = router({
         groups: groupsMap.get(s.id) || [],
         courses: coursesMap.get(s.id) || [],
       }));
+    }),
+
+  getLmsAccess: protectedProcedure
+    .input(z.object({ studentId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return getStudentLmsAccess(ctx.user, input.studentId);
+    }),
+
+  provisionLmsAccess: protectedProcedure
+    .input(
+      z.object({
+        studentId: z.number().int().positive(),
+        password: z.string().min(6).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return provisionStudentLmsAccess(ctx.user, input);
     }),
 });

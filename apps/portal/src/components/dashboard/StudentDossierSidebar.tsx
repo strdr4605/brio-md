@@ -2,7 +2,7 @@
 
 import { ACADEMIC_LABELS } from "@brio-md/ui";
 import { formatPhone } from "@/lib/phone";
-import { PhoneIcon, SchoolIcon } from "@/components/ui/icons";
+import { PhoneIcon, SchoolIcon, KeyIcon } from "@/components/ui/icons";
 
 export type StudentDossierSidebarProps = {
   student: {
@@ -23,6 +23,7 @@ export type StudentDossierSidebarProps = {
   } | null;
   createdDateFormatted: string;
   onOpenBillingTab: () => void;
+  onOpenLmsAccess?: () => void;
 };
 
 export function StudentDossierSidebar({
@@ -30,6 +31,7 @@ export function StudentDossierSidebar({
   balanceSummary,
   createdDateFormatted,
   onOpenBillingTab,
+  onOpenLmsAccess,
 }: StudentDossierSidebarProps) {
   const initials = student.name
     ? student.name
@@ -90,6 +92,19 @@ export function StudentDossierSidebar({
             <span className="font-medium">Înscris la</span>
             <span className="font-semibold text-slate-900">{createdDateFormatted}</span>
           </div>
+          {onOpenLmsAccess && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onOpenLmsAccess}
+                className="w-full py-1.5 px-3 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200/80 hover:border-emerald-200 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition shadow-2xs"
+                title="Generează sau resetează credențialele elevului pentru learn.brio.md"
+              >
+                <KeyIcon className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Acces LMS (learn.brio.md)</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Legal Representative Details */}

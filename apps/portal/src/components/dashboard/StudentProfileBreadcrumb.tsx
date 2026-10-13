@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { ACADEMIC_LABELS } from "@brio-md/ui";
-import { ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
+import { ChevronLeftIcon, PlusIcon, KeyIcon } from "@/components/ui/icons";
 
 export type StudentProfileBreadcrumbProps = {
   onOpenEnroll: () => void;
   onOpenEdit: () => void;
+  onOpenLmsAccess?: () => void;
 };
 
 export function StudentProfileBreadcrumb({
   onOpenEnroll,
   onOpenEdit,
+  onOpenLmsAccess,
 }: StudentProfileBreadcrumbProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -24,6 +26,17 @@ export function StudentProfileBreadcrumb({
       </Link>
 
       <div className="flex items-center gap-2 w-full sm:w-auto">
+        {onOpenLmsAccess && (
+          <button
+            type="button"
+            onClick={onOpenLmsAccess}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 shadow-xs transition"
+            title="Generează sau resetează credențialele elevului pentru learn.brio.md"
+          >
+            <KeyIcon className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Acces LMS</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={onOpenEnroll}
