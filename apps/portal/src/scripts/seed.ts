@@ -1369,7 +1369,7 @@ async function seed() {
       title: "Video Listening: Daily English Conversation A1",
       description: "Dialoguri și exerciții audio-video de înțelegere orală și conversație.",
       type: "video" as const,
-      url: "https://www.youtube.com/watch?v=jW0_t2K0qYQ",
+      url: "https://youtu.be/gD-eIoSCHkI",
       metadata: {
         level: "beginner",
       },
