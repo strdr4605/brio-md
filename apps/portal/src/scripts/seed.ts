@@ -236,6 +236,61 @@ startxref
 848
 %%EOF
 `,
+    "1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf": `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 620 >>
+stream
+BT
+/F1 18 Tf
+50 740 Td
+(Primul an de facultate este o perioada plina de schimbari) Tj
+/F1 12 Tf
+0 -25 Td
+0 -18 Td
+(Vibe Academy - English B2 Translation & Reading Comprehension) Tj
+0 -20 Td
+(Text de tradus in limba engleza:) Tj
+0 -18 Td
+(Tranzitia de la liceu la viata universitara aduce libertate, dar si responsabilitate.) Tj
+0 -18 Td
+(Studentii invata sa isi gestioneze timpul si sa colaboreze in echipe diverse.) Tj
+0 -25 Td
+(Task Instructions:) Tj
+0 -18 Td
+(1. Translate the paragraph above into academic English.) Tj
+0 -18 Td
+(2. Identify 3 phrasal verbs related to adapting to new environments.) Tj
+0 -18 Td
+(3. Expected time: 20 minutes. Do not use automated translation tools.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+982
+%%EOF
+`,
   };
 
   for (const [filename, content] of Object.entries(pdfFiles)) {
@@ -1185,6 +1240,7 @@ async function seed() {
       or(
         like(learningResources.url, "%example.com%"),
         like(learningResources.url, "%28848418%"),
+        like(learningResources.title, "%Abstract_template%"),
       ),
     );
   await db
@@ -1193,8 +1249,25 @@ async function seed() {
       or(
         like(courseMaterials.url, "%example.com%"),
         like(courseMaterials.url, "%28848418%"),
+        like(courseMaterials.title, "%Abstract_template%"),
       ),
     );
+
+  // Purge any orphan local file records whose file is missing from disk
+  const existingLocalResources = await db
+    .select()
+    .from(learningResources)
+    .where(like(learningResources.url, "/api/files/%"));
+
+  for (const r of existingLocalResources) {
+    const relPath = r.url.replace(/^\/api\/files\//, "");
+    const fullPath = path.resolve(__dirname, "../../../learn/uploads", relPath);
+    if (!fs.existsSync(fullPath)) {
+      await db.delete(learningResources).where(eq(learningResources.id, r.id));
+      await db.delete(courseMaterials).where(eq(courseMaterials.url, r.url));
+      console.log(`🗑️ Removed broken local resource with missing file: ${r.title} (${r.url})`);
+    }
+  }
 
   const sampleResources = [
     {
