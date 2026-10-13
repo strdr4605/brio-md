@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, like } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import {
   schools,
@@ -72,6 +72,178 @@ function getPastSessionDates(scheduleDays: string[], count = 2): string[] {
     }
   }
   return dates.sort();
+}
+
+function ensureSamplePdfsExist(): void {
+  const targetDir = path.resolve(__dirname, "../../../learn/uploads/resources");
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const pdfFiles: Record<string, string> = {
+    "lego-spike-prime-manual.pdf": `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 577 >>
+stream
+BT
+/F1 20 Tf
+50 740 Td
+(LEGO SPIKE Prime - Ghid Didactic & Laborator) Tj
+/F1 12 Tf
+0 -25 Td
+0 -18 Td
+(Vibe Academy - Curriculum Robotica si STEM) Tj
+0 -18 Td
+(Modulul 1: Introducere in Motoare si Senzori Ultrasonici) Tj
+0 -18 Td
+(1. Notiuni introductive despre unitatea centrala SPIKE Hub.) Tj
+0 -18 Td
+(2. Conectarea senzorului de distanta la portul B.) Tj
+0 -18 Td
+(3. Algoritmul de detectare a obstacolelor si oprire automata.) Tj
+0 -18 Td
+(4. Calibrarea vitezei motoarelor pas-cu-pas.) Tj
+0 -18 Td
+(Exemplu practic: Programarea deplasarii autonome in linie dreapta.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+939
+%%EOF
+`,
+    "math-logic-worksheet.pdf": `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 516 >>
+stream
+BT
+/F1 20 Tf
+50 740 Td
+(Fisa de Lucru: Logica si Gandire Computationala) Tj
+/F1 12 Tf
+0 -25 Td
+0 -18 Td
+(Vibe Academy - Curs Matematica Aplicata & Logica) Tj
+0 -18 Td
+(Exercitiul 1: Identificarea tiparelor numerice si algoritmice.) Tj
+0 -18 Td
+(Exercitiul 2: Teorema lui Pitagora si aplicatii in spatiul 2D.) Tj
+0 -18 Td
+(Exercitiul 3: Rezolvarea labirintului logic prin backtracking.) Tj
+0 -18 Td
+(Exercitiul 4: Operatii cu fractii si reprezentari grafice.) Tj
+0 -18 Td
+(Timp recomandat de lucru: 45 minute.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+878
+%%EOF
+`,
+    "english-grammar-practice.pdf": `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 486 >>
+stream
+BT
+/F1 20 Tf
+50 740 Td
+(English Grammar in Use - Practical Exercises A1-A2) Tj
+/F1 12 Tf
+0 -25 Td
+0 -18 Td
+(Vibe Academy - General English Beginners) Tj
+0 -18 Td
+(Unit 1: Present Simple vs Present Continuous.) Tj
+0 -18 Td
+(Unit 2: Regular and Irregular Verbs in Past Simple.) Tj
+0 -18 Td
+(Unit 3: Asking Questions and Conversational Dialogues.) Tj
+0 -18 Td
+(Exercise A: Fill in the missing verb forms.) Tj
+0 -18 Td
+(Exercise B: Match the audio phrases with the correct response.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+848
+%%EOF
+`,
+  };
+
+  for (const [filename, content] of Object.entries(pdfFiles)) {
+    const filePath = path.join(targetDir, filename);
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, content, "utf8");
+    }
+  }
 }
 
 async function seed() {
@@ -1003,17 +1175,37 @@ async function seed() {
   );
 
   // 10. Learning Resources & Course Curriculum Links (idempotent)
-  // Incorporating working robotics minigames, math simulations, worksheets, and pdf manuals
+  // Ensure sample static PDF documents exist in apps/learn/uploads/resources/
+  ensureSamplePdfsExist();
+
+  // Clean up legacy broken/placeholder resources
+  await db
+    .delete(learningResources)
+    .where(
+      or(
+        like(learningResources.url, "%example.com%"),
+        like(learningResources.url, "%28848418%"),
+      ),
+    );
+  await db
+    .delete(courseMaterials)
+    .where(
+      or(
+        like(courseMaterials.url, "%example.com%"),
+        like(courseMaterials.url, "%28848418%"),
+      ),
+    );
+
   const sampleResources = [
     {
-      title: "Scratch: Robot Rover Obstacle Avoidance",
+      title: "Scratch: Simulator Robot & Algoritmi",
       description:
         "Simulare algoritmică în Scratch pentru navigarea autonomă a robotului cu senzori ultrasonici.",
       type: "minigame" as const,
-      url: "https://scratch.mit.edu/projects/28848418/",
+      url: "https://scratch.mit.edu/projects/271009701/",
       metadata: {
         maxScore: 100,
-        instructions: "Ghidează robotul prin labirint evitând coliziunea cu pereții.",
+        instructions: "Ghidează robotul prin labirint evitând coliziunea cu obstacolele.",
         level: "intermediate",
       },
       courseId: courseRobotics.id,
@@ -1038,7 +1230,7 @@ async function seed() {
       title: "LEGO SPIKE Prime Ghid Didactic & Manual de Laborator",
       description: "Ghid complet pentru construcția și programarea modelelor robotice SPIKE Prime.",
       type: "pdf" as const,
-      url: "https://example.com/manuals/spike-prime-lab-guide.pdf",
+      url: "/api/files/resources/lego-spike-prime-manual.pdf",
       metadata: {
         level: "intermediate",
         guidelines: "De studiat înainte de sesiunea practică de asamblare.",
@@ -1078,10 +1270,10 @@ async function seed() {
       title: "Fișă de Lucru: Probleme de Logică și Algoritmi",
       description: "Exerciții aplicative de gândire computațională și deducție logică.",
       type: "worksheet" as const,
-      url: "https://example.com/worksheets/math-logic-puzzles.pdf",
+      url: "/api/files/resources/math-logic-worksheet.pdf",
       metadata: {
         maxScore: 50,
-        instructions: "Rezolvați exercițiile 1-5 din secțiunea de logică computațională.",
+        instructions: "Rezolvați exercițiile 1-4 din secțiunea de logică computațională.",
         level: "intermediate",
       },
       courseId: courseMath.id,
@@ -1089,10 +1281,10 @@ async function seed() {
       orderIndex: 1,
     },
     {
-      title: "English Grammar in Use (5th Edition)",
-      description: "Manual de referință și exerciții pentru nivelul A1-A2.",
+      title: "English Grammar in Use - Fișă de Exerciții A1-A2",
+      description: "Manual de referință și exerciții practice pentru nivelul A1-A2.",
       type: "textbook" as const,
-      url: "https://example.com/materials/english-grammar-in-use.pdf",
+      url: "/api/files/resources/english-grammar-practice.pdf",
       metadata: {
         level: "beginner",
       },
@@ -1101,10 +1293,10 @@ async function seed() {
       orderIndex: 1,
     },
     {
-      title: "Exerciții Audio de Înțelegere Orală A1",
-      description: "Dialoguri și exerciții de pronunție pentru începători.",
-      type: "link" as const,
-      url: "https://example.com/audio/a1-listening",
+      title: "Video Listening: Daily English Conversation A1",
+      description: "Dialoguri și exerciții audio-video de înțelegere orală și conversație.",
+      type: "video" as const,
+      url: "https://www.youtube.com/watch?v=jW0_t2K0qYQ",
       metadata: {
         level: "beginner",
       },
@@ -1134,6 +1326,18 @@ async function seed() {
         })
         .returning();
       console.log(`✅ Created Learning Resource: ${res.title} (${res.type})`);
+    } else {
+      [res] = await db
+        .update(learningResources)
+        .set({
+          url: resData.url,
+          type: resData.type,
+          description: resData.description,
+          metadata: resData.metadata,
+        })
+        .where(eq(learningResources.id, res.id))
+        .returning();
+      console.log(`🔄 Updated Learning Resource: ${res.title} (${res.type})`);
     }
 
     // Link to Course Learning Resources junction table
@@ -1168,15 +1372,16 @@ async function seed() {
       .where(and(eq(courseMaterials.courseId, courseId), eq(courseMaterials.title, res.title)))
       .limit(1);
 
+    const legacyType =
+      res.type === "textbook"
+        ? "textbook"
+        : res.type === "pdf" || res.type === "worksheet"
+          ? "manual"
+          : res.type === "link"
+            ? "link"
+            : "file";
+
     if (!legacyMat) {
-      const legacyType =
-        res.type === "textbook"
-          ? "textbook"
-          : res.type === "pdf"
-            ? "manual"
-            : res.type === "link"
-              ? "link"
-              : "file";
       await db.insert(courseMaterials).values({
         courseId,
         title: res.title,
@@ -1184,6 +1389,15 @@ async function seed() {
         url: res.url,
         orderIndex,
       });
+    } else {
+      await db
+        .update(courseMaterials)
+        .set({
+          type: legacyType,
+          url: res.url,
+          orderIndex,
+        })
+        .where(eq(courseMaterials.id, legacyMat.id));
     }
   }
   console.log("✅ Configured learning resources, curriculum syllabus, and minigames");
