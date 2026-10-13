@@ -1377,6 +1377,21 @@ async function seed() {
       sessionNumber: 2,
       orderIndex: 1,
     },
+    {
+      title: "Primul an de facultate este o perioadă plină de schimbări",
+      description:
+        "The task is to translate this text in English. Please do not use AI and do not cheat. The best what you can do first, to try by yourself, and what you really do not know we will discuss on the lecture. Good Luck!",
+      type: "pdf" as const,
+      url: "/api/files/resources/1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf",
+      metadata: {
+        level: "B2",
+        guidelines: "Do it individually, please!",
+        instructions: "Expected time: 20 mins",
+      },
+      courseId: courseEnglish.id,
+      sessionNumber: 3,
+      orderIndex: 1,
+    },
   ];
 
   for (const resItem of sampleResources) {
