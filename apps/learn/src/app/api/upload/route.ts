@@ -54,8 +54,17 @@ export const ALLOWED_EXTENSIONS = new Set([
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    let session = null;
+    try {
+      session = await auth();
+    } catch {
+      return NextResponse.json(
+        { error: "Autentificare necesară pentru a încărca fișiere." },
+        { status: 401 },
+      );
+    }
+
+    if (!session?.user || session.user.expired) {
       return NextResponse.json(
         { error: "Autentificare necesară pentru a încărca fișiere." },
         { status: 401 },

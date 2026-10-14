@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/");
   }
 
-  if (!session?.user || (session.user as any).expired) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 

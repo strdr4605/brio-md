@@ -9,9 +9,14 @@ export default async function CourseDetailPage({
 }: {
   params: Promise<{ id: string }> | { id: string };
 }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
-  if (!session?.user) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 
