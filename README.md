@@ -9,12 +9,13 @@ School management platform for Vibe Academy (Moldova).
 **Prerequisites:** Docker, Node.js 20+, npm.
 
 ```bash
-# 1. Clone repository and set up environment
+# 1. Clone repository, install dependencies, and set up environment
 git clone <repo-url> && cd brio-md
+npm install
 cp .env.example .env
 
-# 2. Initialize database schema & rich showcase seed data
-# (Ensure PostgreSQL container is running: docker compose up -d db)
+# 2. Start PostgreSQL container & initialize showcase seed data
+docker compose up -d db
 npm run setup
 
 # 3. Start development services with hot reload
