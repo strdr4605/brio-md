@@ -66,14 +66,14 @@ describe("attendanceRouter", () => {
     it("throws UNAUTHORIZED when user is null", async () => {
       const caller = attendanceRouter.createCaller({ user: null });
       await expect(
-        caller.getLessonAttendance({ courseId: 1 }),
+        caller.getLessonAttendance({ courseId: 1, groupId: 10 }),
       ).rejects.toThrow(TRPCError);
     });
 
     it("throws FORBIDDEN when user has student role", async () => {
       const caller = attendanceRouter.createCaller({ user: mockStudentUser });
       await expect(
-        caller.getLessonAttendance({ courseId: 1 }),
+        caller.getLessonAttendance({ courseId: 1, groupId: 10 }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
 
@@ -97,7 +97,10 @@ describe("attendanceRouter", () => {
 
       const caller = attendanceRouter.createCaller({ user: unassignedTeacher });
       await expect(
-        caller.getLessonAttendance({ courseId: 1 }),
+        caller.getCourseGroups({ courseId: 1 }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(
+        caller.getLessonAttendance({ courseId: 1, groupId: 10 }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
 
@@ -118,7 +121,7 @@ describe("attendanceRouter", () => {
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockAdminUser });
-      const result = await caller.getLessonAttendance({ courseId: 1 });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10 });
       expect(result.course.id).toBe(1);
     });
 
@@ -153,7 +156,7 @@ describe("attendanceRouter", () => {
       }));
 
       const caller = attendanceRouter.createCaller({ user: teacherAssignedViaArray });
-      const result = await caller.getLessonAttendance({ courseId: 1 });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10 });
       expect(result.course.id).toBe(1);
     });
 
@@ -168,7 +171,7 @@ describe("attendanceRouter", () => {
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       await expect(
-        caller.getLessonAttendance({ courseId: 9999 }),
+        caller.getLessonAttendance({ courseId: 9999, groupId: 10 }),
       ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
@@ -195,6 +198,7 @@ describe("attendanceRouter", () => {
       await expect(
         caller.markLessonAttendance({
           courseId: 1,
+          groupId: 10,
           studentId: 101,
           date: "2026-10-05",
           status: "present",
@@ -204,6 +208,7 @@ describe("attendanceRouter", () => {
       await expect(
         caller.submitWorksheet({
           courseId: 1,
+          groupId: 10,
           studentId: 101,
           date: "2026-10-05",
         }),
@@ -212,6 +217,7 @@ describe("attendanceRouter", () => {
       await expect(
         caller.finalizeLessonAttendance({
           courseId: 1,
+          groupId: 10,
           date: "2026-10-05",
           records: [{ studentId: 101, status: "absent" }],
         }),
@@ -284,18 +290,12 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudentsProgress);
-            if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve(mockAttendance);
-            if (selectStep === 6) return Promise.resolve(mockInvoices);
+            if (selectStep === 3) return Promise.resolve(mockAttendance);
+            if (selectStep === 4) return Promise.resolve(mockInvoices);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudentsProgress);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudentsProgress),
           })),
         })),
       }));
@@ -303,6 +303,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const result = await caller.getLessonAttendance({
         courseId: 1,
+        groupId: 10,
         date: "2026-10-05",
       });
 
@@ -349,7 +350,7 @@ describe("attendanceRouter", () => {
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1 });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10 });
       expect(result.date).toBe(todayStr);
     });
 
@@ -375,24 +376,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
+            if (selectStep === 3) return Promise.resolve(mockAttendance);
             if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve(mockAttendance);
-            if (selectStep === 6) return Promise.resolve([]);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
 
       const sPresent = result.students.find((s) => s.studentId === 201);
       const sLate = result.students.find((s) => s.studentId === 202);
@@ -434,24 +429,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
-            if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve([]);
-            if (selectStep === 6) return Promise.resolve(draftInvoices);
+            if (selectStep === 3) return Promise.resolve([]);
+            if (selectStep === 4) return Promise.resolve(draftInvoices);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
       const student = result.students[0];
 
       expect(student.hasDebt).toBe(false);
@@ -482,24 +471,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
-            if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve([]);
-            if (selectStep === 6) return Promise.resolve(overdueZeroRemainder);
+            if (selectStep === 3) return Promise.resolve([]);
+            if (selectStep === 4) return Promise.resolve(overdueZeroRemainder);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
       const student = result.students[0];
 
       expect(student.hasDebt).toBe(true);
@@ -530,24 +513,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
-            if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve([]);
-            if (selectStep === 6) return Promise.resolve(overpaidInvoice);
+            if (selectStep === 3) return Promise.resolve([]);
+            if (selectStep === 4) return Promise.resolve(overpaidInvoice);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
       const student = result.students[0];
 
       expect(student.debtAmount).toBe(0);
@@ -567,24 +544,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
-            if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve([]);
-            if (selectStep === 6) throw new Error("Invoices table timeout");
+            if (selectStep === 3) return Promise.resolve([]);
+            if (selectStep === 4) throw new Error("Invoices table timeout");
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
 
       expect(result.students).toHaveLength(1);
       expect(result.students[0].hasDebt).toBe(false);
@@ -608,48 +579,150 @@ describe("attendanceRouter", () => {
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
 
       expect(result.students).toEqual([]);
       expect(result.course.id).toBe(1);
     });
 
-    it("automatically creates a default group when course has no existing groups", async () => {
+    it("throws BAD_REQUEST when groupId is omitted or invalid", async () => {
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      await expect(
+        caller.getLessonAttendance({ courseId: 1 } as any),
+      ).rejects.toThrow();
+    });
+
+    it("throws NOT_FOUND when group does not belong to course or does not exist", async () => {
       let selectStep = 0;
       (db.select as any).mockImplementation(() => ({
         from: vi.fn().mockImplementation(() => ({
           where: vi.fn().mockImplementation(() => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
-            if (selectStep === 2) return Promise.resolve([]); // No groups!
+            if (selectStep === 2) return Promise.resolve([]); // Not found!
             return Promise.resolve([]);
           }),
-          innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockResolvedValue([]),
-          })),
-        })),
-      }));
-
-      const createdGroup = {
-        id: 99,
-        name: "Grupă Curs #1",
-        courseId: 1,
-        schoolId: 1,
-        teacherId: 2,
-      };
-
-      (db.insert as any).mockImplementation(() => ({
-        values: vi.fn().mockImplementation(() => ({
-          returning: vi.fn().mockResolvedValue([createdGroup]),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      await expect(
+        caller.getLessonAttendance({ courseId: 1, groupId: 999 }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    });
 
-      expect(result.group).toBeDefined();
-      expect(result.group?.id).toBe(99);
-      expect(result.group?.name).toBe("Grupă Curs #1");
+    it("getCourseGroups returns all active groups for the course ordered by name", async () => {
+      const mockCourseGroups = [
+        { id: 10, name: "Grupa A - Sâmbătă 10:00", courseId: 1, active: true },
+        { id: 11, name: "Grupa B - Sâmbătă 12:00", courseId: 1, active: true },
+      ];
+
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => ({
+            limit: vi.fn().mockResolvedValue([mockCourse]),
+            orderBy: vi.fn().mockResolvedValue(mockCourseGroups),
+          })),
+        })),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      const groupsResult = await caller.getCourseGroups({ courseId: 1 });
+      expect(groupsResult).toHaveLength(2);
+      expect(groupsResult[0].name).toBe("Grupa A - Sâmbătă 10:00");
+      expect(groupsResult[1].name).toBe("Grupa B - Sâmbătă 12:00");
+    });
+
+    it("scopes roster strictly to students enrolled in the specified group", async () => {
+      const mockStudentsProgress = [
+        { progressId: 1, studentId: 101, currentSession: 1, completedSessions: 0, status: "in_progress", studentName: "Group A Student" },
+        { progressId: 2, studentId: 102, currentSession: 1, completedSessions: 0, status: "in_progress", studentName: "Group B Student" },
+      ];
+
+      const groupAEnrollments = [
+        { studentId: 101, studentName: "Group A Student", studentPhone: null, parentName: null, parentPhone: null },
+      ];
+
+      let selectStep = 0;
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => {
+            selectStep++;
+            if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
+            if (selectStep === 2) return Promise.resolve([mockGroup]);
+            if (selectStep === 3) return Promise.resolve(mockStudentsProgress);
+            if (selectStep === 4) return Promise.resolve(groupAEnrollments);
+            if (selectStep === 5) return Promise.resolve([]);
+            if (selectStep === 6) return Promise.resolve([]);
+            return Promise.resolve([]);
+          }),
+          innerJoin: vi.fn().mockImplementation(() => ({
+            where: vi.fn().mockImplementation(() => {
+              selectStep++;
+              if (selectStep === 3) return Promise.resolve(mockStudentsProgress);
+              if (selectStep === 4) return Promise.resolve(groupAEnrollments);
+              return Promise.resolve([]);
+            }),
+          })),
+        })),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
+
+      expect(result.students).toHaveLength(1);
+      expect(result.students[0].studentId).toBe(101);
+      expect(result.students[0].studentName).toBe("Group A Student");
+    });
+
+    it("returns empty roster when a group has 0 enrollments without leaking students from other groups", async () => {
+      const mockStudentsProgress = [
+        { progressId: 1, studentId: 101, currentSession: 1, completedSessions: 0, status: "in_progress", studentName: "Other Group Student" },
+      ];
+
+      let selectStep = 0;
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => {
+            selectStep++;
+            if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
+            if (selectStep === 2) return Promise.resolve([mockGroup]);
+            return Promise.resolve([]);
+          }),
+          innerJoin: vi.fn().mockImplementation(() => ({
+            where: vi.fn().mockImplementation(() => {
+              selectStep++;
+              if (selectStep === 3) return Promise.resolve(mockStudentsProgress);
+              return Promise.resolve([]);
+            }),
+          })),
+        })),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
+
+      expect(result.students).toHaveLength(0);
+      expect(result.students).toEqual([]);
+    });
+
+    it("throws NOT_FOUND when group is inactive", async () => {
+      let selectStep = 0;
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => {
+            selectStep++;
+            if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
+            // Group query (filtered by active !== false) returns empty []
+            return Promise.resolve([]);
+          }),
+        })),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      await expect(
+        caller.getLessonAttendance({ courseId: 1, groupId: 99 }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
     it("correctly computes worksheetCompleted based on completedSessions >= currentSession", async () => {
@@ -665,24 +738,18 @@ describe("attendanceRouter", () => {
             selectStep++;
             if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
             if (selectStep === 2) return Promise.resolve([mockGroup]);
-            if (selectStep === 3) return Promise.resolve(mockStudents);
+            if (selectStep === 3) return Promise.resolve([]);
             if (selectStep === 4) return Promise.resolve([]);
-            if (selectStep === 5) return Promise.resolve([]);
-            if (selectStep === 6) return Promise.resolve([]);
             return Promise.resolve([]);
           }),
           innerJoin: vi.fn().mockImplementation(() => ({
-            where: vi.fn().mockImplementation(() => {
-              selectStep++;
-              if (selectStep === 3) return Promise.resolve(mockStudents);
-              return Promise.resolve([]);
-            }),
+            where: vi.fn().mockResolvedValue(mockStudents),
           })),
         })),
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
 
       const sCompleted = result.students.find((s) => s.studentId === 401);
       const sBehind = result.students.find((s) => s.studentId === 402);
@@ -727,7 +794,7 @@ describe("attendanceRouter", () => {
       }));
 
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
-      const result = await caller.getLessonAttendance({ courseId: 1, date: "2026-10-05" });
+      const result = await caller.getLessonAttendance({ courseId: 1, groupId: 10, date: "2026-10-05" });
 
       expect(result.students).toHaveLength(1);
       expect(result.students[0].studentId).toBe(501);
@@ -771,6 +838,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 102,
         date: "2026-10-05",
         status: "late",
@@ -814,6 +882,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 102,
         date: "2026-10-05",
         status: "present",
@@ -858,6 +927,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 103,
         date: "2026-10-05",
         status: "absent",
@@ -887,6 +957,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 102,
         date: "2026-10-05",
         status: null,
@@ -930,6 +1001,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.quickMark({
         courseId: 1,
+        groupId: 10,
         studentId: 102,
         date: "2026-10-05",
         status: "present",
@@ -946,6 +1018,7 @@ describe("attendanceRouter", () => {
       await expect(
         caller.markLessonAttendance({
           courseId: 1,
+          groupId: 10,
           studentId: 102,
           date: "invalid-date",
           status: "present",
@@ -988,6 +1061,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.submitWorksheet({
         courseId: 1,
+        groupId: 10,
         studentId: 105,
         date: "2026-10-05",
       });
@@ -1027,6 +1101,7 @@ describe("attendanceRouter", () => {
       const todayStr = getLocalDateString();
       const res = await caller.submitWorksheet({
         courseId: 1,
+        groupId: 10,
         studentId: 105,
       });
 
@@ -1072,6 +1147,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.finalizeLessonAttendance({
         courseId: 1,
+        groupId: 10,
         date: "2026-10-05",
         records: mockRecords,
       });
@@ -1096,6 +1172,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.finalizeLessonAttendance({
         courseId: 1,
+        groupId: 10,
         date: "2026-10-05",
         records: [],
       });
@@ -1132,6 +1209,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.finalizeLessonAttendance({
         courseId: 1,
+        groupId: 10,
         date: "2026-10-05",
         records: [
           { studentId: 601, status: "present", comment: "Present" },
@@ -1234,6 +1312,7 @@ describe("attendanceRouter", () => {
 
       const resPresent = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 701,
         date: "2026-10-05",
         status: "present",
@@ -1242,6 +1321,7 @@ describe("attendanceRouter", () => {
 
       const resLate = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 702,
         date: "2026-10-05",
         status: "late",
@@ -1272,6 +1352,7 @@ describe("attendanceRouter", () => {
       const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
       const res = await caller.markLessonAttendance({
         courseId: 1,
+        groupId: 10,
         studentId: 703,
         date: "2026-10-05",
         status: null,

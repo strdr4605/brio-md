@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { groups, attendanceRecords, studentCourseProgress } from "@brio-md/db";
+import { attendanceRecords, studentCourseProgress } from "@brio-md/db";
 import { and, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import {
@@ -12,43 +12,32 @@ import {
 async function resolveGroupOrThrow(
   courseId: number,
   groupId: number | undefined,
-  userIdNumber: number | null,
-  schoolId: number | null | undefined,
 ) {
-  if (groupId) {
-    const [foundGroup] = await db
-      .select()
-      .from(groups)
-      .where(and(eq(groups.id, groupId), eq(groups.courseId, courseId)))
-      .limit(1);
-
-    if (!foundGroup) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Specified group does not belong to this course.",
-      });
-    }
-    return foundGroup;
+  if (!groupId || typeof groupId !== "number" || isNaN(groupId)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Group ID is required to record attendance.",
+    });
   }
 
-  return resolveGroupForCourse(courseId, userIdNumber, schoolId);
+  return resolveGroupForCourse(courseId, groupId);
 }
 
 export async function markLessonAttendanceService(params: {
   courseId: number;
-  groupId?: number;
+  groupId: number;
   studentId: number;
   date: string;
   status: "present" | "late" | "absent" | "excused" | null;
   comment?: string | null;
   user: SessionUserInfo;
 }) {
-  const { courseId, studentId, date, status, comment, user } = params;
-  const course = await assertCourseTeacherAccess(courseId, user);
+  const { courseId, groupId, studentId, date, status, comment, user } = params;
+  await assertCourseTeacherAccess(courseId, user);
   const userId = parseInt(user.id, 10);
   const userIdNumber = isNaN(userId) ? null : userId;
 
-  const group = await resolveGroupOrThrow(courseId, params.groupId, userIdNumber, course.schoolId);
+  const group = await resolveGroupOrThrow(courseId, groupId);
 
   if (status === null) {
     await db
@@ -99,18 +88,18 @@ export async function markLessonAttendanceService(params: {
 
 export async function submitWorksheetService(params: {
   courseId: number;
-  groupId?: number;
+  groupId: number;
   studentId: number;
   date?: string;
   user: SessionUserInfo;
 }) {
-  const { courseId, studentId, user } = params;
+  const { courseId, groupId, studentId, user } = params;
   const course = await assertCourseTeacherAccess(courseId, user);
   const date = params.date || getLocalDateString();
   const userId = parseInt(user.id, 10);
   const userIdNumber = isNaN(userId) ? null : userId;
 
-  const group = await resolveGroupOrThrow(courseId, params.groupId, userIdNumber, course.schoolId);
+  const group = await resolveGroupOrThrow(courseId, groupId);
 
   const [saved] = await db
     .insert(attendanceRecords)
@@ -180,7 +169,7 @@ export async function submitWorksheetService(params: {
 
 export async function finalizeLessonAttendanceService(params: {
   courseId: number;
-  groupId?: number;
+  groupId: number;
   date: string;
   records: Array<{
     studentId: number;
@@ -189,44 +178,51 @@ export async function finalizeLessonAttendanceService(params: {
   }>;
   user: SessionUserInfo;
 }) {
-  const { courseId, date, records, user } = params;
-  const course = await assertCourseTeacherAccess(courseId, user);
+  const { courseId, groupId, date, records, user } = params;
+  await assertCourseTeacherAccess(courseId, user);
   const userId = parseInt(user.id, 10);
   const userIdNumber = isNaN(userId) ? null : userId;
 
-  const group = await resolveGroupOrThrow(courseId, params.groupId, userIdNumber, course.schoolId);
+  const group = await resolveGroupOrThrow(courseId, groupId);
 
-  const results = await Promise.all(
-    records.map(async (rec) => {
-      const [saved] = await db
-        .insert(attendanceRecords)
-        .values({
-          groupId: group.id,
-          courseId,
-          studentId: rec.studentId,
-          date,
-          status: rec.status,
-          comment: rec.comment || null,
-          markedByUserId: userIdNumber,
-          updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [
-            attendanceRecords.groupId,
-            attendanceRecords.studentId,
-            attendanceRecords.date,
-          ],
-          set: {
+  const saveBatch = async (client: typeof db) => {
+    return Promise.all(
+      records.map(async (rec) => {
+        const [saved] = await client
+          .insert(attendanceRecords)
+          .values({
+            groupId: group.id,
+            courseId,
+            studentId: rec.studentId,
+            date,
             status: rec.status,
             comment: rec.comment || null,
             markedByUserId: userIdNumber,
             updatedAt: new Date(),
-          },
-        })
-        .returning();
-      return saved;
-    }),
-  );
+          })
+          .onConflictDoUpdate({
+            target: [
+              attendanceRecords.groupId,
+              attendanceRecords.studentId,
+              attendanceRecords.date,
+            ],
+            set: {
+              status: rec.status,
+              comment: rec.comment || null,
+              markedByUserId: userIdNumber,
+              updatedAt: new Date(),
+            },
+          })
+          .returning();
+        return saved;
+      }),
+    );
+  };
+
+  const results = typeof (db as any).transaction === "function"
+    ? await (db as any).transaction(async (tx: any) => saveBatch(tx))
+    : await saveBatch(db);
 
   return { success: true, count: results.length, records: results };
 }
+
