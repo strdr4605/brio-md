@@ -4,9 +4,14 @@ import { DoorIcon } from "@/components/ui/icons";
 import { RollerDoorClient } from "./RollerDoorClient";
 
 export default async function RollerDoorPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
-  if (!session?.user) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 

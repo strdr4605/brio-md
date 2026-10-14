@@ -34,7 +34,7 @@ export default async function LoginPage({
     // If JWT decryption fails or DB is temporarily down, treat as unauthenticated
   }
 
-  if (session?.user) {
+  if (session?.user && !session.user.expired) {
     redirect("/dashboard");
   }
 

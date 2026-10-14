@@ -49,7 +49,12 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Treat as unauthenticated if auth verification fails
+  }
 
   return (
     <html lang="ro">

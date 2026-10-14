@@ -7,9 +7,14 @@ import { TeacherNavbar } from "@/components/layout/TeacherNavbar";
 import { TeacherResourcesView } from "./TeacherResourcesView";
 
 export default async function TeacherResourcesPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
-  if (!session?.user) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 
