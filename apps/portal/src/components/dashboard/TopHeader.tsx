@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MenuIcon, ChevronRightIcon, DoorIcon } from "@/components/ui/icons";
+import { MenuIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { GlobalSearch } from "./GlobalSearch";
-import { RollerDoorModal } from "./RollerDoorModal";
 
 type TopHeaderProps = {
   userName?: string;
@@ -32,18 +31,11 @@ const ROUTE_TITLES: Record<string, { title: string; section: string; sectionHref
 export function TopHeader({
   userName,
   role,
-  permissions = [],
+  permissions: _permissions = [],
   schoolId: _schoolId,
   onOpenMobileNavAction,
 }: TopHeaderProps) {
   const pathname = usePathname();
-  const [doorModalOpen, setDoorModalOpen] = useState(false);
-
-  const canAccessDoor =
-    permissions.includes("open-front-door") ||
-    permissions.includes("super") ||
-    role === "superadmin" ||
-    role === "admin";
 
   const current = ROUTE_TITLES[pathname] || {
     title: "Portal",
@@ -99,19 +91,6 @@ export function TopHeader({
 
       {/* Right controls */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {canAccessDoor && (
-          <button
-            type="button"
-            onClick={() => setDoorModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition active:scale-95"
-            title="Control Roletă Intrare"
-            aria-label="Control roletă intrare"
-          >
-            <DoorIcon className="w-4 h-4 text-slate-700 shrink-0" />
-            <span className="hidden sm:inline">Roletă</span>
-          </button>
-        )}
-
         {/* User Mini Chip */}
         <Link
           href="/dashboard/settings"
@@ -131,13 +110,6 @@ export function TopHeader({
           </div>
         </Link>
       </div>
-
-      {canAccessDoor && (
-        <RollerDoorModal
-          isOpen={doorModalOpen}
-          onClose={() => setDoorModalOpen(false)}
-        />
-      )}
     </header>
   );
 }

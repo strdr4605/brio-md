@@ -161,22 +161,32 @@ export default function SetariPage() {
                   <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               )}
-
-              {canAccessDoor && (
-                <button
-                  type="button"
-                  onClick={() => setDoorModalOpen(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95 text-left"
-                >
-                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
-                    <DoorIcon className="w-4 h-4 text-slate-600" />
-                    <span>Roletă Intrare</span>
-                  </div>
-                  <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-              )}
             </div>
           </div>
+
+          {/* IoT Facility Access Card */}
+          {canAccessDoor && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <DoorIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Control Roletă Intrare</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Releu IoT acces clădire</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDoorModalOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all active:scale-[0.99]"
+              >
+                <DoorIcon className="w-4 h-4" />
+                <span>Deschide / Închide Roleta</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
