@@ -8,7 +8,7 @@ import {
   StudentsIcon,
   InvoiceIcon,
   UsersIcon,
-  DoorIcon,
+  BookOpenIcon,
   CalendarIcon,
   MenuIcon,
 } from "@/components/ui/icons";
@@ -16,7 +16,7 @@ import {
 export type MobileBottomNavProps = {
   canManageStudents: boolean;
   isSuperOrAdmin: boolean;
-  canAccessDoor: boolean;
+  canAccessDoor?: boolean;
   isBillingAllowed?: boolean;
   overdueCount?: number;
   onOpenMobile?: () => void;
@@ -25,7 +25,7 @@ export type MobileBottomNavProps = {
 export function MobileBottomNav({
   canManageStudents,
   isSuperOrAdmin,
-  canAccessDoor,
+  canAccessDoor: _canAccessDoor,
   isBillingAllowed = false,
   overdueCount = 0,
   onOpenMobile,
@@ -38,20 +38,13 @@ export function MobileBottomNav({
     return pathname.startsWith(href);
   };
 
-  // Determine contextual destination (Facturi if billing allowed, or Panou/Roletă/Utilizatori)
+  // Determine contextual destination (Facturi if billing allowed, or Utilizatori/Panou)
   const fourthItem = isBillingAllowed
     ? {
         href: "/dashboard/invoices",
         label: "Facturi",
         Icon: InvoiceIcon,
         badge: overdueCount > 0 ? overdueCount : undefined,
-      }
-    : canAccessDoor
-    ? {
-        href: "/dashboard/roller-door",
-        label: "Roletă",
-        Icon: DoorIcon,
-        badge: undefined,
       }
     : isSuperOrAdmin
     ? {
@@ -157,15 +150,15 @@ export function MobileBottomNav({
           </Link>
         ) : (
           <Link
-            href="/dashboard/roller-door"
+            href="/dashboard/courses"
             className={`flex flex-col items-center justify-center gap-1 min-w-[52px] py-1.5 px-1.5 rounded-xl transition-all active:scale-95 ${
-              isRouteActive("/dashboard/roller-door")
+              isRouteActive("/dashboard/courses")
                 ? "text-white font-bold bg-white/[0.08] shadow-xs"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <DoorIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Roletă</span>
+            <BookOpenIcon className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] tracking-tight leading-none">Cursuri</span>
           </Link>
         )}
 

@@ -9,13 +9,11 @@ import {
   DashboardIcon,
   BookOpenIcon,
   UsersIcon,
-  DoorIcon,
   BarChartIcon,
   SettingsIcon,
   LogOutIcon,
   XIcon,
   ShieldCheckIcon,
-  KeyIcon,
   InvoiceIcon,
 } from "@/components/ui/icons";
 
@@ -37,7 +35,7 @@ export function MobileMenuHub({
   role = "user",
   permissions: _permissions = [],
   isSuperOrAdmin = false,
-  canAccessDoor = false,
+  canAccessDoor: _canAccessDoor = false,
   isBillingAllowed = false,
 }: MobileMenuHubProps) {
   const pathname = usePathname();
@@ -109,20 +107,6 @@ export function MobileMenuHub({
       description: "Profesori & conturi",
       Icon: UsersIcon,
       visible: isSuperOrAdmin,
-    },
-    {
-      href: "/dashboard/permissions",
-      label: "Permisiuni",
-      description: "Roluri & permisiuni",
-      Icon: KeyIcon,
-      visible: isSuperOrAdmin,
-    },
-    {
-      href: "/dashboard/roller-door",
-      label: "Roletă Garaj",
-      description: "Control acces intrare",
-      Icon: DoorIcon,
-      visible: canAccessDoor,
     },
     {
       href: "/dashboard/invoices/statistics",

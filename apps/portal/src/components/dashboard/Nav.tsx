@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react";
 import { useState } from "react";
 import {
   DashboardIcon, UsersIcon, StudentsIcon, BookOpenIcon, CalendarIcon,
-  KeyIcon, DoorIcon, SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
+  SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
   ChevronRightIcon, LogOutIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
@@ -47,7 +47,6 @@ export function Nav({
   });
 
   const [academicOpen, setAcademicOpen] = useState(true);
-  const [securityOpen, setSecurityOpen] = useState(true);
 
   const isRouteActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -206,35 +205,6 @@ export function Nav({
                 {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount, collapsed)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon, undefined, collapsed)}
                 {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon, undefined, collapsed)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Group: Securitate & Control */}
-        {(canAccessDoor || isSuperAdmin) && (
-          <div className="space-y-1">
-            {collapsed ? (
-              <div className="border-t border-white/[0.08] my-2 mx-1" />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setSecurityOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
-              >
-                <span>Control & Acces</span>
-                <ChevronDownIcon
-                  className={`w-4 h-4 transition-transform duration-200 ${
-                    securityOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-              </button>
-            )}
-
-            {(securityOpen || collapsed) && (
-              <div className="space-y-1">
-                {canAccessDoor && renderNavLink("/dashboard/roller-door", "Roletă Intrare", DoorIcon, undefined, collapsed)}
-                {isSuperAdmin && renderNavLink("/dashboard/permissions", "Permisiuni", KeyIcon, undefined, collapsed)}
               </div>
             )}
           </div>

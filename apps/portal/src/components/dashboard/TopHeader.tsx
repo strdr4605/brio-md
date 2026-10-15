@@ -8,6 +8,7 @@ import { GlobalSearch } from "./GlobalSearch";
 type TopHeaderProps = {
   userName?: string;
   role?: string;
+  permissions?: string[];
   schoolId?: number | null;
   onOpenMobileNavAction?: () => void;
 };
@@ -30,10 +31,12 @@ const ROUTE_TITLES: Record<string, { title: string; section: string; sectionHref
 export function TopHeader({
   userName,
   role,
+  permissions: _permissions = [],
   schoolId: _schoolId,
   onOpenMobileNavAction,
 }: TopHeaderProps) {
   const pathname = usePathname();
+
   const current = ROUTE_TITLES[pathname] || {
     title: "Portal",
     section: "Prezentare",
