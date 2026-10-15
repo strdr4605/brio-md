@@ -204,6 +204,13 @@ export function LiveLessonWorkspace({ courseId }: Props) {
     }
   });
 
+  const [closedBroadcastId, setClosedBroadcastId] = useState<number | null>(null);
+  const latestSubmissionResourceId = lessonSubmissions.length > 0 ? lessonSubmissions[0].resourceId : null;
+  const activeBroadcastResourceId =
+    latestSubmissionResourceId && latestSubmissionResourceId !== closedBroadcastId
+      ? latestSubmissionResourceId
+      : null;
+
   return (
     <div className="space-y-4">
       {/* Header with GroupPicker and DatePicker */}
@@ -216,7 +223,10 @@ export function LiveLessonWorkspace({ courseId }: Props) {
         unmarkedCount={counts.unmarked}
         courseGroups={courseGroups}
         selectedGroupId={selectedGroupId}
-        onSelectGroup={setSelectedGroupId}
+        onSelectGroup={(id) => {
+          setSelectedGroupId(id);
+          setClosedBroadcastId(null);
+        }}
         isGroupsLoading={isGroupsLoading}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
@@ -230,6 +240,8 @@ export function LiveLessonWorkspace({ courseId }: Props) {
         resources={courseResources}
         selectedResourceId={selectedBroadcastResourceId}
         onSelectResource={setSelectedBroadcastResourceId}
+        activeBroadcastResourceId={activeBroadcastResourceId}
+        onCloseBroadcast={() => setClosedBroadcastId(activeBroadcastResourceId)}
       />
 
       {/* Filter Tabs & Search */}
@@ -249,7 +261,7 @@ export function LiveLessonWorkspace({ courseId }: Props) {
       >
         <div className="overflow-x-auto">
           <div className="min-w-[860px]">
-            <div className="bg-[#f8fafc] border-b border-slate-200 px-5 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider grid grid-cols-[48px_minmax(200px,1fr)_280px_minmax(260px,1.2fr)] items-center gap-4 select-none">
+            <div className="bg-[#f8fafc] border-b border-slate-200 px-4 sm:px-5 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider grid grid-cols-[40px_minmax(180px,1fr)_260px_minmax(240px,1.2fr)] items-center gap-3 sm:gap-4 select-none">
               <span className="text-center">#</span>
               <span>NUME ELEV</span>
               <span className="text-center">STATUS PREZENȚĂ</span>
