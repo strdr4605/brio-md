@@ -62,6 +62,7 @@ export function DashboardShell({
         <TopHeader
           userName={userName}
           role={role}
+          permissions={permissions}
           schoolId={schoolId}
           onOpenMobileNavAction={() => setMobileOpen(true)}
         />

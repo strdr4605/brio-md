@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
@@ -14,9 +15,11 @@ import {
 } from "@/components/ui/icons";
 import { SchoolProfileForm } from "@/components/dashboard/settings/SchoolProfileForm";
 import { ChangePasswordForm } from "@/components/dashboard/settings/ChangePasswordForm";
+import { RollerDoorModal } from "@/components/dashboard/RollerDoorModal";
 
 export default function SetariPage() {
   const { data: session } = useSession();
+  const [doorModalOpen, setDoorModalOpen] = useState(false);
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
   const isSuperAdmin = permissions.includes("super") || role === "superadmin";
@@ -160,21 +163,29 @@ export default function SetariPage() {
               )}
 
               {canAccessDoor && (
-                <Link
-                  href="/dashboard/roller-door"
-                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95"
+                <button
+                  type="button"
+                  onClick={() => setDoorModalOpen(true)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80 transition group active:scale-95 text-left"
                 >
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
                     <DoorIcon className="w-4 h-4 text-slate-600" />
                     <span>Roletă Intrare</span>
                   </div>
                   <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {canAccessDoor && (
+        <RollerDoorModal
+          isOpen={doorModalOpen}
+          onClose={() => setDoorModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

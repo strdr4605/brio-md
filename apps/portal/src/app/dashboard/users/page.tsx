@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { UserFormDrawer, type UserFormUser } from "@/components/dashboard/UserForm";
 import { UserKpiCards } from "@/components/dashboard/UserKpiCards";
+import { PermissionDefinitionsDrawer } from "@/components/dashboard/PermissionDefinitionsDrawer";
 import {
   UsersIcon,
   SearchIcon,
@@ -24,6 +25,7 @@ export default function UsersPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
+  const [showPermissionsDrawer, setShowPermissionsDrawer] = useState(false);
   const [editingUser, setEditingUser] = useState<UserFormUser | null>(null);
 
   const { data: users = [], isLoading } = trpc.user.list.useQuery(
@@ -105,13 +107,26 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
-        >
-          <PlusIcon className="w-4 h-4" />
-          <span>Adaugă Utilizator</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowPermissionsDrawer(true)}
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold shadow-2xs hover:border-slate-300 transition-all active:scale-[0.99]"
+            >
+              <ShieldCheckIcon className="w-4 h-4 text-slate-600 shrink-0" />
+              <span>Definiții Permisiuni</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>Adaugă Utilizator</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Bar */}
@@ -278,6 +293,14 @@ export default function UsersPage() {
           isSuperAdmin={isSuperAdmin}
           onClose={() => setShowForm(false)}
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
+        />
+      )}
+
+      {/* Permission Definitions Management Drawer */}
+      {isSuperAdmin && (
+        <PermissionDefinitionsDrawer
+          isOpen={showPermissionsDrawer}
+          onClose={() => setShowPermissionsDrawer(false)}
         />
       )}
     </>
