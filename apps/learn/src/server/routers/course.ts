@@ -3,6 +3,8 @@ import {
   courses,
   courseMaterials,
   studentCourseProgress,
+  studentGroupEnrollments,
+  groups,
   users,
   courseLearningResources,
   learningResources,
@@ -12,19 +14,78 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
+export async function getStudentActiveCourseIds(studentId: number): Promise<number[]> {
+  // 1. Fetch group enrollments joined with groups
+  const groupEnrollments = await db
+    .select({
+      status: studentGroupEnrollments.status,
+      enrollmentCourseId: studentGroupEnrollments.courseId,
+      groupCourseId: groups.courseId,
+      groupActive: groups.active,
+    })
+    .from(studentGroupEnrollments)
+    .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
+    .where(eq(studentGroupEnrollments.studentId, studentId));
+
+  const activeGroupCourseIds = new Set<number>();
+  const withdrawnGroupCourseIds = new Set<number>();
+
+  for (const enr of groupEnrollments) {
+    const courseId = enr.groupCourseId ?? enr.enrollmentCourseId;
+    if (!courseId) continue;
+
+    if (enr.status === "active" && enr.groupActive !== false) {
+      activeGroupCourseIds.add(courseId);
+    } else {
+      withdrawnGroupCourseIds.add(courseId);
+    }
+  }
+
+  // 2. Fetch direct course progress
+  const progressList = await db
+    .select({
+      courseId: studentCourseProgress.courseId,
+      status: studentCourseProgress.status,
+    })
+    .from(studentCourseProgress)
+    .where(eq(studentCourseProgress.studentId, studentId));
+
+  const activeCourseIds = new Set<number>(activeGroupCourseIds);
+
+  for (const prog of progressList) {
+    if (prog.status === "completed") continue;
+    // Withdrawing a student from a group removes that course even if progress row exists
+    if (withdrawnGroupCourseIds.has(prog.courseId) && !activeGroupCourseIds.has(prog.courseId)) {
+      continue;
+    }
+    activeCourseIds.add(prog.courseId);
+  }
+
+  return Array.from(activeCourseIds);
+}
+
 export const courseRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    const courseIds = (ctx.user.courseIds || [])
-      .map((id) => (typeof id === "number" ? id : parseInt(String(id), 10)))
-      .filter((id) => !isNaN(id));
+    const currentStudentId = ctx.user.studentId;
+    let courseIds: number[] = [];
+
+    if (currentStudentId) {
+      courseIds = await getStudentActiveCourseIds(currentStudentId);
+    } else {
+      courseIds = (ctx.user.courseIds || [])
+        .map((id) => (typeof id === "number" ? id : parseInt(String(id), 10)))
+        .filter((id) => !isNaN(id));
+    }
 
     if (courseIds.length === 0) {
       return [];
     }
 
-    const currentStudentId = ctx.user.studentId;
+    const coursesList = await db
+      .select()
+      .from(courses)
+      .where(and(inArray(courses.id, courseIds), eq(courses.active, true)));
 
-    const coursesList = await db.select().from(courses).where(inArray(courses.id, courseIds));
     const progressList = currentStudentId
       ? await db
           .select()
@@ -63,9 +124,16 @@ export const courseRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const courseIds = (ctx.user.courseIds || [])
-        .map((id) => (typeof id === "number" ? id : parseInt(String(id), 10)))
-        .filter((id) => !isNaN(id));
+      const currentStudentId = ctx.user.studentId;
+      let courseIds: number[] = [];
+
+      if (currentStudentId) {
+        courseIds = await getStudentActiveCourseIds(currentStudentId);
+      } else {
+        courseIds = (ctx.user.courseIds || [])
+          .map((id) => (typeof id === "number" ? id : parseInt(String(id), 10)))
+          .filter((id) => !isNaN(id));
+      }
 
       const isPrivileged =
         ctx.user.role === "superadmin" ||
@@ -82,7 +150,7 @@ export const courseRouter = router({
 
       const [course] = await db.select().from(courses).where(eq(courses.id, input.id)).limit(1);
 
-      if (!course) {
+      if (!course || (!course.active && !isPrivileged)) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Course not found.",
@@ -107,7 +175,6 @@ export const courseRouter = router({
         .where(eq(courseMaterials.courseId, input.id))
         .orderBy(courseMaterials.orderIndex);
 
-      const currentStudentId = ctx.user.studentId;
       let progress = null;
 
       if (currentStudentId) {
