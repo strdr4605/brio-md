@@ -64,7 +64,7 @@ export function AbsentCommentInput({
           </svg>
           Motiv absență:
         </span>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-rose-50 text-rose-800 border border-rose-200 font-medium">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 font-medium">
           <span>„{comment}”</span>
           {!disabled && (
             <button
@@ -130,7 +130,7 @@ export function AbsentCommentInput({
               type="button"
               disabled={disabled}
               onClick={() => handleSelectPreset(preset)}
-              className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 transition cursor-pointer"
+              className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 transition cursor-pointer"
             >
               {preset}
             </button>
@@ -148,13 +148,13 @@ export function AbsentCommentInput({
           placeholder="ex. A sunat părintele, răcit, plecat din localitate..."
           maxLength={250}
           autoFocus
-          className="flex-1 px-3 py-1.5 rounded-[4px] border border-slate-300 bg-white text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition"
+          className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition"
         />
         <button
           type="button"
           disabled={disabled}
           onClick={handleSave}
-          className="px-3 py-1.5 rounded-[4px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-2xs transition cursor-pointer flex items-center gap-1"
+          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-2xs transition cursor-pointer flex items-center gap-1"
         >
           <span>Salvează</span>
         </button>
@@ -164,7 +164,7 @@ export function AbsentCommentInput({
             setText(comment || "");
             setIsEditing(false);
           }}
-          className="px-2.5 py-1.5 rounded-[4px] border border-slate-300 hover:bg-slate-50 text-slate-600 text-xs font-medium transition cursor-pointer"
+          className="px-2.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-600 text-xs font-medium transition cursor-pointer"
         >
           Anulează
         </button>

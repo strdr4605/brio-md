@@ -80,7 +80,7 @@ export function LiveLessonHeader({
 
         <div
           onClick={handleOpenCalendar}
-          className="relative border border-slate-300 rounded-[4px] px-3 py-1 bg-white shadow-2xs flex flex-col justify-center cursor-pointer hover:border-slate-400 transition min-w-[130px] select-none"
+          className="relative border border-slate-300 rounded-lg px-3 py-1 bg-white shadow-2xs flex flex-col justify-center cursor-pointer hover:border-slate-400 transition min-w-[130px] select-none"
         >
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">Data</span>
           <div className="flex items-center justify-between gap-2 mt-0.5">
@@ -111,7 +111,7 @@ export function LiveLessonHeader({
         <button
           type="button"
           onClick={onOpenFinalize}
-          className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-2xs cursor-pointer flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-slate-900 focus:outline-none"
+          className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-2xs cursor-pointer flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-slate-900 focus:outline-none"
           title="Finalizează prezența și cataloghează elevii rămași"
         >
           <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

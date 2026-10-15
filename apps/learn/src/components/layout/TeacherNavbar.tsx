@@ -30,7 +30,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
           <nav aria-label="Navigare profesor" className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-5">
             <Link
               href="/teacher"
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition ${
                 activeTab === "courses"
                   ? "bg-slate-100 text-slate-900 font-bold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -40,7 +40,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
             </Link>
             <Link
               href="/teacher/resources"
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition ${
                 activeTab === "resources"
                   ? "bg-slate-100 text-slate-900 font-bold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -57,7 +57,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
             href="https://in.brio.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 transition px-2.5 py-1.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200"
+            className="hidden lg:flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 transition px-2.5 py-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200"
           >
             <span>Portal Staff</span>
             <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +84,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
           <form action={onSignOut}>
             <button
               type="submit"
-              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer flex items-center gap-1"
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer flex items-center gap-1"
               title="Deconectare"
             >
               <span>Ieșire</span>
@@ -103,7 +103,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
       >
         <Link
           href="/teacher"
-          className={`text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+          className={`text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition ${
             activeTab === "courses"
               ? "bg-white text-slate-900 font-bold shadow-2xs border border-slate-200"
               : "text-slate-600 hover:text-slate-900"
@@ -113,7 +113,7 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
         </Link>
         <Link
           href="/teacher/resources"
-          className={`text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+          className={`text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition ${
             activeTab === "resources"
               ? "bg-white text-slate-900 font-bold shadow-2xs border border-slate-200"
               : "text-slate-600 hover:text-slate-900"

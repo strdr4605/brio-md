@@ -32,7 +32,7 @@ export function AttendanceStatusPills({
         type="button"
         disabled={disabled}
         onClick={() => handlePillClick("present")}
-        className={`px-3 py-1.5 rounded-[4px] text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1 focus:outline-none ${
+        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1 focus:outline-none ${
           currentStatus === "present"
             ? "bg-[#15803d] text-white border border-[#15803d]"
             : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 hover:text-slate-900"
@@ -50,7 +50,7 @@ export function AttendanceStatusPills({
         type="button"
         disabled={disabled}
         onClick={() => handlePillClick("absent")}
-        className={`px-3 py-1.5 rounded-[4px] text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 relative shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-1 focus:outline-none ${
+        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 relative shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-1 focus:outline-none ${
           currentStatus === "absent"
             ? "bg-[#e11d48] text-white border border-[#e11d48]"
             : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 hover:text-slate-900"
@@ -74,7 +74,7 @@ export function AttendanceStatusPills({
         type="button"
         disabled={disabled}
         onClick={() => handlePillClick("late")}
-        className={`px-3 py-1.5 rounded-[4px] text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-1 focus:outline-none ${
+        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all active:scale-[0.97] cursor-pointer select-none flex items-center gap-1.5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-1 focus:outline-none ${
           currentStatus === "late"
             ? "bg-[#d97706] text-white border border-[#d97706]"
             : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 hover:text-slate-900"

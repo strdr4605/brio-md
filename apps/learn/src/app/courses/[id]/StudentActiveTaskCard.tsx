@@ -32,18 +32,47 @@ type Props = {
 function getResourceBadge(type: string) {
   switch (type.toLowerCase()) {
     case "worksheet":
-      return { label: "Fișă de lucru", class: "bg-slate-100 text-slate-700 border-slate-200" };
+    case "task":
+      return {
+        label: "Fișă de lucru",
+        class: "bg-indigo-50 text-indigo-700 border-indigo-200",
+        iconBg: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
+      };
     case "minigame":
-      return { label: "Minijoc interactiv", class: "bg-slate-100 text-slate-700 border-slate-200" };
+    case "game":
+      return {
+        label: "Minijoc interactiv",
+        class: "bg-amber-50 text-amber-700 border-amber-200",
+        iconBg: "bg-amber-50 text-amber-700 border-amber-200/80",
+      };
     case "pdf":
     case "manual":
-      return { label: "Material / Manual", class: "bg-slate-100 text-slate-700 border-slate-200" };
+    case "textbook":
+      return {
+        label: "Material / Manual",
+        class: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        iconBg: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+      };
+    case "video":
+      return {
+        label: "Lecție Video",
+        class: "bg-rose-50 text-rose-700 border-rose-200",
+        iconBg: "bg-rose-50 text-rose-700 border-rose-200/80",
+      };
     case "presentation":
     case "pptx":
     case "ppt":
-      return { label: "Prezentare PPTX", class: "bg-slate-100 text-slate-700 border-slate-200" };
+      return {
+        label: "Prezentare PPTX",
+        class: "bg-amber-50 text-amber-700 border-amber-200",
+        iconBg: "bg-amber-50 text-amber-700 border-amber-200/80",
+      };
     default:
-      return { label: type, class: "bg-slate-100 text-slate-700 border-slate-200" };
+      return {
+        label: type,
+        class: "bg-slate-100 text-slate-700 border-slate-200",
+        iconBg: "bg-slate-100 text-slate-700 border-slate-200/80",
+      };
   }
 }
 
@@ -76,10 +105,10 @@ export function StudentActiveTaskCard({
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 hover:border-slate-300 hover:shadow-sm transition">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm transition">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs ${badge.iconBg}`}>
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -91,10 +120,10 @@ export function StudentActiveTaskCard({
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Lecția curentă #{currentSession}
                 </span>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${badge.class}`}>
+                <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${badge.class}`}>
                   {badge.label}
                 </span>
               </div>
@@ -104,14 +133,15 @@ export function StudentActiveTaskCard({
 
           <div>
             {isCompleted ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold shadow-2xs">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
                 {existingSubmission?.status === "reviewed" ? "Evaluat de profesor" : "Sarcină predată"}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-200 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                 În desfășurare
               </span>
             )}
@@ -129,7 +159,7 @@ export function StudentActiveTaskCard({
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200/80 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200/80 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition shadow-2xs"
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -139,44 +169,33 @@ export function StudentActiveTaskCard({
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
               />
             </svg>
-            Deschide materialul interactiv
+            <span>Deschide Resursa</span>
           </a>
 
-          <div className="flex items-center gap-2">
-            {!isCompleted ? (
-              <button
-                type="button"
-                onClick={() => setActiveModalResource(resource)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm cursor-pointer"
-              >
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Predă sarcina
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setActiveModalResource(resource)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition"
-              >
-                Actualizează predarea
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveModalResource(resource)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shadow-xs cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span>{isCompleted ? "Re-trimite Rezolvarea" : "Predă Tema / Rezolvarea"}</span>
+          </button>
         </div>
       </div>
 
       {activeModalResource && (
         <StudentTaskSubmitModal
-          isOpen={true}
+          isOpen={!!activeModalResource}
           onClose={() => setActiveModalResource(null)}
           resourceTitle={activeModalResource.title}
           resourceType={activeModalResource.type}
-          isSubmitting={isSubmitting}
           onSubmit={async ({ notes, fileUrl }) => {
             await onSubmitTask(activeModalResource.id, notes, fileUrl);
+            setActiveModalResource(null);
           }}
+          isSubmitting={isSubmitting}
         />
       )}
     </>

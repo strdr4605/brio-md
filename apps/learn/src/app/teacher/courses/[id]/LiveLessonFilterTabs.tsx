@@ -41,7 +41,7 @@ export function LiveLessonFilterTabs({
           placeholder="Search students by name or code..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full text-xs border border-slate-300 bg-white rounded-[4px] pl-9 pr-8 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition"
+          className="w-full text-xs border border-slate-300 bg-white rounded-lg pl-9 pr-8 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition"
         />
         {search && (
           <button
@@ -60,7 +60,7 @@ export function LiveLessonFilterTabs({
         <button
           type="button"
           onClick={() => onTabChange("present")}
-          className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+          className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
             activeTab === "present"
               ? "bg-[#15803d] text-white border-[#15803d] shadow-2xs"
               : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -78,7 +78,7 @@ export function LiveLessonFilterTabs({
         <button
           type="button"
           onClick={() => onTabChange("all")}
-          className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+          className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
             activeTab === "all"
               ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
               : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -96,7 +96,7 @@ export function LiveLessonFilterTabs({
         <button
           type="button"
           onClick={() => onTabChange("unmarked")}
-          className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+          className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
             activeTab === "unmarked"
               ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
               : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -114,7 +114,7 @@ export function LiveLessonFilterTabs({
         <button
           type="button"
           onClick={() => onTabChange("late")}
-          className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+          className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
             activeTab === "late"
               ? "bg-[#d97706] text-white border-[#d97706] shadow-2xs"
               : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -132,7 +132,7 @@ export function LiveLessonFilterTabs({
         <button
           type="button"
           onClick={() => onTabChange("absent")}
-          className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+          className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
             activeTab === "absent"
               ? "bg-[#e11d48] text-white border-[#e11d48] shadow-2xs"
               : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -151,7 +151,7 @@ export function LiveLessonFilterTabs({
           <button
             type="button"
             onClick={() => onTabChange("restricted")}
-            className={`px-3 py-1.5 rounded-[4px] font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
+            className={`px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-[11px] transition cursor-pointer flex items-center gap-1.5 border ${
               activeTab === "restricted"
                 ? "bg-rose-700 text-white border-rose-700 shadow-2xs"
                 : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"

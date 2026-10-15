@@ -22,7 +22,7 @@ export function getLevelBadgeClass(level: string | null | undefined) {
     case "advanced":
       return "bg-purple-50 text-purple-700 border-purple-200";
     default:
-      return "bg-neutral-100 text-neutral-700 border-neutral-200";
+      return "bg-slate-100 text-slate-700 border-slate-200";
   }
 }
 
@@ -35,7 +35,7 @@ export function formatSchedule(days: string[] | null | undefined, time: string |
   if (daysText && time) {
     return `${daysText} • ${time}`;
   }
-  return daysText || time || "Schedule to be announced";
+  return daysText || time || "Program nespecificat";
 }
 
 export function CourseOverviewHeaderCard({
@@ -50,11 +50,14 @@ export function CourseOverviewHeaderCard({
   total,
   progressPct,
 }: Props) {
+  const isFullyCompleted = progressPct === 100;
+
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
+      {/* Header with Title and Level */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">{name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">{name}</h1>
           {level && (
             <span
               className={`text-xs font-semibold px-3 py-1 rounded-full border capitalize ${getLevelBadgeClass(
@@ -66,21 +69,21 @@ export function CourseOverviewHeaderCard({
           )}
         </div>
         {instructorName && (
-          <div className="flex items-center gap-2 text-sm text-neutral-700 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-200/60 shrink-0">
-            <span className="font-semibold text-neutral-500">Instructor:</span>
-            <span className="font-medium text-neutral-900">{instructorName}</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/80 shrink-0 shadow-2xs">
+            <span className="font-semibold text-slate-500">Profesor:</span>
+            <span className="font-bold text-slate-900">{instructorName}</span>
           </div>
         )}
       </div>
 
-      <p className="text-neutral-600 leading-relaxed max-w-4xl mb-6">
-        {description || "In-depth course curriculum with guided sessions and supporting study materials."}
+      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+        {description || "Curriculum structurat, materiale interactive de învățare și exerciții practice."}
       </p>
 
       {/* Schedule & Metadata Badges */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-neutral-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-5 border-t border-slate-100">
+        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -90,16 +93,16 @@ export function CourseOverviewHeaderCard({
               />
             </svg>
           </div>
-          <div>
-            <p className="text-xs font-medium text-neutral-500">Session Duration</p>
-            <p className="text-sm font-semibold text-neutral-900">
-              {sessionDurationMinutes ? `${sessionDurationMinutes} minutes` : "60 minutes"}
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">Durată Sesiune</p>
+            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+              {sessionDurationMinutes ? `${sessionDurationMinutes} minute` : "60 minute"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -109,16 +112,16 @@ export function CourseOverviewHeaderCard({
               />
             </svg>
           </div>
-          <div>
-            <p className="text-xs font-medium text-neutral-500">Weekly Schedule</p>
-            <p className="text-sm font-semibold text-neutral-900">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">Program Săptămânal</p>
+            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
               {formatSchedule(scheduleDays, scheduleTime)}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -128,12 +131,38 @@ export function CourseOverviewHeaderCard({
               />
             </svg>
           </div>
-          <div>
-            <p className="text-xs font-medium text-neutral-500">Plan Progress</p>
-            <p className="text-sm font-semibold text-neutral-900">
-              {completed} of {total} Sessions ({progressPct}%)
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">Progres General</p>
+            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+              {completed} din {total} Sesiuni ({progressPct}%)
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Motivating Completion Bar */}
+      <div className="space-y-2 pt-1">
+        <div className="flex justify-between items-center text-xs">
+          <span className="font-semibold text-slate-700">Parcurs Didactic</span>
+          {isFullyCompleted ? (
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+              <span>🎉</span> Felicitări! Curs finalizat
+            </span>
+          ) : (
+            <span className="font-semibold text-slate-500">
+              {completed} / {total} lecții finalizate
+            </span>
+          )}
+        </div>
+        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
+          <div
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              isFullyCompleted
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xs"
+                : "bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 shadow-xs"
+            }`}
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
     </div>

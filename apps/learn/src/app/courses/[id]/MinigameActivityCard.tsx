@@ -61,12 +61,12 @@ export function MinigameActivityCard({
       {/* Top Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 text-xl font-medium">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0 text-xl font-medium shadow-2xs">
             🎮
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 Minijoc Interactiv
               </span>
               {sessionNumber && (
@@ -89,7 +89,7 @@ export function MinigameActivityCard({
 
         {submissionScore !== null && submissionScore !== undefined && (
           <div className="text-right shrink-0">
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl">
+            <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl shadow-2xs">
               Scor: {submissionScore}
               {maxScore ? ` / ${maxScore}` : ""}
             </span>
@@ -99,8 +99,8 @@ export function MinigameActivityCard({
 
       {/* Instructions */}
       {instructions && (
-        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-100 p-2.5 rounded-xl leading-relaxed">
-          <span className="font-semibold text-slate-800">Sarcina: </span>
+        <p className="text-xs text-slate-600 bg-amber-50/40 border border-amber-100/80 p-2.5 rounded-xl leading-relaxed">
+          <span className="font-semibold text-amber-900">Sarcina: </span>
           {instructions}
         </p>
       )}
@@ -141,12 +141,12 @@ export function MinigameActivityCard({
                 placeholder={maxScore ? `Scor (max ${maxScore})` : "Scor obținut"}
                 value={scoreInput}
                 onChange={(e) => setScoreInput(e.target.value)}
-                className="w-28 text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white"
+                className="w-28 text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white"
               />
               <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 cursor-pointer"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 cursor-pointer shadow-2xs"
               >
                 {submitMutation.isPending ? "..." : "Confirmă"}
               </button>

@@ -125,7 +125,7 @@ export function CourseResourcesSection({
               <span>🎮</span>
               <span>Minijocuri & Activități Interactive</span>
             </h2>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
               {minigames.length} {minigames.length === 1 ? "activitate" : "activități"}
             </span>
           </div>
@@ -202,11 +202,11 @@ export function CourseResourcesSection({
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${badge.className}`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${badge.className}`}>
                           {badge.label}
                         </span>
                         {cr.sessionNumber && (
-                          <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
                             Sesiunea {cr.sessionNumber}
                           </span>
                         )}
@@ -293,7 +293,7 @@ export function CourseResourcesSection({
 
       {/* Teacher Feedback / Progress Notes Card if available */}
       {notes && (
-        <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5">
+        <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 shadow-2xs">
           <div className="flex items-center gap-2 mb-2 text-amber-900 font-semibold text-sm">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
