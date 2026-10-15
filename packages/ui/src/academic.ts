@@ -31,7 +31,7 @@ export const ACADEMIC_LABELS = {
   },
   courses: {
     title: "Cursuri & Grupe",
-    newCourse: "+ Adaugă Curs Nou",
+    newCourse: "Adaugă Curs Nou",
     emptyTitle: "Nu există cursuri",
     emptyDescription: "Adăugați primul curs pentru această filială",
     capacityLabel: "locuri ocupate",

@@ -15,7 +15,8 @@ describe("Academic Hub Contracts & Terminology", () => {
     expect(ACADEMIC_LABELS.tabs.courses).toBe("Cursuri & Grupe");
     expect(ACADEMIC_LABELS.tabs.attendance).toBe("Prezență");
     expect(ACADEMIC_LABELS.tabs.billing).toBe("Facturi & Plăți");
-    expect(ACADEMIC_LABELS.tabs.notes).toBe("Observații");
+    expect(ACADEMIC_LABELS.courses.title).toBe("Cursuri & Grupe");
+    expect(ACADEMIC_LABELS.courses.newCourse).toBe("Adaugă Curs Nou");
     expect(ACADEMIC_LABELS.drawer.close).toBe("Închide");
     expect(ACADEMIC_LABELS.drawer.saveEnrollment).toBe("Înscrie în Grupă");
     expect(ACADEMIC_LABELS.drawer.cancel).toBe("Anulează");
