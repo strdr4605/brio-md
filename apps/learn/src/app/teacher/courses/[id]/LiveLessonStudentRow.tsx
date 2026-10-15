@@ -59,20 +59,23 @@ export function LiveLessonStudentRow({
 
   return (
     <div
-      className={`border-b border-slate-100 hover:bg-slate-50/70 transition-colors px-5 py-3.5 ${
+      className={`border-b border-slate-100 hover:bg-slate-50/70 transition-colors px-4 py-3 sm:px-5 sm:py-3.5 ${
         isAbsent ? "bg-rose-50/20" : "bg-white"
       }`}
     >
-      <div className="grid grid-cols-[48px_minmax(200px,1fr)_280px_minmax(260px,1.2fr)] items-center gap-4">
+      <div className="grid grid-cols-[40px_minmax(180px,1fr)_260px_minmax(240px,1.2fr)] items-center gap-3 sm:gap-4">
         {/* Col 1: Index # */}
         <span className="text-center text-xs font-semibold text-slate-400 tabular-nums select-none">
           {index}
         </span>
 
         {/* Col 2: Student Info */}
-        <div className="min-w-0 pr-2 space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[13.5px] font-semibold text-slate-900 tracking-tight truncate">
+        <div className="min-w-0 pr-2 space-y-0.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="text-[13.5px] font-semibold text-slate-900 tracking-tight truncate block"
+              title={student.studentName}
+            >
               {student.studentName}
             </span>
             <RestrictedStudentBadge
@@ -81,23 +84,25 @@ export function LiveLessonStudentRow({
               studentName={student.studentName}
             />
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
-            <span className="font-mono text-[10.5px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/70 tracking-tight select-none">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate">
+            <span className="font-mono text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/70 tracking-tight select-none shrink-0">
               STD-{student.studentId.toString().padStart(4, "0")}
             </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-600 font-medium">Sesiune {student.currentSession}</span>
+            <span className="text-slate-300 shrink-0">•</span>
+            <span className="text-slate-600 font-medium shrink-0">Sesiune {student.currentSession}</span>
             {student.parentPhone && (
               <>
-                <span className="text-slate-300">•</span>
-                <span className="text-slate-500">Tel: {student.parentPhone}</span>
+                <span className="text-slate-300 shrink-0">•</span>
+                <span className="text-slate-500 truncate" title={`Tel: ${student.parentPhone}`}>
+                  {student.parentPhone}
+                </span>
               </>
             )}
           </div>
         </div>
 
         {/* Col 3: Status Buttons (Centered directly under STATUS header) */}
-        <div className="flex justify-center">
+        <div className="flex justify-center shrink-0 w-[260px]">
           <AttendanceStatusPills
             currentStatus={student.status}
             onStatusChange={(next) => onStatusChange(student.studentId, next)}
@@ -107,7 +112,7 @@ export function LiveLessonStudentRow({
         </div>
 
         {/* Col 4: Sarcini & Fișă (Right-aligned under SARCINI & FIȘĂ header) */}
-        <div className="flex justify-end">
+        <div className="flex justify-end min-w-0">
           <StudentResourceAssigner
             studentId={student.studentId}
             studentName={student.studentName}
@@ -126,7 +131,7 @@ export function LiveLessonStudentRow({
 
       {/* Expandable Absent Mini-Comment Section */}
       {showCommentArea && (
-        <div className="pl-12 pr-4 pt-2.5">
+        <div className="pl-10 pr-4 pt-2">
           <AbsentCommentInput
             comment={student.comment}
             onSaveComment={(cmt) => onCommentChange(student.studentId, cmt)}

@@ -27,8 +27,24 @@ type Props = {
   resources: SessionResourceItem[];
   selectedResourceId: number | null;
   onSelectResource: (resourceId: number | null) => void;
+  activeBroadcastResourceId?: number | null;
+  onCloseBroadcast?: () => void;
   onBroadcastSuccess?: (resourceTitle: string, count: number) => void;
 };
+
+const TYPE_BADGES: Record<string, { bg: string; label: string }> = {
+  worksheet: { bg: "bg-emerald-50 text-emerald-800 border-emerald-200", label: "Fișă" },
+  minigame: { bg: "bg-purple-50 text-purple-800 border-purple-200", label: "Minijoc" },
+  link: { bg: "bg-blue-50 text-blue-800 border-blue-200", label: "Link" },
+  pdf: { bg: "bg-rose-50 text-rose-800 border-rose-200", label: "PDF" },
+  presentation: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "PPTX" },
+  manual: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
+  textbook: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
+  video: { bg: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Video" },
+  vdr: { bg: "bg-cyan-50 text-cyan-800 border-cyan-200", label: "VDR" },
+};
+
+const FILTER_LABELS: Record<string, string> = { all: "Toate", worksheet: "Fișe", minigame: "Minijocuri", pdf: "PDF", presentation: "PPTX", link: "Linkuri" };
 
 export function SessionResourceBroadcastBar({
   courseId,
@@ -36,11 +52,17 @@ export function SessionResourceBroadcastBar({
   resources,
   selectedResourceId,
   onSelectResource,
+  activeBroadcastResourceId,
+  onCloseBroadcast,
   onBroadcastSuccess,
 }: Props) {
   const [activeFilter, setActiveFilter] = useState<"all" | "worksheet" | "minigame" | "pdf" | "presentation" | "link">("all");
   const [broadcastFeedback, setBroadcastFeedback] = useState<string | null>(null);
+  const [internalActiveBroadcastId, setInternalActiveBroadcastId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const activeBroadcastId =
+    activeBroadcastResourceId !== undefined ? activeBroadcastResourceId : internalActiveBroadcastId;
 
   const utils = trpc.useUtils();
 
@@ -48,6 +70,7 @@ export function SessionResourceBroadcastBar({
     onSuccess: (res) => {
       const target = resources.find((r) => r.resource.id === selectedResourceId);
       const title = target?.resource.title || "Resursa";
+      setInternalActiveBroadcastId(selectedResourceId);
       setBroadcastFeedback(`Resursa «${title}» a fost deschisă pentru ${res.assignedCount} elevi.`);
       utils.lesson.getLessonSubmissions.invalidate({ courseId, groupId });
       utils.attendance.getLessonAttendance.invalidate({ courseId });
@@ -57,6 +80,11 @@ export function SessionResourceBroadcastBar({
       setTimeout(() => setBroadcastFeedback(null), 4000);
     },
   });
+
+  const handleCloseBroadcast = () => {
+    setInternalActiveBroadcastId(null);
+    onCloseBroadcast?.();
+  };
 
   const filteredResources = resources.filter((item) => {
     if (activeFilter === "all") return true;
@@ -87,23 +115,66 @@ export function SessionResourceBroadcastBar({
             onClick={() => setIsAddOpen(true)}
             className="px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer select-none"
           >
-            <span>+</span>
-            <span>Adaugă Primul Material</span>
+            <span>+ Adaugă Primul Material</span>
           </button>
         </div>
-
-        <AddResourceModal
-          isOpen={isAddOpen}
-          onClose={() => setIsAddOpen(false)}
-          courseId={courseId}
-        />
+        <AddResourceModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} courseId={courseId} />
       </>
     );
   }
 
+  const activeResource = resources.find((r) => r.resource.id === activeBroadcastId);
+
   return (
     <>
       <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] p-4 sm:p-5 space-y-3.5">
+        {/* Currently Broadcasting Banner */}
+        {activeResource && (
+          <div className="bg-slate-900 text-white rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md border border-slate-800 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    În difuzare activă
+                  </span>
+                  <span className="text-[10px] text-slate-400">• Pe ecranele elevilor</span>
+                </div>
+                <div className="text-xs sm:text-sm font-bold text-white truncate">
+                  {activeResource.resource.title}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {selectedResourceId && selectedResourceId !== activeResource.resource.id && (
+                <button
+                  type="button"
+                  disabled={broadcastMutation.isPending}
+                  onClick={handleBroadcast}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                  title="Comută difuzarea la resursa selectată"
+                >
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span>{broadcastMutation.isPending ? "Se comută..." : "Comută difuzarea"}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleCloseBroadcast}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/20 cursor-pointer"
+                title="Închide starea de difuzare activă"
+              >
+                <span>Închide difuzarea</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header and Type Filter Pills */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -116,14 +187,6 @@ export function SessionResourceBroadcastBar({
           {/* Filter Pills + Add Button */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-wrap">
             {(["all", "worksheet", "minigame", "pdf", "presentation", "link"] as const).map((filter) => {
-              const labelMap: Record<string, string> = {
-                all: "Toate",
-                worksheet: "Fișe",
-                minigame: "Minijocuri",
-                pdf: "PDF",
-                presentation: "PPTX",
-                link: "Linkuri",
-              };
               const count =
                 filter === "all"
                   ? resources.length
@@ -141,7 +204,7 @@ export function SessionResourceBroadcastBar({
                       : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70"
                   }`}
                 >
-                  <span>{labelMap[filter]}</span>
+                  <span>{FILTER_LABELS[filter]}</span>
                   <span className="text-[10px] opacity-70">({count})</span>
                 </button>
               );
@@ -163,17 +226,11 @@ export function SessionResourceBroadcastBar({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
           {filteredResources.map((item) => {
             const isSelected = item.resource.id === selectedResourceId;
-            const typeBadge = {
-              worksheet: { bg: "bg-emerald-50 text-emerald-800 border-emerald-200", label: "Fișă" },
-              minigame: { bg: "bg-purple-50 text-purple-800 border-purple-200", label: "Minijoc" },
-              link: { bg: "bg-blue-50 text-blue-800 border-blue-200", label: "Link" },
-              pdf: { bg: "bg-rose-50 text-rose-800 border-rose-200", label: "PDF" },
-              presentation: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "PPTX" },
-              manual: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
-              textbook: { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Manual" },
-              video: { bg: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Video" },
-              vdr: { bg: "bg-cyan-50 text-cyan-800 border-cyan-200", label: "VDR" },
-            }[item.resource.type] || { bg: "bg-slate-50 text-slate-700 border-slate-200", label: item.resource.type };
+            const isBroadcasting = item.resource.id === activeBroadcastId;
+            const typeBadge = TYPE_BADGES[item.resource.type] || {
+              bg: "bg-slate-50 text-slate-700 border-slate-200",
+              label: item.resource.type,
+            };
 
             return (
               <button
@@ -183,11 +240,13 @@ export function SessionResourceBroadcastBar({
                 className={`text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 select-none relative ${
                   isSelected
                     ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20"
-                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                    : isBroadcasting
+                      ? "bg-emerald-50/40 hover:bg-emerald-50/70 border-emerald-300 text-slate-800 ring-1 ring-emerald-400/50"
+                      : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border ${
                         isSelected ? "bg-white/20 text-white border-white/30" : typeBadge.bg
@@ -195,9 +254,21 @@ export function SessionResourceBroadcastBar({
                     >
                       {typeBadge.label}
                     </span>
-                    {isSelected && (
-                      <span className="text-[11px] font-bold text-emerald-400">Selectat ✓</span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {isBroadcasting && (
+                        <span className={`text-[10px] font-bold flex items-center gap-1 px-1.5 py-0.2 rounded border ${
+                          isSelected
+                            ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/40"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Difuzat</span>
+                        </span>
+                      )}
+                      {isSelected && (
+                        <span className="text-[11px] font-bold text-emerald-400">Selectat ✓</span>
+                      )}
+                    </div>
                   </div>
                   <div className="font-bold text-xs line-clamp-1">{item.resource.title}</div>
                 </div>
@@ -221,7 +292,7 @@ export function SessionResourceBroadcastBar({
           <div className="text-xs text-slate-500">
             {selectedItem ? (
               <span>
-                Resursă pregătită: <strong className="text-slate-800">{selectedItem.resource.title}</strong>
+                Resursă selectată: <strong className="text-slate-800">{selectedItem.resource.title}</strong>
               </span>
             ) : (
               <span className="italic">Selectează o resursă de mai sus pentru a o transmite întregii clase.</span>
@@ -230,10 +301,10 @@ export function SessionResourceBroadcastBar({
 
           <button
             type="button"
-            disabled={!selectedResourceId || !groupId || broadcastMutation.isPending}
+            disabled={!selectedResourceId || !groupId || broadcastMutation.isPending || activeBroadcastId === selectedResourceId}
             onClick={handleBroadcast}
             className={`px-4 py-2 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border shadow-xs ${
-              !selectedResourceId || !groupId
+              !selectedResourceId || !groupId || activeBroadcastId === selectedResourceId
                 ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-70"
                 : "bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white border-slate-900 active:scale-[0.98]"
             }`}
@@ -245,7 +316,11 @@ export function SessionResourceBroadcastBar({
             <span>
               {broadcastMutation.isPending
                 ? "Se transmite..."
-                : "Deschide resursa pentru toți elevii"}
+                : activeBroadcastId && selectedResourceId && activeBroadcastId !== selectedResourceId
+                  ? "Comută difuzarea la resursa selectată"
+                  : activeBroadcastId === selectedResourceId
+                    ? "Resursa este deja în difuzare"
+                    : "Deschide resursa pentru toți elevii"}
             </span>
           </button>
         </div>
