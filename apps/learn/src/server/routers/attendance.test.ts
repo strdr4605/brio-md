@@ -8,6 +8,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -1228,6 +1229,107 @@ describe("attendanceRouter", () => {
         expect(val.date).toBe("2026-10-05");
         expect(val.markedByUserId).toBe(2);
       });
+    });
+
+    it("synchronizes studentCourseProgress for eligible students (present and late)", async () => {
+      let selectStep = 0;
+      const existingProgress = {
+        id: 77,
+        studentId: 701,
+        courseId: 1,
+        currentSession: 3,
+        completedSessions: 2,
+        status: "in_progress",
+      };
+
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => {
+            selectStep++;
+            if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
+            if (selectStep === 2) return Promise.resolve([mockGroup]);
+            // lookup studentCourseProgress
+            return { limit: vi.fn().mockResolvedValue([existingProgress]) };
+          }),
+        })),
+      }));
+
+      (db.insert as any).mockImplementation(() => ({
+        values: vi.fn().mockImplementation((val) => ({
+          onConflictDoUpdate: vi.fn().mockImplementation(() => ({
+            returning: vi.fn().mockResolvedValue([{ ...val, id: 101 }]),
+          })),
+        })),
+      }));
+
+      let updatedPayload: any = null;
+      (db.update as any).mockImplementation(() => ({
+        set: vi.fn().mockImplementation((payload) => {
+          updatedPayload = payload;
+          return {
+            where: vi.fn().mockResolvedValue([]),
+          };
+        }),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      const res = await caller.finalizeLessonAttendance({
+        courseId: 1,
+        groupId: 10,
+        date: "2026-10-05",
+        records: [
+          { studentId: 701, status: "present", comment: null },
+        ],
+      });
+
+      expect(res.success).toBe(true);
+      expect(updatedPayload).not.toBeNull();
+      expect(updatedPayload.completedSessions).toBe(3);
+      expect(updatedPayload.currentSession).toBe(4);
+      expect(updatedPayload.status).toBe("in_progress");
+    });
+
+    it("inserts initial studentCourseProgress if no prior record exists for present student", async () => {
+      let selectStep = 0;
+      (db.select as any).mockImplementation(() => ({
+        from: vi.fn().mockImplementation(() => ({
+          where: vi.fn().mockImplementation(() => {
+            selectStep++;
+            if (selectStep === 1) return { limit: vi.fn().mockResolvedValue([mockCourse]) };
+            if (selectStep === 2) return Promise.resolve([mockGroup]);
+            // no existing progress
+            return { limit: vi.fn().mockResolvedValue([]) };
+          }),
+        })),
+      }));
+
+      const insertedProgressValues: any[] = [];
+      (db.insert as any).mockImplementation(() => ({
+        values: vi.fn().mockImplementation((val) => {
+          insertedProgressValues.push(val);
+          return {
+            onConflictDoUpdate: vi.fn().mockImplementation(() => ({
+              returning: vi.fn().mockResolvedValue([{ ...val, id: 102 }]),
+            })),
+          };
+        }),
+      }));
+
+      const caller = attendanceRouter.createCaller({ user: mockTeacherUser });
+      const res = await caller.finalizeLessonAttendance({
+        courseId: 1,
+        groupId: 10,
+        date: "2026-10-05",
+        records: [
+          { studentId: 801, status: "present" },
+        ],
+      });
+
+      expect(res.success).toBe(true);
+      const progressEntry = insertedProgressValues.find((v) => v.studentId === 801 && v.completedSessions !== undefined);
+      expect(progressEntry).toBeDefined();
+      expect(progressEntry.completedSessions).toBe(1);
+      expect(progressEntry.currentSession).toBe(2);
     });
   });
 

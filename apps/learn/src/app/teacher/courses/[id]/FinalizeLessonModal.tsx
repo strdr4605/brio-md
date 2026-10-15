@@ -108,22 +108,30 @@ export function FinalizeLessonModal({
       });
     }
 
-    if (unmarkedStudents.length === 0) {
+    if (allStudents.length === 0) {
       onSuccess();
       onClose();
       return;
     }
 
-    const records = unmarkedStudents.map((s) => ({
-      studentId: s.studentId,
-      status: statuses[s.studentId] || "absent",
-      comment:
-        statuses[s.studentId] === "excused"
+    const records = allStudents.map((s) => {
+      const isUnmarked = s.status === null;
+      const finalStatus: "present" | "absent" | "late" | "excused" =
+        s.status !== null ? s.status : (statuses[s.studentId] || "absent");
+      const comment = isUnmarked
+        ? statuses[s.studentId] === "excused"
           ? "Absență motivată la finalizarea lecției"
           : statuses[s.studentId] === "absent"
             ? "Absență nemotivată la finalizarea lecției"
-            : null,
-    }));
+            : null
+        : undefined;
+
+      return {
+        studentId: s.studentId,
+        status: finalStatus,
+        comment,
+      };
+    });
 
     finalizeMutation.mutate({
       courseId,
