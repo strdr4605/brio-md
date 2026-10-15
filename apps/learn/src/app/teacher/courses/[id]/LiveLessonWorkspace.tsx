@@ -25,6 +25,7 @@ export function LiveLessonWorkspace({ courseId }: Props) {
   const [search, setSearch] = useState("");
   const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
   const [selectedBroadcastResourceId, setSelectedBroadcastResourceId] = useState<number | null>(null);
+  const [closedBroadcastId, setClosedBroadcastId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
@@ -204,7 +205,6 @@ export function LiveLessonWorkspace({ courseId }: Props) {
     }
   });
 
-  const [closedBroadcastId, setClosedBroadcastId] = useState<number | null>(null);
   const latestSubmissionResourceId = lessonSubmissions.length > 0 ? lessonSubmissions[0].resourceId : null;
   const activeBroadcastResourceId =
     latestSubmissionResourceId && latestSubmissionResourceId !== closedBroadcastId
