@@ -1,43 +1,48 @@
+import Link from "next/link";
+import { STAFF_PORTAL_URL, LEARNING_PORTAL_URL } from "@/lib/config";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-neutral-900 selection:bg-neutral-900 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-slate-900 selection:text-white">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 bg-[#FAFAFA]/90 backdrop-blur-md border-b border-neutral-200/80">
+      <header className="sticky top-0 z-50 bg-slate-50/90 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <a href="#" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white font-bold text-base shadow-sm">
-              B
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-base shadow-xs">
+              V
             </div>
-            <span className="text-lg font-bold tracking-tight text-neutral-900">
-              brio<span className="text-indigo-600">.md</span>
+            <span className="text-lg font-black tracking-tight text-slate-900">
+              Vibe<span className="text-slate-500 font-semibold">Academy</span>
             </span>
-          </a>
+          </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-neutral-600">
-            <a href="#features" className="hover:text-neutral-900 transition-colors">
-              Functionalități
+          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
+            <a href="#programe" className="hover:text-slate-900 transition-colors">
+              Programe
             </a>
-            <a href="#demo" className="hover:text-neutral-900 transition-colors">
-              Demonstrație
+            <a href="#grupe" className="hover:text-slate-900 transition-colors">
+              Grupe de Vârstă
             </a>
-            <a href="#about" className="hover:text-neutral-900 transition-colors">
-              Despre proiect
+            <a href="#filiale" className="hover:text-slate-900 transition-colors">
+              Filiale
+            </a>
+            <a href="#despre" className="hover:text-slate-900 transition-colors">
+              Despre Noi
             </a>
           </nav>
 
           <div className="flex items-center gap-3">
             <a
-              href="#"
-              className="text-sm font-semibold text-neutral-700 hover:text-neutral-900 px-3 py-1.5 transition-colors hidden sm:inline-block"
+              href={LEARNING_PORTAL_URL}
+              className="text-sm font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 transition-colors hidden sm:inline-block"
             >
-              Autentificare
+              Learning Portal
             </a>
             <a
-              href="#demo"
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-neutral-900 rounded-lg hover:bg-neutral-800 transition-all duration-150 shadow-sm"
+              href={STAFF_PORTAL_URL}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all duration-150 shadow-xs"
             >
-              Intră în portal
+              Staff Portal
             </a>
           </div>
         </div>
@@ -50,146 +55,234 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             {/* Left Content */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-neutral-100 border border-neutral-200 text-xs font-mono uppercase tracking-wider text-neutral-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
-                Evaluare Digitală Conformată Programa Școlară
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono uppercase tracking-wider text-slate-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Academia de Tehnologie & STEM • Chișinău
               </div>
 
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 leading-[1.12]">
-                Evaluări mai clare. <br className="hidden sm:inline" />
-                <span className="text-neutral-500 font-normal">Rezultate reale pentru fiecare elev.</span>
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 leading-[1.12]">
+                Robotică, programare și inginerie practică. <br className="hidden sm:inline" />
+                <span className="text-slate-500 font-normal">Abilități reale pentru viitorul copiilor.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-neutral-600 leading-relaxed max-w-xl">
-                Brio.md simplifică procesul de testare și monitorizare în școli. Fără foi risipite, fără corectări manuale obositoare — doar teste inteligente și analize clare.
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+                La Vibe Academy copiii și adolescenții își dezvoltă gândirea analitică prin proiecte practice de robotică, codare și circuite electronice. Lucrăm în echipe restrânse, ghidați de mentori pasionați.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <a
-                  href="#demo"
-                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all duration-150 shadow-sm"
+                  href={LEARNING_PORTAL_URL}
+                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all duration-150 shadow-xs"
                 >
-                  Solicită o demonstrație
+                  Intră în Learning Portal
                 </a>
                 <a
-                  href="#features"
-                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-all duration-150"
+                  href={STAFF_PORTAL_URL}
+                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-all duration-150"
                 >
-                  Vezi cum funcționează
+                  Portal Staff & Profesori
                 </a>
               </div>
 
-              {/* Social Proof Bar */}
-              <div className="pt-6 border-t border-neutral-200/80 flex items-center gap-6 text-xs text-neutral-500 font-medium">
+              {/* Highlights Bar */}
+              <div className="pt-6 border-t border-slate-200/80 flex flex-wrap items-center gap-6 text-xs text-slate-600 font-medium">
                 <div className="flex items-center gap-1.5">
                   <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Conform Curriculum Național</span>
+                  <span>4 Filiale Moderne în Chișinău</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Raportare Instantă</span>
+                  <span>Kituri Reale & Proiecte Hardware</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Educational Test Interactive Card Mockup */}
+            {/* Right Interactive Robotics Project Showcase */}
             <div className="lg:col-span-5">
-              <div className="bg-white rounded-xl border border-neutral-300 shadow-md p-5 space-y-4">
-                {/* Header of Mock Test */}
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span className="text-xs font-mono font-semibold uppercase text-neutral-500">Test În Desfășurare</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-xs font-mono font-bold uppercase text-slate-700">Proiect Activ • Laborator</span>
                   </div>
-                  <span className="text-xs font-mono text-neutral-400">Matematică • Clasa IX</span>
+                  <span className="text-xs font-mono font-semibold text-slate-500">Robotică & Electronică</span>
                 </div>
 
-                {/* Question Box */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Întrebarea 4 din 10</div>
-                  <p className="text-sm font-semibold text-neutral-900 leading-snug">
-                    Fie funcția <code className="bg-neutral-100 px-1.5 py-0.5 rounded font-mono text-xs text-indigo-700">f(x) = 2x - 4</code>. Care este valoarea lui <code className="bg-neutral-100 px-1 py-0.5 rounded font-mono text-xs">x</code> pentru care <code className="bg-neutral-100 px-1 py-0.5 rounded font-mono text-xs">f(x) = 0</code>?
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Modul Curent</span>
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    Rover Autonom cu Senzori Ultrasonici & Motoare Pas-cu-Pas
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Construcție mecanică și algoritm de navigare în timp real programat în C++ pe placă Arduino.
                   </p>
                 </div>
 
-                {/* Options List */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 bg-neutral-50/50">
-                    <span>A) x = -2</span>
+                <div className="space-y-2 pt-1 text-xs">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-700">
+                    <span className="font-medium">Senzori HC-SR04 Calibrați</span>
+                    <span className="font-bold text-emerald-600">3 / 3 Conectați</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-indigo-600 bg-indigo-50/40 text-xs font-semibold text-indigo-900">
-                    <span>B) x = 2</span>
-                    <span className="text-[10px] bg-indigo-600 text-white font-bold px-2 py-0.5 rounded">Răspuns Selectat</span>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-700">
+                    <span className="font-medium">Firmware Microcontroller</span>
+                    <span className="font-bold text-slate-900">Algoritm Evitare Obstacole</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 bg-neutral-50/50">
-                    <span>C) x = 4</span>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50 text-slate-700">
+                    <span className="font-medium">Nivel Cursanți</span>
+                    <span className="font-bold text-slate-900">Junior & Teens (10–14 ani)</span>
                   </div>
                 </div>
 
-                {/* Score Progress Bar */}
-                <div className="pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500 font-mono">
-                  <span>Acuratețe estimată</span>
-                  <span className="font-bold text-indigo-600">96.4%</span>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono">
+                  <span>Echipă Laborator</span>
+                  <span className="font-bold text-slate-900">Grupa Robotică Sâmbătă</span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3-Feature Grid Section */}
-        <section id="features" className="border-y border-neutral-200/90 bg-white py-16">
+        {/* 4-Pillar Programs Section */}
+        <section id="programe" className="border-y border-slate-200/80 bg-white py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12">
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-indigo-600">
-                01 — Arhitectură & Module
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500">
+                01 — Programe Educaționale
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 mt-2">
-                Conceput pentru profesori, elevi și administrație
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-2">
+                Pilonii de formare inginerească și digitală
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-200 border-t border-neutral-200">
-              {/* Feature 1 */}
-              <div className="py-8 md:py-0 md:px-8 first:pl-0 last:pr-0 space-y-3">
-                <div className="text-xs font-mono font-bold text-neutral-400">01 / EVALUARE</div>
-                <h3 className="text-lg font-bold text-neutral-900">Testări & Rapoarte Automate</h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Generare rapidă de testări conform programei și analiză detaliată a nivelului de pregătire per elev.
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="text-xs font-mono font-bold text-slate-400">01 / ROBOTICĂ</div>
+                <h3 className="text-lg font-bold text-slate-900">Robotică & Mecatronică</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Construcție practică cu LEGO Education, SPIKE Prime și componente modulare. Proiectare de mecanisme și roboți autonomi.
                 </p>
-                <div className="pt-2 text-xs font-semibold text-indigo-600 flex items-center gap-1">
-                  <span>Află mai multe</span>
-                  <span>→</span>
-                </div>
               </div>
 
-              {/* Feature 2 */}
-              <div className="py-8 md:py-0 md:px-8 first:pl-0 last:pr-0 space-y-3">
-                <div className="text-xs font-mono font-bold text-neutral-400">02 / ADAPTIV</div>
-                <h3 className="text-lg font-bold text-neutral-900">Învățare Personalizată</h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Algoritmul adaptează gradul de dificultate al exercițiilor în funcție de evoluția individuală.
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="text-xs font-mono font-bold text-slate-400">02 / CODING</div>
+                <h3 className="text-lg font-bold text-slate-900">Programare & Software</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  De la Scratch și logică algoritmică la Python, dezvoltare web modernă și gândire computațională structurată.
                 </p>
-                <div className="pt-2 text-xs font-semibold text-indigo-600 flex items-center gap-1">
-                  <span>Află mai multe</span>
-                  <span>→</span>
-                </div>
               </div>
 
-              {/* Feature 3 */}
-              <div className="py-8 md:py-0 md:px-8 first:pl-0 last:pr-0 space-y-3">
-                <div className="text-xs font-mono font-bold text-neutral-400">03 / ADMINISTRARE</div>
-                <h3 className="text-lg font-bold text-neutral-900">Gestionare Simplă a Claselor</h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Evidență clară a grupelor, claselor și rezultatelor într-un panou de control fără birocrație.
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="text-xs font-mono font-bold text-slate-400">03 / ELECTRONICĂ</div>
+                <h3 className="text-lg font-bold text-slate-900">Circuite & IoT</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Lucru cu plăci Arduino și ESP32, senzori inteligenți, breadboard-uri și componente electronice reale.
                 </p>
-                <div className="pt-2 text-xs font-semibold text-indigo-600 flex items-center gap-1">
-                  <span>Află mai multe</span>
-                  <span>→</span>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="text-xs font-mono font-bold text-slate-400">04 / STEM</div>
+                <h3 className="text-lg font-bold text-slate-900">Știință & Matematică Aplicată</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Concepte de fizică, mecanică și logică demonstrate prin experimente interactive și simulări practice.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Age Groups Section */}
+        <section id="grupe" className="py-16 bg-slate-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-12">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500">
+                02 — Adaptat Fiecărei Vârste
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-2">
+                Grupe calibrate pe etape de dezvoltare
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-3 shadow-xs">
+                <div className="inline-flex px-2.5 py-1 rounded-md bg-slate-100 text-xs font-mono font-bold text-slate-700">
+                  5 – 7 ANI
                 </div>
+                <h3 className="text-lg font-bold text-slate-900">Early STEM & Inițiere Lego</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Descoperirea primelor mecanisme simple, roți dințate, orientare spațială și algoritmi vizuali intuitivi.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-3 shadow-xs">
+                <div className="inline-flex px-2.5 py-1 rounded-md bg-slate-100 text-xs font-mono font-bold text-slate-700">
+                  8 – 11 ANI
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Robotică & Coding Junior</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Construcție de roboți complecși, programare în Scratch și Python introductiv, integrare de motoare și senzori.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-3 shadow-xs">
+                <div className="inline-flex px-2.5 py-1 rounded-md bg-slate-100 text-xs font-mono font-bold text-slate-700">
+                  12 – 17 ANI
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Adolescenți & Tehnologii Avansate</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Python avansat, programare microcontroller în C++, dezvoltare software, baze de date și robotică competitivă.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Local Branches Section */}
+        <section id="filiale" className="border-t border-slate-200/80 bg-white py-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-12">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500">
+                03 — Locații în Chișinău
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-2">
+                Filiale moderne aproape de tine
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="text-xs font-bold text-slate-400 uppercase font-mono">SECTOR BOTANICA</div>
+                <h3 className="text-base font-bold text-slate-900">Filiala Botanica</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  bd. Dacia • Laboratoare dotate pentru robotică și STEM.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="text-xs font-bold text-slate-400 uppercase font-mono">SECTOR CENTRU</div>
+                <h3 className="text-base font-bold text-slate-900">Filiala Centru</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  str. Pușkin • Hub tehnologic dedicat programării și IoT.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="text-xs font-bold text-slate-400 uppercase font-mono">SECTOR RÎȘCANI</div>
+                <h3 className="text-base font-bold text-slate-900">Filiala Rîșcani</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  bd. Moscova • Săli moderne de circuite și mecatronică.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="text-xs font-bold text-slate-400 uppercase font-mono">SECTOR BUIUCANI</div>
+                <h3 className="text-base font-bold text-slate-900">Filiala Buiucani</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  str. Ion Creangă • Centru educațional digital și coding.
+                </p>
               </div>
             </div>
           </div>
@@ -197,35 +290,38 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-neutral-900 text-neutral-400 text-xs py-12 border-t border-neutral-800">
+      <footer id="despre" className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-neutral-800">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-white text-neutral-900 font-bold flex items-center justify-center text-xs">
-                B
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-slate-800">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white text-slate-900 font-black flex items-center justify-center text-xs">
+                V
               </div>
-              <span className="text-base font-bold text-white tracking-tight">brio.md</span>
+              <span className="text-base font-black text-white tracking-tight">Vibe Academy</span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 text-neutral-300 font-medium">
-              <a href="#features" className="hover:text-white transition-colors">
-                Functionalități
+            <div className="flex flex-wrap items-center gap-6 text-slate-300 font-medium">
+              <a href="#programe" className="hover:text-white transition-colors">
+                Programe
               </a>
-              <a href="#demo" className="hover:text-white transition-colors">
-                Demonstrație
+              <a href="#grupe" className="hover:text-white transition-colors">
+                Grupe Vârstă
               </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Termeni
+              <a href="#filiale" className="hover:text-white transition-colors">
+                Filiale
               </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Confidențialitate
+              <a href={LEARNING_PORTAL_URL} className="hover:text-white transition-colors">
+                Learning Portal
+              </a>
+              <a href={STAFF_PORTAL_URL} className="hover:text-white transition-colors">
+                Staff Portal
               </a>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-neutral-500 font-mono">
-            <p>© {new Date().getFullYear()} Brio.md. Platformă educațională de evaluare.</p>
-            <p>Chișinău • București</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 font-mono">
+            <p>© {new Date().getFullYear()} Vibe Academy • Chișinău, Republica Moldova.</p>
+            <p>Powered by Brio.md Educational Platform</p>
           </div>
         </div>
       </footer>

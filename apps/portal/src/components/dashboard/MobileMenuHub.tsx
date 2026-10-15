@@ -111,9 +111,9 @@ export function MobileMenuHub({
       visible: isSuperOrAdmin,
     },
     {
-      href: "/dashboard/keys",
-      label: "Securitate & Chei",
-      description: "Chei RFID & acces",
+      href: "/dashboard/permissions",
+      label: "Permisiuni",
+      description: "Roluri & permisiuni",
       Icon: KeyIcon,
       visible: isSuperOrAdmin,
     },

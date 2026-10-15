@@ -9,14 +9,12 @@ import {
   StudentsIcon,
   BookOpenIcon,
   CalendarIcon,
-  DoorIcon,
   UserCheckIcon,
   TrendingUpIcon,
   InvoiceIcon,
   BarChartIcon,
   AlertTriangleIcon,
   CheckCircleIcon,
-  ShieldCheckIcon,
   SchoolIcon,
   ChevronRightIcon,
 } from "@/components/ui/icons";
@@ -29,7 +27,6 @@ export default function DashboardPage() {
   const isSuperOrAdmin = isSuperAdmin || permissions.includes("admin") || role === "admin";
   const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
   const isBillingAllowed = permissions.includes("manage_billing") || isSuperOrAdmin;
-  const canAccessDoor = permissions.includes("open-front-door") || isSuperOrAdmin;
 
   // Real-time telemetry queries
   const { data: students = [], isLoading: loadingStudents } = trpc.student.list.useQuery(undefined, {
@@ -242,53 +239,6 @@ export default function DashboardPage() {
               </div>
             }
           />
-        </div>
-      </section>
-
-      {/* SECTION 4: Infrastructură & Securitate */}
-      <section className="space-y-4">
-        <h2 className="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-wide">
-          Stare Sistem & Securitate
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-base font-bold text-slate-900">Infrastructură Platformă</span>
-              <ShieldCheckIcon className="w-5 h-5 text-slate-400" />
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-600 font-medium">Baza de Date</span>
-                <span className="font-bold text-slate-900">PostgreSQL (Drizzle ORM)</span>
-              </div>
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-600 font-medium">Izolare Multi-Tenant</span>
-                <span className="font-bold text-emerald-600 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> Activă
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-base font-bold text-slate-900">Control Acces & Perimetru</span>
-              <DoorIcon className="w-5 h-5 text-slate-400" />
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-600 font-medium">Roletă Intrare Tasmota</span>
-                <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${canAccessDoor ? "bg-emerald-500" : "bg-slate-400"}`} />
-                  {canAccessDoor ? "Standby • Conectat" : "Fără acces"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-600 font-medium">Autentificare & PBAC</span>
-                <span className="font-bold text-slate-900">NextAuth.js v5 (Securizat)</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
     </div>

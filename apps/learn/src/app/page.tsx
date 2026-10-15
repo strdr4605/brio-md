@@ -10,8 +10,14 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   // If already logged in, redirect based on role
-  const session = await auth();
-  if (session?.user) {
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Treat as unauthenticated if auth verification fails
+  }
+
+  if (session?.user && !session.user.expired) {
     const isTeacher =
       session.user.role === "teacher" ||
       session.user.role === "admin" ||

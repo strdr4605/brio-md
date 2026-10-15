@@ -5,9 +5,14 @@ import Link from "next/link";
 import { CourseList } from "./CourseList";
 
 export default async function CoursesPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
-  if (!session?.user) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 

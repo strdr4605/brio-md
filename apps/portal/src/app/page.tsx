@@ -4,6 +4,24 @@ import Link from "next/link";
 import { auth } from "@brio-md/auth";
 import { LoginForm } from "@brio-md/ui";
 
+// Polyfill/guard performance.measure against Next.js Turbopack negative timestamp bugs
+if (typeof globalThis.performance !== "undefined" && typeof globalThis.performance.measure === "function") {
+  const origMeasure = globalThis.performance.measure.bind(globalThis.performance);
+  globalThis.performance.measure = function (name: string, ...args: unknown[]) {
+    try {
+      return origMeasure(name, ...(args as [any, any]));
+    } catch {
+      return {
+        name,
+        entryType: "measure",
+        startTime: 0,
+        duration: 0,
+        toJSON: () => ({}),
+      } as unknown as PerformanceMeasure;
+    }
+  };
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -16,7 +34,7 @@ export default async function LoginPage({
     // If JWT decryption fails or DB is temporarily down, treat as unauthenticated
   }
 
-  if (session?.user) {
+  if (session?.user && !session.user.expired) {
     redirect("/dashboard");
   }
 

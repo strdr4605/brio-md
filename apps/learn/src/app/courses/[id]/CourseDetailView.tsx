@@ -162,7 +162,6 @@ export function CourseDetailView({ courseId }: Props) {
         <div className="lg:col-span-5 space-y-6">
           <CourseResourcesSection
             courseId={courseId}
-            materials={course.materials}
             notes={course.progress?.notes}
             selectedSessionNumber={selectedSessionNumber}
             onSelectSession={setSelectedSessionNumber}

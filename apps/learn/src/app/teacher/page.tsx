@@ -6,9 +6,14 @@ import { TeacherNavbar } from "@/components/layout/TeacherNavbar";
 import { TeacherDashboard } from "./TeacherDashboard";
 
 export default async function TeacherPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/");
+  }
 
-  if (!session?.user) {
+  if (!session?.user || session.user.expired) {
     redirect("/");
   }
 
