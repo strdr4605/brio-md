@@ -43,12 +43,26 @@ export default function SetariPage() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition active:scale-95 self-start sm:self-auto"
-        >
-          <span>← Înapoi la Panou</span>
-        </Link>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {canAccessDoor && (
+            <button
+              type="button"
+              onClick={() => setDoorModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition active:scale-95"
+              title="Control Roletă Intrare"
+            >
+              <DoorIcon className="w-4 h-4 text-slate-700 shrink-0" />
+              <span>Roletă Intrare</span>
+            </button>
+          )}
+
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition active:scale-95"
+          >
+            <span>← Înapoi la Panou</span>
+          </Link>
+        </div>
       </div>
 
       {/* Account Profile Card */}
@@ -163,30 +177,6 @@ export default function SetariPage() {
               )}
             </div>
           </div>
-
-          {/* IoT Facility Access Card */}
-          {canAccessDoor && (
-            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                  <DoorIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Control Roletă Intrare</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Releu IoT acces clădire</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setDoorModalOpen(true)}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all active:scale-[0.99]"
-              >
-                <DoorIcon className="w-4 h-4" />
-                <span>Deschide / Închide Roleta</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
