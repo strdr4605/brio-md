@@ -4,15 +4,10 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { MinigameActivityCard } from "./MinigameActivityCard";
 import { ResourcePreviewModal } from "@/app/teacher/resources/ResourcePreviewModal";
-import {
-  CourseMaterialsList,
-  getMaterialTypeBadge,
-  type MaterialItem,
-} from "./CourseMaterialsList";
+import { getMaterialTypeBadge } from "./CourseMaterialsList";
 
 type Props = {
   courseId: number;
-  materials: MaterialItem[];
   notes?: string | null;
   selectedSessionNumber?: number | null;
   onSelectSession?: (session: number | null) => void;
@@ -30,7 +25,6 @@ type PreviewTarget = {
 
 export function CourseResourcesSection({
   courseId,
-  materials,
   notes,
   selectedSessionNumber = null,
   onSelectSession,
@@ -174,7 +168,7 @@ export function CourseResourcesSection({
       )}
 
       {/* Learning Resources & Video Lessons Section */}
-      {learningItems.length > 0 && (
+      {(!selectedSessionNumber || learningItems.length > 0) && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -186,111 +180,116 @@ export function CourseResourcesSection({
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            {learningItems.map((cr) => {
-              const res = cr.resource;
-              const sub = submissionsByResource.get(res.id);
-              const isCompleted = sub?.status === "completed" || sub?.status === "reviewed";
-              const badge = getMaterialTypeBadge(res.type);
-              const isVideo = res.type === "video";
+          {learningItems.length === 0 ? (
+            <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <p className="text-xs sm:text-sm text-slate-500">
+                Nu există materiale didactice atașate acestui curs.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {learningItems.map((cr) => {
+                const res = cr.resource;
+                const sub = submissionsByResource.get(res.id);
+                const isCompleted = sub?.status === "completed" || sub?.status === "reviewed";
+                const badge = getMaterialTypeBadge(res.type);
+                const isVideo = res.type === "video";
 
-              return (
-                <div
-                  key={cr.id}
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-2xs transition bg-white gap-3"
-                >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${badge.className}`}>
-                        {badge.label}
-                      </span>
-                      {cr.sessionNumber && (
-                        <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                          Sesiunea {cr.sessionNumber}
+                return (
+                  <div
+                    key={cr.id}
+                    className="group flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-2xs transition bg-white gap-3"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${badge.className}`}>
+                          {badge.label}
                         </span>
-                      )}
-                      {isCompleted && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Finalizat
-                        </span>
+                        {cr.sessionNumber && (
+                          <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                            Sesiunea {cr.sessionNumber}
+                          </span>
+                        )}
+                        {isCompleted && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Finalizat
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        {res.title}
+                      </h3>
+                      {res.description && (
+                        <p className="text-xs text-slate-500 line-clamp-1">{res.description}</p>
                       )}
                     </div>
-                    <h3 className="text-sm font-semibold text-slate-900 truncate">
-                      {res.title}
-                    </h3>
-                    {res.description && (
-                      <p className="text-xs text-slate-500 line-clamp-1">{res.description}</p>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      disabled={recordMutation.isPending}
-                      onClick={() =>
-                        recordMutation.mutate({
-                          courseId,
-                          resourceId: res.id,
-                          status: isCompleted ? "assigned" : "completed",
-                        })
-                      }
-                      className={`p-1.5 rounded-xl border transition cursor-pointer text-xs flex items-center gap-1 ${
-                        isCompleted
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                          : "bg-white text-slate-400 border-slate-200 hover:text-slate-700 hover:bg-slate-50"
-                      }`}
-                      title={isCompleted ? "Marchează ca nefinalizat" : "Marchează ca finalizat"}
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        disabled={recordMutation.isPending}
+                        onClick={() =>
+                          recordMutation.mutate({
+                            courseId,
+                            resourceId: res.id,
+                            status: isCompleted ? "assigned" : "completed",
+                          })
+                        }
+                        className={`p-1.5 rounded-xl border transition cursor-pointer text-xs flex items-center gap-1 ${
+                          isCompleted
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                            : "bg-white text-slate-400 border-slate-200 hover:text-slate-700 hover:bg-slate-50"
+                        }`}
+                        title={isCompleted ? "Marchează ca nefinalizat" : "Marchează ca finalizat"}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPreviewItem({
-                          id: res.id,
-                          title: res.title,
-                          type: res.type,
-                          url: res.url,
-                          description: res.description,
-                          metadata: (res.metadata || {}) as Record<string, unknown>,
-                        })
-                      }
-                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shrink-0 cursor-pointer shadow-2xs"
-                    >
-                      {isVideo ? (
-                        <>
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span>Vizionează</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          <span>Deschide</span>
-                        </>
-                      )}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreviewItem({
+                            id: res.id,
+                            title: res.title,
+                            type: res.type,
+                            url: res.url,
+                            description: res.description,
+                            metadata: (res.metadata || {}) as Record<string, unknown>,
+                          })
+                        }
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shrink-0 cursor-pointer shadow-2xs"
+                      >
+                        {isVideo ? (
+                          <>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Vizionează</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Deschide</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
-
-      {/* Course Materials Card */}
-      <CourseMaterialsList materials={materials} />
 
       {/* Teacher Feedback / Progress Notes Card if available */}
       {notes && (
