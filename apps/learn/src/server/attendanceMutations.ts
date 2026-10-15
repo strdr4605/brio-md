@@ -179,7 +179,7 @@ export async function finalizeLessonAttendanceService(params: {
   user: SessionUserInfo;
 }) {
   const { courseId, groupId, date, records, user } = params;
-  await assertCourseTeacherAccess(courseId, user);
+  const course = await assertCourseTeacherAccess(courseId, user);
   const userId = parseInt(user.id, 10);
   const userIdNumber = isNaN(userId) ? null : userId;
 
@@ -222,6 +222,56 @@ export async function finalizeLessonAttendanceService(params: {
   const results = typeof (db as any).transaction === "function"
     ? await (db as any).transaction(async (tx: any) => saveBatch(tx))
     : await saveBatch(db);
+
+  // Synchronize studentCourseProgress for eligible students (present or late)
+  const eligibleRecords = records.filter(
+    (r) => r.status === "present" || r.status === "late",
+  );
+
+  const totalSessions = course.totalSessions || 1;
+
+  for (const rec of eligibleRecords) {
+    try {
+      const [existingProgress] = await db
+        .select()
+        .from(studentCourseProgress)
+        .where(
+          and(
+            eq(studentCourseProgress.courseId, courseId),
+            eq(studentCourseProgress.studentId, rec.studentId),
+          ),
+        )
+        .limit(1);
+
+      if (existingProgress) {
+        const cur = existingProgress.currentSession ?? 1;
+        const comp = Math.max(existingProgress.completedSessions ?? 0, cur);
+        const nextSession = Math.min(totalSessions, comp + 1);
+        await db
+          .update(studentCourseProgress)
+          .set({
+            completedSessions: comp,
+            currentSession: nextSession,
+            status: comp >= totalSessions ? "completed" : "in_progress",
+            updatedAt: new Date(),
+          })
+          .where(eq(studentCourseProgress.id, existingProgress.id));
+      } else {
+        const comp = 1;
+        const nextSession = Math.min(totalSessions, 2);
+        await db.insert(studentCourseProgress).values({
+          studentId: rec.studentId,
+          courseId,
+          completedSessions: comp,
+          currentSession: nextSession,
+          status: comp >= totalSessions ? "completed" : "in_progress",
+          updatedAt: new Date(),
+        });
+      }
+    } catch {
+      // Non-blocking progress update
+    }
+  }
 
   return { success: true, count: results.length, records: results };
 }
