@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  Card,
+  ClockIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  formatSchedule,
+  getLevelBadgeClass,
+  getLevelBadgeLabel,
+} from "@brio-md/ui";
+
 type Props = {
   name: string;
   level?: string | null;
@@ -12,31 +22,6 @@ type Props = {
   total: number;
   progressPct: number;
 };
-
-export function getLevelBadgeClass(level: string | null | undefined) {
-  switch (level?.toLowerCase()) {
-    case "beginner":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "intermediate":
-      return "bg-blue-50 text-blue-700 border-blue-200";
-    case "advanced":
-      return "bg-purple-50 text-purple-700 border-purple-200";
-    default:
-      return "bg-slate-100 text-slate-700 border-slate-200";
-  }
-}
-
-export function formatSchedule(days: string[] | null | undefined, time: string | null | undefined) {
-  const daysText =
-    days && days.length > 0
-      ? days.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
-      : null;
-
-  if (daysText && time) {
-    return `${daysText} • ${time}`;
-  }
-  return daysText || time || "Program nespecificat";
-}
 
 export function CourseOverviewHeaderCard({
   name,
@@ -53,18 +38,18 @@ export function CourseOverviewHeaderCard({
   const isFullyCompleted = progressPct === 100;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
+    <Card className="p-5 sm:p-8 space-y-6">
       {/* Header with Title and Level */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">{name}</h1>
           {level && (
             <span
-              className={`text-xs font-semibold px-3 py-1 rounded-full border capitalize ${getLevelBadgeClass(
+              className={`text-xs font-semibold px-3 py-1 rounded-full border whitespace-nowrap ${getLevelBadgeClass(
                 level,
               )}`}
             >
-              {level}
+              {getLevelBadgeLabel(level)}
             </span>
           )}
         </div>
@@ -84,14 +69,7 @@ export function CourseOverviewHeaderCard({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-5 border-t border-slate-100">
         <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <ClockIcon className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-medium text-slate-500">Durată Sesiune</p>
@@ -103,14 +81,7 @@ export function CourseOverviewHeaderCard({
 
         <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <CalendarIcon className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-medium text-slate-500">Program Săptămânal</p>
@@ -122,14 +93,7 @@ export function CourseOverviewHeaderCard({
 
         <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <CheckCircleIcon className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-medium text-slate-500">Progres General</p>
@@ -165,6 +129,6 @@ export function CourseOverviewHeaderCard({
           />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

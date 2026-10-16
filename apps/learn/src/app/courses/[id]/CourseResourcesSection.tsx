@@ -5,6 +5,15 @@ import { trpc } from "@/lib/trpc";
 import { MinigameActivityCard } from "./MinigameActivityCard";
 import { ResourcePreviewModal } from "@/app/teacher/resources/ResourcePreviewModal";
 import { getMaterialTypeBadge } from "./CourseMaterialsList";
+import {
+  Card,
+  GamepadIcon,
+  BookOpenIcon,
+  VideoIcon,
+  CheckCircleIcon,
+  NoteIcon,
+  ExternalLinkIcon,
+} from "@brio-md/ui";
 
 type Props = {
   courseId: number;
@@ -64,7 +73,7 @@ export function CourseResourcesSection({
     <div className="space-y-6">
       {/* Session Filter Bar */}
       {totalSessions > 1 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-3 sm:p-4 shadow-2xs space-y-2">
+        <Card className="p-3 sm:p-4 shadow-2xs space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-slate-900 uppercase tracking-wider">Filtrează după sesiune</span>
             <span className="text-slate-500 font-medium">
@@ -98,12 +107,12 @@ export function CourseResourcesSection({
               </button>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Empty State for selected session */}
       {selectedSessionNumber && minigames.length === 0 && learningItems.length === 0 && (
-        <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center space-y-2">
+        <Card className="border-dashed p-8 text-center space-y-2">
           <p className="text-xs sm:text-sm text-slate-500">
             Nu există resurse atașate pentru Sesiunea {selectedSessionNumber}.
           </p>
@@ -114,7 +123,7 @@ export function CourseResourcesSection({
           >
             Vezi toate resursele cursului →
           </button>
-        </div>
+        </Card>
       )}
 
       {/* Minigames Section */}
@@ -122,7 +131,7 @@ export function CourseResourcesSection({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span>🎮</span>
+              <GamepadIcon className="w-5 h-5 text-amber-600" />
               <span>Minijocuri & Activități Interactive</span>
             </h2>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
@@ -169,10 +178,10 @@ export function CourseResourcesSection({
 
       {/* Learning Resources & Video Lessons Section */}
       {(!selectedSessionNumber || learningItems.length > 0) && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+        <Card className="p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span>📚</span>
+              <BookOpenIcon className="w-5 h-5 text-indigo-600" />
               <span>Lecții Video & Materiale Didactice</span>
             </h2>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
@@ -194,6 +203,7 @@ export function CourseResourcesSection({
                 const isCompleted = sub?.status === "completed" || sub?.status === "reviewed";
                 const badge = getMaterialTypeBadge(res.type);
                 const isVideo = res.type === "video";
+                const Icon = badge.icon;
 
                 return (
                   <div
@@ -202,8 +212,9 @@ export function CourseResourcesSection({
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${badge.className}`}>
-                          {badge.label}
+                        <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${badge.className}`}>
+                          <Icon className="w-3 h-3" />
+                          <span>{badge.label}</span>
                         </span>
                         {cr.sessionNumber && (
                           <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
@@ -212,10 +223,8 @@ export function CourseResourcesSection({
                         )}
                         {isCompleted && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Finalizat
+                            <CheckCircleIcon className="w-3 h-3" />
+                            <span>Finalizat</span>
                           </span>
                         )}
                       </div>
@@ -245,9 +254,7 @@ export function CourseResourcesSection({
                         }`}
                         title={isCompleted ? "Marchează ca nefinalizat" : "Marchează ca finalizat"}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <CheckCircleIcon className="w-4 h-4" />
                       </button>
 
                       <button
@@ -266,18 +273,12 @@ export function CourseResourcesSection({
                       >
                         {isVideo ? (
                           <>
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <VideoIcon className="w-3.5 h-3.5" />
                             <span>Vizionează</span>
                           </>
                         ) : (
                           <>
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                            <ExternalLinkIcon className="w-3.5 h-3.5" />
                             <span>Deschide</span>
                           </>
                         )}
@@ -288,17 +289,15 @@ export function CourseResourcesSection({
               })}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Teacher Feedback / Progress Notes Card if available */}
       {notes && (
         <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 shadow-2xs">
           <div className="flex items-center gap-2 mb-2 text-amber-900 font-semibold text-sm">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-            </svg>
-            Feedback și Observații Profesor
+            <NoteIcon className="w-4 h-4" />
+            <span>Feedback și Observații Profesor</span>
           </div>
           <p className="text-xs sm:text-sm text-amber-800 leading-relaxed">{notes}</p>
         </div>

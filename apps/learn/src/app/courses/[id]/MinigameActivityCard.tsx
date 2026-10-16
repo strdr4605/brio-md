@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import {
+  Card,
+  GamepadIcon,
+  CheckCircleIcon,
+  ExternalLinkIcon,
+  TrophyIcon,
+} from "@brio-md/ui";
 
 type Props = {
   courseId: number;
@@ -57,12 +64,12 @@ export function MinigameActivityCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-slate-300 hover:shadow-xs transition space-y-4">
+    <Card className="p-5 hover:border-slate-300 hover:shadow-xs transition space-y-4">
       {/* Top Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0 text-xl font-medium shadow-2xs">
-            🎮
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+            <GamepadIcon className="w-6 h-6" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
@@ -76,10 +83,8 @@ export function MinigameActivityCard({
               )}
               {isCompleted && (
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Finalizat
+                  <CheckCircleIcon className="w-3.5 h-3.5" />
+                  <span>Finalizat</span>
                 </span>
               )}
             </div>
@@ -89,9 +94,9 @@ export function MinigameActivityCard({
 
         {submissionScore !== null && submissionScore !== undefined && (
           <div className="text-right shrink-0">
-            <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl shadow-2xs">
-              Scor: {submissionScore}
-              {maxScore ? ` / ${maxScore}` : ""}
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl shadow-2xs">
+              <TrophyIcon className="w-3.5 h-3.5" />
+              <span>Scor: {submissionScore}{maxScore ? ` / ${maxScore}` : ""}</span>
             </span>
           </div>
         )}
@@ -115,9 +120,7 @@ export function MinigameActivityCard({
             className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <span>Lansează Jocul</span>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <ExternalLinkIcon className="w-3.5 h-3.5" />
           </a>
 
           {onPreview && (
@@ -165,9 +168,7 @@ export function MinigameActivityCard({
               disabled={submitMutation.isPending}
               className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckCircleIcon className="w-3.5 h-3.5" />
               <span>Marchează ca Finalizat</span>
             </button>
           )
@@ -178,6 +179,6 @@ export function MinigameActivityCard({
           </span>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

@@ -83,3 +83,34 @@ export type AcademicGroupSummary = {
     max: number;
   } | null;
 };
+
+export const SHORT_DAY_LABELS: Record<string, string> = {
+  mon: "Lun",
+  tue: "Mar",
+  wed: "Mie",
+  thu: "Joi",
+  fri: "Vin",
+  sat: "Sâm",
+  sun: "Dum",
+};
+
+export function formatSchedule(days: string[] | null | undefined, time: string | null | undefined) {
+  const d = days?.length ? days.map((x) => SHORT_DAY_LABELS[x.toLowerCase()] || x).join(", ") : null;
+  return d && time ? `${d} • ${time}` : d || time || "Nespecificat";
+}
+
+export const LEVEL_STYLES: Record<string, { label: string; cls: string }> = {
+  beginner: { label: "Începător", cls: "bg-emerald-50 text-emerald-800 border-emerald-200/50" },
+  intermediate: { label: "Mediu", cls: "bg-slate-100 text-slate-700 border-slate-200/80" },
+  advanced: { label: "Avansat", cls: "bg-slate-900 text-white border-transparent" },
+};
+
+export function getLevelBadgeClass(level: string | null | undefined) {
+  const item = level ? LEVEL_STYLES[level.toLowerCase()] : null;
+  return item ? item.cls : "bg-slate-100 text-slate-700 border-slate-200";
+}
+
+export function getLevelBadgeLabel(level: string | null | undefined) {
+  const item = level ? LEVEL_STYLES[level.toLowerCase()] : null;
+  return item ? item.label : level || "";
+}

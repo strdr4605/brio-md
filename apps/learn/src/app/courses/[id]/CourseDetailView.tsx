@@ -3,6 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+import {
+  Card,
+  ArrowLeftIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+} from "@brio-md/ui";
 import { CourseResourcesSection } from "./CourseResourcesSection";
 import { CourseOverviewHeaderCard } from "./CourseOverviewHeaderCard";
 import { StudentActiveTaskCard } from "./StudentActiveTaskCard";
@@ -51,22 +57,20 @@ export function CourseDetailView({ courseId }: Props) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="h-6 bg-slate-200 rounded-lg w-48 mb-6" />
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 space-y-4 shadow-xs">
+        <Card className="p-8 space-y-4">
           <div className="h-8 bg-slate-200 rounded-lg w-1/3" />
           <div className="h-4 bg-slate-200 rounded-lg w-2/3" />
           <div className="h-20 bg-slate-100 rounded-xl" />
-        </div>
+        </Card>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-10 sm:p-12 text-center max-w-lg mx-auto mt-8">
+      <Card className="p-10 sm:p-12 text-center max-w-lg mx-auto mt-8">
         <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shadow-2xs">
-          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+          <AlertTriangleIcon className="w-7 h-7" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 mb-1.5">Curs Indisponibil</h3>
         <p className="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
@@ -78,7 +82,7 @@ export function CourseDetailView({ courseId }: Props) {
         >
           ← Înapoi la Cursuri
         </Link>
-      </div>
+      </Card>
     );
   }
 
@@ -124,9 +128,7 @@ export function CourseDetailView({ courseId }: Props) {
           href="/courses"
           className="inline-flex items-center text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 shadow-2xs"
         >
-          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeftIcon className="w-4 h-4 text-slate-400" />
           <span>Înapoi la toate cursurile</span>
         </Link>
       </div>
@@ -176,7 +178,7 @@ export function CourseDetailView({ courseId }: Props) {
 
         {/* Right Column: Interactive Session Plan & Timeline */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8">
+          <Card className="p-5 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Plan & Cronologie Sesiuni</h2>
@@ -208,14 +210,7 @@ export function CourseDetailView({ courseId }: Props) {
                       }`}
                     >
                       {isCompleted ? (
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <CheckCircleIcon className="w-3.5 h-3.5 text-white" />
                       ) : (
                         <span className="text-[10px]">{session.sessionNumber}</span>
                       )}
@@ -290,7 +285,7 @@ export function CourseDetailView({ courseId }: Props) {
                 );
               })}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

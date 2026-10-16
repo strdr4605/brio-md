@@ -8,3 +8,4 @@ export { StatusDot } from "./StatusDot";
 export type { StatusDotProps, StatusDotStatus } from "./StatusDot";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
+export * from "./icons";
