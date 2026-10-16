@@ -2,7 +2,7 @@
 
 type LoadingButtonProps = {
   children: React.ReactNode;
-  variant?: "blue" | "green" | "slate";
+  variant?: "blue" | "green" | "slate" | "indigo";
   isPending?: boolean;
   formAction?: (formData: FormData) => void;
   className?: string;
@@ -20,6 +20,10 @@ const variants = {
   slate: {
     base: "bg-slate-900 hover:bg-slate-800 focus:ring-slate-900",
     spinner: "border-slate-400 border-t-white",
+  },
+  indigo: {
+    base: "bg-indigo-600 hover:bg-indigo-500 focus:ring-indigo-500 shadow-sm shadow-indigo-200",
+    spinner: "border-indigo-200 border-t-white",
   },
 };
 

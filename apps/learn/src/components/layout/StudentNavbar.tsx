@@ -15,15 +15,15 @@ export function StudentNavbar({ userName, onSignOut }: Props) {
         {/* Brand & Left Navigation */}
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/courses" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition-transform">
               B
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-extrabold tracking-tight text-slate-900 group-hover:text-slate-700 transition">
+              <span className="text-base font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-900 transition">
                 Learning Portal
               </span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wider hidden sm:inline-block">
-                Elev
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80 uppercase tracking-wider hidden sm:inline-block shadow-2xs">
+                Elev 🚀
               </span>
             </div>
           </Link>
@@ -43,15 +43,15 @@ export function StudentNavbar({ userName, onSignOut }: Props) {
 
           {/* User Profile Chip */}
           <div className="flex items-center gap-2 pl-2 sm:border-l sm:border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shadow-xs ring-2 ring-slate-100">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white text-xs font-bold flex items-center justify-center shadow-xs ring-2 ring-indigo-100">
               {initial}
             </div>
             <div className="hidden sm:flex flex-col text-left max-w-[150px]">
               <span className="text-xs font-semibold text-slate-800 leading-tight truncate">
                 {userName || "Elev"}
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                Student
+              <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600">
+                Elev
               </span>
             </div>
           </div>

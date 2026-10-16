@@ -84,9 +84,9 @@ export function CourseResourcesSection({
             <button
               type="button"
               onClick={() => onSelectSession?.(null)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                 selectedSessionNumber === null
-                  ? "bg-slate-900 text-white shadow-2xs"
+                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
@@ -97,9 +97,9 @@ export function CourseResourcesSection({
                 key={sNum}
                 type="button"
                 onClick={() => onSelectSession?.(sNum)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   selectedSessionNumber === sNum
-                    ? "bg-slate-900 text-white shadow-2xs"
+                    ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                 }`}
               >
@@ -269,7 +269,11 @@ export function CourseResourcesSection({
                             metadata: (res.metadata || {}) as Record<string, unknown>,
                           })
                         }
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shrink-0 cursor-pointer shadow-2xs"
+                        className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl text-white transition shrink-0 cursor-pointer shadow-2xs active:scale-[0.99] ${
+                          isVideo
+                            ? "bg-rose-600 hover:bg-rose-500 shadow-rose-100"
+                            : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-100"
+                        }`}
                       >
                         {isVideo ? (
                           <>

@@ -205,7 +205,7 @@ export function CourseDetailView({ courseId }: Props) {
                         isCompleted
                           ? "bg-emerald-600 text-white"
                           : isCurrent
-                            ? "bg-indigo-600 text-white animate-pulse"
+                            ? "bg-gradient-to-tr from-indigo-600 to-violet-600 text-white animate-pulse ring-4 ring-indigo-100"
                             : "bg-slate-200 text-slate-500"
                       }`}
                     >
@@ -226,9 +226,9 @@ export function CourseDetailView({ courseId }: Props) {
                       }
                       className={`flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border transition text-left cursor-pointer ${
                         isSelected
-                          ? "border-slate-900 bg-slate-900 text-white shadow-xs"
+                          ? "border-indigo-600 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm shadow-indigo-200"
                           : isCurrent
-                            ? "border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50/80 shadow-2xs"
+                            ? "border-indigo-300 bg-indigo-50/60 hover:bg-indigo-50/90 shadow-2xs"
                             : isCompleted
                               ? "border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50/50"
                               : "border-slate-100 bg-slate-50/60 hover:bg-slate-100/60"

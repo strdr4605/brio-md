@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { LoadingButton } from "./LoadingButton";
 
 type LoginFormProps = {
-  variant?: "blue" | "green" | "slate";
+  variant?: "blue" | "green" | "slate" | "indigo";
   error?: string | null;
   onSubmit: (formData: FormData) => Promise<void>;
 };
@@ -18,7 +18,9 @@ export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps)
       ? "focus:ring-blue-500"
       : variant === "slate"
         ? "focus:ring-slate-900"
-        : "focus:ring-green-500";
+        : variant === "indigo"
+          ? "focus:ring-indigo-500"
+          : "focus:ring-green-500";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

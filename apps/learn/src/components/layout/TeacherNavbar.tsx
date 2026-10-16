@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLinkIcon, LogOutIcon } from "@brio-md/ui";
 
 type Props = {
   userName?: string | null;
@@ -57,12 +58,10 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
             href="https://in.brio.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 transition px-2.5 py-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200"
+            className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition px-2.5 py-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200"
           >
             <span>Portal Staff</span>
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <ExternalLinkIcon className="w-3.5 h-3.5 text-slate-400" />
           </Link>
 
           {/* User Profile Chip */}
@@ -84,13 +83,11 @@ export function TeacherNavbar({ userName, activeTab, onSignOut }: Props) {
           <form action={onSignOut}>
             <button
               type="submit"
-              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer flex items-center gap-1"
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer flex items-center gap-1.5"
               title="Deconectare"
             >
               <span>Ieșire</span>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <LogOutIcon className="w-3.5 h-3.5" />
             </button>
           </form>
         </div>

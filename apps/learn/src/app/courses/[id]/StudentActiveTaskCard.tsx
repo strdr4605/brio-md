@@ -121,15 +121,15 @@ export function StudentActiveTaskCard({
 
   return (
     <>
-      <Card className="p-5 sm:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm transition">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <Card className="p-5 sm:p-6 shadow-xs border-indigo-200/80 bg-gradient-to-b from-indigo-50/25 via-white to-white hover:border-indigo-300 hover:shadow-md transition">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-indigo-100/60">
           <div className="flex items-center gap-3.5">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs ${badge.iconBg}`}>
               <Icon className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-900/70">
                   Lecția curentă #{currentSession}
                 </span>
                 <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${badge.class}`}>
@@ -166,7 +166,7 @@ export function StudentActiveTaskCard({
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200/80 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition shadow-2xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition shadow-2xs"
           >
             <ExternalLinkIcon className="w-4 h-4 text-slate-500" />
             <span>Deschide Resursa</span>
@@ -175,7 +175,7 @@ export function StudentActiveTaskCard({
           <button
             type="button"
             onClick={() => setActiveModalResource(resource)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white transition shadow-sm shadow-indigo-200 cursor-pointer active:scale-[0.99]"
           >
             <PlusIcon className="w-4 h-4" />
             <span>{isCompleted ? "Re-trimite Rezolvarea" : "Predă Tema / Rezolvarea"}</span>

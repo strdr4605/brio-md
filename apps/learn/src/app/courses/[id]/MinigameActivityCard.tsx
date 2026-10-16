@@ -64,7 +64,7 @@ export function MinigameActivityCard({
   };
 
   return (
-    <Card className="p-5 hover:border-slate-300 hover:shadow-xs transition space-y-4">
+    <Card className="p-5 hover:border-amber-300 hover:shadow-sm border-amber-100/70 bg-gradient-to-b from-amber-50/15 via-white to-white transition space-y-4">
       {/* Top Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -117,7 +117,7 @@ export function MinigameActivityCard({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            className="px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition flex items-center gap-1.5 shadow-sm shadow-amber-200 cursor-pointer active:scale-[0.99]"
           >
             <span>Lansează Jocul</span>
             <ExternalLinkIcon className="w-3.5 h-3.5" />
