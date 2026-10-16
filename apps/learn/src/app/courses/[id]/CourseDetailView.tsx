@@ -3,6 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+import {
+  Card,
+  ArrowLeftIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+} from "@brio-md/ui";
 import { CourseResourcesSection } from "./CourseResourcesSection";
 import { CourseOverviewHeaderCard } from "./CourseOverviewHeaderCard";
 import { StudentActiveTaskCard } from "./StudentActiveTaskCard";
@@ -50,35 +56,33 @@ export function CourseDetailView({ courseId }: Props) {
   if (isCourseLoading) {
     return (
       <div className="space-y-8 animate-pulse">
-        <div className="h-6 bg-slate-200 rounded w-48 mb-6" />
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-4">
-          <div className="h-8 bg-slate-200 rounded w-1/3" />
-          <div className="h-4 bg-slate-200 rounded w-2/3" />
-          <div className="h-20 bg-slate-100 rounded" />
-        </div>
+        <div className="h-6 bg-slate-200 rounded-lg w-48 mb-6" />
+        <Card className="p-8 space-y-4">
+          <div className="h-8 bg-slate-200 rounded-lg w-1/3" />
+          <div className="h-4 bg-slate-200 rounded-lg w-2/3" />
+          <div className="h-20 bg-slate-100 rounded-xl" />
+        </Card>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-12 text-center max-w-lg mx-auto mt-8">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+      <Card className="p-10 sm:p-12 text-center max-w-lg mx-auto mt-8">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shadow-2xs">
+          <AlertTriangleIcon className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-2">Curs Indisponibil</h3>
-        <p className="text-sm text-slate-600 mb-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-1.5">Curs Indisponibil</h3>
+        <p className="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
           {error?.message || "Este posibil să nu fii înrolat în acest curs sau cursul nu există."}
         </p>
         <Link
           href="/courses"
-          className="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition"
+          className="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition"
         >
           ← Înapoi la Cursuri
         </Link>
-      </div>
+      </Card>
     );
   }
 
@@ -122,12 +126,10 @@ export function CourseDetailView({ courseId }: Props) {
       <div>
         <Link
           href="/courses"
-          className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition gap-1.5"
+          className="inline-flex items-center text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 shadow-2xs"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Înapoi la toate cursurile
+          <ArrowLeftIcon className="w-4 h-4 text-slate-400" />
+          <span>Înapoi la toate cursurile</span>
         </Link>
       </div>
 
@@ -176,20 +178,20 @@ export function CourseDetailView({ courseId }: Props) {
 
         {/* Right Column: Interactive Session Plan & Timeline */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-8">
+          <Card className="p-5 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
-                <h2 className="text-lg font-bold text-neutral-900">Session Plan & Timeline</h2>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Ordered lesson roadmap from Session 1 to {total}
+                <h2 className="text-lg font-bold text-slate-900">Plan & Cronologie Sesiuni</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Parcursul structurat al lecțiilor de la Sesiunea 1 până la {total}
                 </p>
               </div>
-              <div className="text-xs font-semibold px-3 py-1 bg-neutral-100 text-neutral-700 rounded-lg shrink-0 w-fit">
-                Status: <span className="capitalize">{course.progress?.status?.replace("_", " ") || "In Progress"}</span>
+              <div className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 shrink-0 w-fit">
+                Status: <span className="capitalize">{course.progress?.status?.replace("_", " ") || "În desfășurare"}</span>
               </div>
             </div>
 
-            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
+            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
               {sessionsList.map((session) => {
                 const isCompleted = session.status === "completed";
                 const isCurrent = session.status === "current";
@@ -199,23 +201,16 @@ export function CourseDetailView({ courseId }: Props) {
                   <div key={session.sessionNumber} className="relative flex items-center gap-4">
                     {/* Timeline Node Bullet */}
                     <div
-                      className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white ${
+                      className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-2xs ${
                         isCompleted
                           ? "bg-emerald-600 text-white"
                           : isCurrent
-                            ? "bg-blue-600 text-white animate-pulse"
-                            : "bg-neutral-200 text-neutral-500"
+                            ? "bg-gradient-to-tr from-indigo-600 to-violet-600 text-white animate-pulse ring-4 ring-indigo-100"
+                            : "bg-slate-200 text-slate-500"
                       }`}
                     >
                       {isCompleted ? (
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <CheckCircleIcon className="w-3.5 h-3.5 text-white" />
                       ) : (
                         <span className="text-[10px]">{session.sessionNumber}</span>
                       )}
@@ -231,12 +226,12 @@ export function CourseDetailView({ courseId }: Props) {
                       }
                       className={`flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border transition text-left cursor-pointer ${
                         isSelected
-                          ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
+                          ? "border-indigo-600 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm shadow-indigo-200"
                           : isCurrent
-                            ? "border-blue-400 bg-blue-50/50 shadow-2xs"
+                            ? "border-indigo-300 bg-indigo-50/60 hover:bg-indigo-50/90 shadow-2xs"
                             : isCompleted
-                              ? "border-emerald-100 bg-emerald-50/20 hover:bg-emerald-50/40"
-                              : "border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60"
+                              ? "border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50/50"
+                              : "border-slate-100 bg-slate-50/60 hover:bg-slate-100/60"
                       }`}
                     >
                       <div>
@@ -245,24 +240,24 @@ export function CourseDetailView({ courseId }: Props) {
                             isSelected
                               ? "text-white font-bold"
                               : isCurrent
-                                ? "text-blue-900 font-bold"
+                                ? "text-indigo-950 font-bold"
                                 : isCompleted
-                                  ? "text-neutral-800"
-                                  : "text-neutral-600"
+                                  ? "text-slate-800"
+                                  : "text-slate-600"
                           }`}
                         >
-                          Session {session.sessionNumber}
+                          Sesiunea {session.sessionNumber}
                         </p>
                         <p
                           className={`text-xs ${
-                            isSelected ? "text-slate-300" : "text-neutral-500"
+                            isSelected ? "text-slate-300" : "text-slate-500"
                           }`}
                         >
                           {isCompleted
-                            ? "Completed lesson"
+                            ? "Lecție finalizată"
                             : isCurrent
-                              ? "Current active session"
-                              : "Upcoming scheduled session"}
+                              ? "Lecția curentă activă"
+                              : "Lecție programată viitoare"}
                         </p>
                       </div>
 
@@ -272,16 +267,16 @@ export function CourseDetailView({ courseId }: Props) {
                             Selectat
                           </span>
                         ) : isCompleted ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
-                            Completed
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Finalizat
                           </span>
                         ) : isCurrent ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">
-                            Current
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            Curent
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-neutral-200 text-neutral-600">
-                            Upcoming
+                          <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-slate-200/80 text-slate-600">
+                            Viitor
                           </span>
                         )}
                       </div>
@@ -290,7 +285,7 @@ export function CourseDetailView({ courseId }: Props) {
                 );
               })}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

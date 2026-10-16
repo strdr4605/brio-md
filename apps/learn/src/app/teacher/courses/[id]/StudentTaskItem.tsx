@@ -78,18 +78,18 @@ export function StudentTaskItem({
               setScoreVal(sub.score !== null && sub.score !== undefined ? String(sub.score) : "100");
               setIsEditingScore(true);
             }}
-            className="px-1.5 py-0.5 rounded-[4px] text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition cursor-pointer select-none"
+            className="px-1.5 py-0.5 rounded-lg text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition cursor-pointer select-none"
             title="Click pentru a edita nota"
           >
             {sub.score !== null && sub.score !== undefined ? `${sub.score}p ✓` : "Predat ✓"}
           </button>
         )
       ) : isInProgress ? (
-        <span className="px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 select-none">
+        <span className="px-1.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 select-none">
           În lucru ⚡
         </span>
       ) : (
-        <span className="px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-300 select-none">
+        <span className="px-1.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-300 select-none">
           Alocat ⏳
         </span>
       )}
@@ -100,7 +100,7 @@ export function StudentTaskItem({
           type="button"
           disabled={!canAssign || isMutating}
           onClick={() => onComplete(sub, 100)}
-          className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[4px] text-[10px] font-bold uppercase tracking-wider transition active:scale-[0.97] cursor-pointer shadow-2xs flex items-center gap-0.5 select-none"
+          className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition active:scale-[0.97] cursor-pointer shadow-2xs flex items-center gap-0.5 select-none"
           title="Marchează finalizat și acordă 100p"
         >
           <span>✓</span>

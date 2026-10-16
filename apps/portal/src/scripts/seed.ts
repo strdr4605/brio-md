@@ -344,6 +344,7 @@ async function seed() {
   // 3. System Users (idempotent)
   const adminHash = await hash("admin123", 12);
   const teacherHash = await hash("teacher123", 12);
+  const studentHash = await hash("student123", 12);
 
   // SuperAdmin
   await db
@@ -691,7 +692,7 @@ async function seed() {
     .insert(users)
     .values({
       email: "student@vibe.md",
-      passwordHash: teacherHash,
+      passwordHash: studentHash,
       name: seededStudents[0].name,
       role: "student",
       permissions: [],
@@ -703,6 +704,7 @@ async function seed() {
       target: users.email,
       set: {
         name: seededStudents[0].name,
+        passwordHash: studentHash,
         studentId: seededStudents[0].id,
         courseIds: [courseEnglish.id, courseRobotics.id],
         schoolId: school.id,
@@ -1569,11 +1571,11 @@ async function seed() {
   console.log(` • Invoices:    13 total (6 paid, 2 partial, 3 overdue, 2 draft)`);
   console.log(` • Resources:   Minigames (Scratch & PhET), PDFs, Worksheets`);
   console.log("=================================================");
-  console.log("Staff Login Credentials:");
+  console.log("Staff & Student Login Credentials:");
   console.log("  SuperAdmin: admin@brio.md / admin123");
   console.log("  Admin:      admin@vibe.md / admin123");
   console.log("  Teacher:    teacher@vibe.md / teacher123");
-  console.log("  Student:    student@vibe.md / teacher123");
+  console.log("  Student:    student@vibe.md / student123");
   console.log("=================================================");
 
   process.exit(0);

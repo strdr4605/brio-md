@@ -198,7 +198,7 @@ export function SessionResourceBroadcastBar({
                   key={filter}
                   type="button"
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-2.5 py-1 rounded-[4px] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeFilter === filter
                       ? "bg-slate-900 text-white shadow-2xs"
                       : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70"
@@ -213,7 +213,7 @@ export function SessionResourceBroadcastBar({
             <button
               type="button"
               onClick={() => setIsAddOpen(true)}
-              className="px-2.5 py-1 rounded-[4px] text-[11px] font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-2xs cursor-pointer select-none ml-1"
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-2xs cursor-pointer select-none ml-1"
               title="Adaugă o nouă fișă sau minijoc pentru acest curs"
             >
               <span>+</span>
@@ -303,7 +303,7 @@ export function SessionResourceBroadcastBar({
             type="button"
             disabled={!selectedResourceId || !groupId || broadcastMutation.isPending || activeBroadcastId === selectedResourceId}
             onClick={handleBroadcast}
-            className={`px-4 py-2 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border shadow-xs ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border shadow-xs ${
               !selectedResourceId || !groupId || activeBroadcastId === selectedResourceId
                 ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-70"
                 : "bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white border-slate-900 active:scale-[0.98]"

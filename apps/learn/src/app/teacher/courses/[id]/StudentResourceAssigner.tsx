@@ -139,7 +139,7 @@ export function StudentResourceAssigner({
             value=""
             disabled={!canAssign || assignMutation.isPending}
             onChange={(e) => handleSelectResource(e.target.value)}
-            className={`w-full py-1 px-2 text-[10.5px] font-medium rounded-[4px] border transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-900 truncate ${
+            className={`w-full py-1 px-2 text-[10.5px] font-medium rounded-lg border transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-900 truncate ${
               !canAssign
                 ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
                 : submissions.length === 0
@@ -180,7 +180,7 @@ export function StudentResourceAssigner({
             type="button"
             disabled={!canAssign || isWorksheetSubmitting}
             onClick={() => onWorksheetSubmit(studentId)}
-            className={`px-2.5 py-1 rounded-[4px] text-[10.5px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] cursor-pointer border shadow-2xs flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] cursor-pointer border shadow-2xs flex items-center gap-1 ${
               !canAssign
                 ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
                 : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"

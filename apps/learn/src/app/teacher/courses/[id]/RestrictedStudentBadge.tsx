@@ -31,7 +31,7 @@ export function RestrictedStudentBadge({
           e.stopPropagation();
           setShowTooltip((prev) => !prev);
         }}
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition shadow-2xs cursor-pointer select-none"
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition shadow-2xs cursor-pointer select-none"
         title={`Restricție: ${reasonText}`}
       >
         <svg className="w-3.5 h-3.5 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

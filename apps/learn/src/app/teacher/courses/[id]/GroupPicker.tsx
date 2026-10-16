@@ -24,7 +24,7 @@ export function GroupPicker({
 
   return (
     <div
-      className="relative border border-slate-300 rounded-[4px] px-3 py-1 bg-white shadow-2xs flex flex-col justify-center cursor-pointer hover:border-slate-400 transition min-w-[150px] select-none"
+      className="relative border border-slate-300 rounded-lg px-3 py-1 bg-white shadow-2xs flex flex-col justify-center cursor-pointer hover:border-slate-400 transition min-w-[150px] select-none"
       title="Selectează grupa activă"
     >
       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">

@@ -1,8 +1,7 @@
 import { signIn } from "@/lib/auth";
 import { auth } from "@brio-md/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { LoginForm } from "@brio-md/ui";
+import { LoginRoleCard } from "./LoginRoleCard";
 
 export default async function LoginPage({
   searchParams,
@@ -57,24 +56,13 @@ export default async function LoginPage({
       if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.includes("NEXT_REDIRECT")) {
         throw error;
       }
-      // Otherwise redirect to error page
       redirect("/?error=Invalid+credentials");
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-green-50 to-white">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Learning Portal</h1>
-
-        <LoginForm variant="green" error={error} onSubmit={handleLogin} />
-
-        <div className="mt-4 text-center">
-          <Link href="https://in.brio.md" className="text-sm text-green-600 hover:underline">
-            Go to Staff Portal →
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-50">
+      <LoginRoleCard error={error} onSubmit={handleLogin} />
     </div>
   );
 }

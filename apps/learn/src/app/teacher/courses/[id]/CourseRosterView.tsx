@@ -37,7 +37,7 @@ export function CourseRosterView({ courseId }: Props) {
         <p className="text-sm text-slate-600 mb-6">{error?.message || "Curs inexistent sau neautorizat."}</p>
         <Link
           href="/teacher"
-          className="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-[4px] transition cursor-pointer"
+          className="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition cursor-pointer"
         >
           ← Înapoi la cursuri
         </Link>
@@ -56,7 +56,7 @@ export function CourseRosterView({ courseId }: Props) {
           <button
             type="button"
             onClick={() => setViewMode("live")}
-            className={`py-1.5 px-3.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`py-1.5 px-3.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
               viewMode === "live"
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -68,7 +68,7 @@ export function CourseRosterView({ courseId }: Props) {
           <button
             type="button"
             onClick={() => setViewMode("progress")}
-            className={`py-1.5 px-3.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`py-1.5 px-3.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
               viewMode === "progress"
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -91,7 +91,7 @@ export function CourseRosterView({ courseId }: Props) {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900">{course.name}</h1>
             {course.level && (
-              <span className="text-[11px] font-bold uppercase px-2 py-0.5 rounded-[4px] border border-slate-300 bg-slate-50 text-slate-700">
+              <span className="text-[11px] font-bold uppercase px-2 py-0.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-700">
                 {course.level}
               </span>
             )}
