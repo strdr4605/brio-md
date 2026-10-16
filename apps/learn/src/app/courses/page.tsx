@@ -4,6 +4,7 @@ import { signOut } from "@/lib/auth";
 import Link from "next/link";
 import { CourseList } from "./CourseList";
 import { StudentNavbar } from "@/components/layout/StudentNavbar";
+import { ExternalLinkIcon } from "@brio-md/ui";
 
 export default async function CoursesPage() {
   let session = null;
@@ -61,7 +62,7 @@ export default async function CoursesPage() {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition px-3 py-1.5 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 shadow-2xs"
           >
             <span>Portal Staff (Cadre Didactice)</span>
-            <span aria-hidden="true">→</span>
+            <ExternalLinkIcon className="w-3.5 h-3.5" />
           </Link>
         </div>
       </main>

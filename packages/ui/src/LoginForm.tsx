@@ -4,15 +4,21 @@ import { useState, useTransition } from "react";
 import { LoadingButton } from "./LoadingButton";
 
 type LoginFormProps = {
-  variant: "blue" | "green";
+  variant?: "blue" | "green" | "slate";
   error?: string | null;
   onSubmit: (formData: FormData) => Promise<void>;
-}
+};
 
-export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
+export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [, startTransition] = useTransition();
-  const focusRing = variant === "blue" ? "focus:ring-blue-500" : "focus:ring-green-500";
+
+  const focusRing =
+    variant === "blue"
+      ? "focus:ring-blue-500"
+      : variant === "slate"
+        ? "focus:ring-slate-900"
+        : "focus:ring-green-500";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,15 +34,15 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold">
           {error}
         </div>
       )}
 
-      <div className="mb-4">
-        <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
+      <div>
+        <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
           Email
         </label>
         <input
@@ -44,13 +50,13 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
           name="email"
           type="email"
           required
-          className={`w-full px-3 py-2 border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 ${focusRing}`}
-          placeholder={"@brio.md"}
+          className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 transition ${focusRing}`}
+          placeholder="@brio.md"
         />
       </div>
 
-      <div className="mb-6">
-        <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
+      <div>
+        <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
           Parolă
         </label>
         <input
@@ -58,14 +64,16 @@ export function LoginForm({ variant, error, onSubmit }: LoginFormProps) {
           name="password"
           type="password"
           required
-          className={`w-full px-3 py-2 border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 ${focusRing}`}
+          className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 transition ${focusRing}`}
           placeholder="••••••••"
         />
       </div>
 
-      <LoadingButton variant={variant} isPending={isPending}>
-        Autentificare
-      </LoadingButton>
+      <div className="pt-2">
+        <LoadingButton variant={variant} isPending={isPending}>
+          Autentificare
+        </LoadingButton>
+      </div>
     </form>
   );
 }
