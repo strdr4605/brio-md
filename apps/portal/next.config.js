@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: "/login",
+        destination: "/",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

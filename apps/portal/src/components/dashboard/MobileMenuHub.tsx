@@ -159,7 +159,7 @@ export function MobileMenuHub({
           {/* Quick Logout Button */}
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="p-2.5 rounded-xl bg-white/[0.06] hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] transition active:scale-95 cursor-pointer shrink-0"
             title="Deconectare"
           >
