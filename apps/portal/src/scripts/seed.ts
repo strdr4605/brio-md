@@ -344,6 +344,7 @@ async function seed() {
   // 3. System Users (idempotent)
   const adminHash = await hash("admin123", 12);
   const teacherHash = await hash("teacher123", 12);
+  const studentHash = await hash("student123", 12);
 
   // SuperAdmin
   await db
@@ -691,7 +692,7 @@ async function seed() {
     .insert(users)
     .values({
       email: "student@vibe.md",
-      passwordHash: teacherHash,
+      passwordHash: studentHash,
       name: seededStudents[0].name,
       role: "student",
       permissions: [],
@@ -703,6 +704,7 @@ async function seed() {
       target: users.email,
       set: {
         name: seededStudents[0].name,
+        passwordHash: studentHash,
         studentId: seededStudents[0].id,
         courseIds: [courseEnglish.id, courseRobotics.id],
         schoolId: school.id,
