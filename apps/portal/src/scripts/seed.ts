@@ -1571,11 +1571,11 @@ async function seed() {
   console.log(` • Invoices:    13 total (6 paid, 2 partial, 3 overdue, 2 draft)`);
   console.log(` • Resources:   Minigames (Scratch & PhET), PDFs, Worksheets`);
   console.log("=================================================");
-  console.log("Staff Login Credentials:");
+  console.log("Staff & Student Login Credentials:");
   console.log("  SuperAdmin: admin@brio.md / admin123");
   console.log("  Admin:      admin@vibe.md / admin123");
   console.log("  Teacher:    teacher@vibe.md / teacher123");
-  console.log("  Student:    student@vibe.md / teacher123");
+  console.log("  Student:    student@vibe.md / student123");
   console.log("=================================================");
 
   process.exit(0);

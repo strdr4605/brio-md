@@ -52,6 +52,7 @@ docker compose down -v
 | admin@brio.md   | admin123   | SuperAdmin |
 | admin@vibe.md   | admin123   | Admin      |
 | teacher@vibe.md | teacher123 | Teacher    |
+| student@vibe.md | student123 | Student    |
 
 ## Deployment
 
