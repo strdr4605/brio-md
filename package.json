@@ -18,7 +18,8 @@
     "lint": "oxlint -c oxlintrc.json .",
     "format": "prettier --write . --list-different",
     "test": "npm test --workspaces --if-present",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:preflight": "playwright test e2e/preflight.spec.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

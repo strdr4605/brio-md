@@ -109,8 +109,8 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
 
       {/* Desktop Table View */}
       <div className="hidden md:block relative">
-        <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full text-left border-collapse min-w-[760px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border border-slate-200/80 scrollbar-thin">
+          <table className="min-w-[650px] w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 <th className="w-12 px-4 py-3.5 text-center"></th>

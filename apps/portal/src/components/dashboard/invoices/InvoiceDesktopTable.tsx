@@ -27,8 +27,8 @@ export function InvoiceDesktopTable({
   onPrintReceipt,
 }: InvoiceDesktopTableProps) {
   return (
-    <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full text-left text-xs border-collapse">
+    <div className="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border border-slate-200/80 scrollbar-thin">
+      <table className="min-w-[650px] w-full text-left text-xs border-collapse">
         <thead>
           <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
             <th className="py-3 px-4">Factură</th>

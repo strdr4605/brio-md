@@ -68,9 +68,9 @@ export function AttendanceJournalDesktopTable({
   }, [dates]);
 
   return (
-    <div className="bg-white -mx-3 sm:mx-0 rounded-none sm:rounded-2xl border-y sm:border border-slate-200/90 shadow-xs overflow-hidden flex flex-col flex-1">
+    <div className="bg-white -mx-4 sm:mx-0 rounded-xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col flex-1">
       <div ref={scrollContainerRef} className="overflow-x-auto flex-1 select-none scrollbar-thin">
-        <table className="w-full text-left border-collapse min-w-[540px] sm:min-w-[700px]">
+        <table className="min-w-[650px] w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-100/90 text-slate-700 text-[10px] sm:text-[11px] font-black border-b border-slate-200">
               <th className="sticky left-0 z-20 bg-slate-100 w-8 sm:w-10 min-w-[32px] sm:min-w-[40px] p-1.5 sm:p-2 text-center border-r border-slate-200">

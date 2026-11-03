@@ -138,8 +138,8 @@ export function AttendanceMatrix({
             Nu există sesiuni de prezență înregistrate pentru această grupă în perioada selectată.
           </div>
         ) : (
-          <div className="overflow-x-auto scrollbar-thin">
-            <table className="w-full border-collapse text-left text-xs">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border border-slate-200/80 scrollbar-thin">
+            <table className="min-w-[650px] w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200/80">
                   {/* Sticky Column: Student Info */}

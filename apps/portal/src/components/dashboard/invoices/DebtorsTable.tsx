@@ -122,7 +122,7 @@ export function DebtorsTable({
         {/* Filters Toolbar */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search box */}
-          <div className="relative min-w-[200px]">
+          <div className="relative w-full sm:w-auto sm:min-w-[200px]">
             <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -137,7 +137,7 @@ export function DebtorsTable({
           <select
             value={minDebtFilter}
             onChange={(e) => setMinDebtFilter(Number(e.target.value))}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition cursor-pointer"
+            className="w-full sm:w-auto px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition cursor-pointer"
           >
             <option value={0}>Toate sumele</option>
             <option value={500}>Peste 500 MDL</option>
@@ -206,8 +206,8 @@ export function DebtorsTable({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border border-slate-200/80 scrollbar-thin">
+          <table className="min-w-[650px] w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                 <th className="py-3 px-3">Elev</th>
