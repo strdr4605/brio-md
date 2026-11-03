@@ -1,6 +1,7 @@
 "use client";
 
 import { SearchIcon } from "@/components/ui/icons";
+import { useTranslation } from "@/lib/i18n";
 
 type Props = {
   search: string;
@@ -21,13 +22,15 @@ export function StudentFiltersBar({
   courseFilter,
   setCourseFilter,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
       <div className="relative w-full md:w-80">
         <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
-          placeholder="Caută după nume sau telefon..."
+          placeholder={t("students.searchPlaceholder", "Caută după nume sau telefon...")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-3.5 h-9 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
@@ -43,7 +46,7 @@ export function StudentFiltersBar({
             }
             className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
           >
-            <option value="all">Toate Școlile</option>
+            <option value="all">{t("students.allSchools", "Toate Școlile")}</option>
             {schools.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -57,9 +60,9 @@ export function StudentFiltersBar({
           onChange={(e) => setCourseFilter(e.target.value as any)}
           className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
         >
-          <option value="all">Toate Cursurile</option>
-          <option value="enrolled">Doar Înrolați</option>
-          <option value="unenrolled">Fără Curs Asignat</option>
+          <option value="all">{t("students.allCourses", "Toate Cursurile")}</option>
+          <option value="enrolled">{t("students.enrolledOnly", "Doar Înrolați")}</option>
+          <option value="unenrolled">{t("students.unenrolledOnly", "Fără Curs Asignat")}</option>
         </select>
       </div>
     </div>

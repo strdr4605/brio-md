@@ -1,11 +1,13 @@
 import { signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@brio-md/auth";
-import { LoginForm } from "@brio-md/ui";
+import { LoginClientCard } from "./LoginClientCard";
 
 // Polyfill/guard performance.measure against Next.js Turbopack negative timestamp bugs
-if (typeof globalThis.performance !== "undefined" && typeof globalThis.performance.measure === "function") {
+if (
+  typeof globalThis.performance !== "undefined" &&
+  typeof globalThis.performance.measure === "function"
+) {
   const origMeasure = globalThis.performance.measure.bind(globalThis.performance);
   globalThis.performance.measure = function (name: string, ...args: unknown[]) {
     try {
@@ -59,7 +61,13 @@ export default async function LoginPage({
         },
       );
     } catch (error) {
-      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.includes("NEXT_REDIRECT")) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        typeof error.digest === "string" &&
+        error.digest.includes("NEXT_REDIRECT")
+      ) {
         throw error;
       }
       redirect("/?error=Invalid+credentials");
@@ -68,17 +76,7 @@ export default async function LoginPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-xs w-full max-w-md">
-        <h1 className="text-2xl font-black text-slate-900 mb-6 text-center tracking-tight">Portal Personal</h1>
-
-        <LoginForm variant="blue" error={error} onSubmit={handleLogin} />
-
-        <div className="mt-5 text-center">
-          <Link href="https://learn.brio.md" className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
-            Accesează Portalul de Învățare →
-          </Link>
-        </div>
-      </div>
+      <LoginClientCard error={error} onSubmitAction={handleLogin} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   detectStudentScheduleConflicts,
   findGroupConflictWithSelected,
 } from "@/lib/scheduleConflicts";
+import { useTranslation } from "@/lib/i18n";
 
 export type StudentFormStudent = {
   id?: number;
@@ -38,7 +39,8 @@ type Props = {
   currentUserSchoolId?: number;
 };
 
-const inputCls = "w-full px-3.5 py-2.5 text-sm bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition";
+const inputCls =
+  "w-full px-3.5 py-2.5 text-sm bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition";
 const labelCls = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5";
 
 export function StudentFormDrawer({
@@ -49,6 +51,7 @@ export function StudentFormDrawer({
   onCloseAction,
   currentUserSchoolId,
 }: Props) {
+  const { t } = useTranslation();
   const utils = trpc.useUtils();
   const isEditing = !!student?.id;
 
@@ -138,9 +141,7 @@ export function StudentFormDrawer({
         const course = filteredCourses.find((c) => c.id === courseId);
         if (!course) return null;
         const selectedGroupId = courseGroups[courseId];
-        const group = selectedGroupId
-          ? schoolGroups.find((g) => g.id === selectedGroupId)
-          : null;
+        const group = selectedGroupId ? schoolGroups.find((g) => g.id === selectedGroupId) : null;
 
         if (group) {
           return {
@@ -222,7 +223,8 @@ export function StudentFormDrawer({
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isPending =
+    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   if (!mounted) return null;
 
@@ -238,31 +240,39 @@ export function StudentFormDrawer({
         <div className="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              {isEditing ? "Editează Student" : "Adaugă Student"}
+              {isEditing
+                ? t("students.editTitle", "Editează Student")
+                : t("students.addTitle", "Adaugă Student")}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {isEditing ? "Actualizează datele elevului și înscrierile" : "Completează datele pentru noul elev"}
+              {isEditing
+                ? t("students.editSubtitle", "Actualizează datele elevului și înscrierile")
+                : t("students.addSubtitle", "Completează datele pentru noul elev")}
             </p>
           </div>
           <button
             onClick={onCloseAction}
             type="button"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
-            aria-label="Închide"
+            aria-label={t("common.close", "Închide")}
           >
             ✕
           </button>
         </div>
 
-        <form id="student-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form
+          id="student-form"
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4"
+        >
           <div>
-            <label className={labelCls}>Nume elev *</label>
+            <label className={labelCls}>{t("students.nameLabel", "Nume elev *")}</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Ex: Ion Popescu"
+              placeholder={t("students.namePlaceholder", "Ex: Ion Popescu")}
               className={inputCls}
             />
           </div>
@@ -271,9 +281,9 @@ export function StudentFormDrawer({
             <div>
               <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
                 <span>
-                  Telefon student{" "}
+                  {t("students.studentPhoneLabel", "Telefon student")}{" "}
                   <span className="text-slate-400 font-normal text-xs normal-case">
-                    (sau telefon părinte)*
+                    {t("students.orParentPhone", "(sau telefon părinte)*")}
                   </span>
                 </span>
               </label>
@@ -298,7 +308,7 @@ export function StudentFormDrawer({
 
             <div>
               <label className={`${labelCls} sm:min-h-[2rem] sm:flex sm:items-end`}>
-                <span>Vârstă (ani)</span>
+                <span>{t("students.ageLabel", "Vârstă (ani)")}</span>
               </label>
               <input
                 type="number"
@@ -314,15 +324,19 @@ export function StudentFormDrawer({
 
           {isSuperAdmin && (
             <div>
-              <label className={labelCls}>Școală</label>
+              <label className={labelCls}>{t("common.school", "Școală")}</label>
               <select
                 value={formData.schoolId || ""}
-                onChange={(e) => setFormData({ ...formData, schoolId: Number(e.target.value) || null })}
+                onChange={(e) =>
+                  setFormData({ ...formData, schoolId: Number(e.target.value) || null })
+                }
                 className={inputCls}
               >
-                <option value="">Selectează școală</option>
+                <option value="">{t("students.selectSchool", "Selectează școală")}</option>
                 {schools.map((school) => (
-                  <option key={school.id} value={school.id}>{school.name}</option>
+                  <option key={school.id} value={school.id}>
+                    {school.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -330,11 +344,13 @@ export function StudentFormDrawer({
 
           <div className="pt-2 border-t border-slate-100">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-              Date Părinte / Tutore
+              {t("students.parentSection", "Date Părinte / Tutore")}
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Nume părinte</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  {t("students.parentName", "Nume părinte")}
+                </label>
                 <input
                   type="text"
                   value={formData.parentName}
@@ -346,7 +362,10 @@ export function StudentFormDrawer({
 
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Telefon părinte <span className="text-slate-400 font-normal text-xs">(sau telefon student)*</span>
+                  {t("students.parentPhone", "Telefon părinte")}{" "}
+                  <span className="text-slate-400 font-normal text-xs">
+                    {t("students.orParentPhone", "(sau telefon student)*")}
+                  </span>
                 </label>
                 <input
                   type="tel"
@@ -364,7 +383,9 @@ export function StudentFormDrawer({
                   placeholder="Ex: +373 68 000 000"
                   className={`${inputCls} ${parentPhoneError ? "border-rose-300 focus:ring-rose-500/30 focus:border-rose-500" : ""}`}
                 />
-                {parentPhoneError && <p className="text-rose-500 text-xs mt-1">{parentPhoneError}</p>}
+                {parentPhoneError && (
+                  <p className="text-rose-500 text-xs mt-1">{parentPhoneError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -416,14 +437,17 @@ export function StudentFormDrawer({
                       Alocare Grupe (Opțional)
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      {selectedCourseIds.length} {selectedCourseIds.length === 1 ? "curs selectat" : "cursuri selectate"}
+                      {selectedCourseIds.length}{" "}
+                      {selectedCourseIds.length === 1 ? "curs selectat" : "cursuri selectate"}
                     </span>
                   </div>
                   <div className="space-y-2.5">
                     {selectedCourseIds.map((courseId) => {
                       const course = filteredCourses.find((c) => c.id === courseId);
                       if (!course) return null;
-                      const availableForCourse = schoolGroups.filter((g) => g.courseId === courseId);
+                      const availableForCourse = schoolGroups.filter(
+                        (g) => g.courseId === courseId,
+                      );
                       const selectedGroupId = courseGroups[courseId] ?? null;
 
                       // Other groups selected in different courses
@@ -439,17 +463,22 @@ export function StudentFormDrawer({
                           className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2 shadow-xs"
                         >
                           <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 pb-1.5">
-                            <span className="text-xs font-bold text-slate-800 truncate" title={course.name}>
+                            <span
+                              className="text-xs font-bold text-slate-800 truncate"
+                              title={course.name}
+                            >
                               {course.name}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 font-medium shrink-0">
-                              {availableForCourse.length} {availableForCourse.length === 1 ? "grupă" : "grupe"}
+                              {availableForCourse.length}{" "}
+                              {availableForCourse.length === 1 ? "grupă" : "grupe"}
                             </span>
                           </div>
 
                           {availableForCourse.length === 0 ? (
                             <p className="text-[11px] text-slate-400 italic">
-                              Nu există grupe active pentru acest curs. (Elevul va fi înscris doar la nivel de curs).
+                              Nu există grupe active pentru acest curs. (Elevul va fi înscris doar
+                              la nivel de curs).
                             </p>
                           ) : (
                             <div className="space-y-1.5">
@@ -476,7 +505,9 @@ export function StudentFormDrawer({
                               >
                                 <option value="">Fără grupă (doar înscriere la curs)</option>
                                 {availableForCourse.map((g) => {
-                                  const days = Array.isArray(g.scheduleDays) ? g.scheduleDays.join(", ") : "";
+                                  const days = Array.isArray(g.scheduleDays)
+                                    ? g.scheduleDays.join(", ")
+                                    : "";
                                   const time = g.scheduleTime || "";
                                   const scheduleStr = [days, time].filter(Boolean).join(" • ");
                                   const isCurrentChoice = selectedGroupId === g.id;
@@ -488,7 +519,9 @@ export function StudentFormDrawer({
 
                                   return (
                                     <option key={g.id} value={g.id} disabled={isConflicted}>
-                                      {isConflicted ? "[Suprapunere de orar] " : ""}{g.name} {scheduleStr ? `(${scheduleStr})` : ""} {g.room ? `• ${g.room}` : ""}
+                                      {isConflicted ? "[Suprapunere de orar] " : ""}
+                                      {g.name} {scheduleStr ? `(${scheduleStr})` : ""}{" "}
+                                      {g.room ? `• ${g.room}` : ""}
                                     </option>
                                   );
                                 })}
@@ -505,12 +538,12 @@ export function StudentFormDrawer({
           )}
 
           <div className="pt-2 border-t border-slate-100">
-            <label className={labelCls}>Notițe / Informații</label>
+            <label className={labelCls}>{t("students.notes", "Notițe / Informații")}</label>
             <textarea
               rows={3}
               value={formData.info}
               onChange={(e) => setFormData({ ...formData, info: e.target.value })}
-              placeholder="Detalii adiționale despre elev..."
+              placeholder={t("students.notesPlaceholder", "Detalii adiționale despre elev...")}
               className={inputCls}
             />
           </div>
@@ -524,7 +557,9 @@ export function StudentFormDrawer({
                   onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                   className="w-4 h-4 rounded text-slate-900 border-slate-300 focus:ring-slate-900/20"
                 />
-                <span className="text-sm font-semibold text-slate-700">Cont elev activ</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {t("students.accountActive", "Cont elev activ")}
+                </span>
               </label>
             </div>
           )}
@@ -542,20 +577,24 @@ export function StudentFormDrawer({
             onClick={onCloseAction}
             className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-xl transition"
           >
-            Anulează
+            {t("common.cancel", "Anulează")}
           </button>
           {isEditing && (
             <button
               type="button"
               onClick={() => {
-                if (confirm("Sigur doriți să ștergeți acest student?")) {
+                if (
+                  confirm(t("students.deleteConfirm", "Sigur doriți să ștergeți acest student?"))
+                ) {
                   deleteMutation.mutate({ id: student.id! });
                 }
               }}
               disabled={isPending}
               className="px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition disabled:opacity-50"
             >
-              {deleteMutation.isPending ? "Se șterge..." : "Șterge"}
+              {deleteMutation.isPending
+                ? t("common.deleting", "Se șterge...")
+                : t("common.delete", "Șterge")}
             </button>
           )}
           <button
@@ -564,7 +603,11 @@ export function StudentFormDrawer({
             disabled={isPending || courseConflicts.length > 0}
             className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-xs rounded-xl transition disabled:opacity-50"
           >
-            {isPending ? "Se procesează..." : isEditing ? "Salvează Modificările" : "Creează Student"}
+            {isPending
+              ? t("common.processing", "Se procesează...")
+              : isEditing
+                ? t("common.saveChanges", "Salvează Modificările")
+                : t("students.createStudent", "Creează Student")}
           </button>
         </div>
       </div>

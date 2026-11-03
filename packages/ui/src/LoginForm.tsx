@@ -7,9 +7,14 @@ type LoginFormProps = {
   variant?: "blue" | "green" | "slate" | "indigo";
   error?: string | null;
   onSubmit: (formData: FormData) => Promise<void>;
+  labels?: {
+    email?: string;
+    password?: string;
+    submit?: string;
+  };
 };
 
-export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps) {
+export function LoginForm({ variant = "blue", error, onSubmit, labels }: LoginFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -45,7 +50,7 @@ export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps)
 
       <div>
         <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
-          Email
+          {labels?.email || "Email"}
         </label>
         <input
           id="email"
@@ -59,7 +64,7 @@ export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps)
 
       <div>
         <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
-          Parolă
+          {labels?.password || "Parolă"}
         </label>
         <input
           id="password"
@@ -73,7 +78,7 @@ export function LoginForm({ variant = "blue", error, onSubmit }: LoginFormProps)
 
       <div className="pt-2">
         <LoadingButton variant={variant} isPending={isPending}>
-          Autentificare
+          {labels?.submit || "Autentificare"}
         </LoadingButton>
       </div>
     </form>

@@ -4,10 +4,8 @@ import Link from "next/link";
 import { formatPhone } from "@/lib/phone";
 import { StudentCoursesCell } from "./StudentCoursesCell";
 import { StudentRowDetails } from "./StudentRowDetails";
-import {
-  PhoneIcon,
-  ChevronDownIcon,
-} from "@/components/ui/icons";
+import { PhoneIcon, ChevronDownIcon } from "@/components/ui/icons";
+import { useTranslation } from "@/lib/i18n";
 
 export type StudentMobileCardProps = {
   student: {
@@ -41,6 +39,7 @@ export function StudentMobileCard({
   onDelete,
   deletePending = false,
 }: StudentMobileCardProps) {
+  const { t } = useTranslation();
   const studentAvailableCourses = courses.filter(
     (c) => !c.schoolId || !student.schoolId || c.schoolId === student.schoolId,
   );
@@ -82,7 +81,11 @@ export function StudentMobileCard({
             type="button"
             onClick={onToggleExpand}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition active:scale-95 shrink-0"
-            aria-label={isExpanded ? "Restrânge detalii" : "Extinde detalii"}
+            aria-label={
+              isExpanded
+                ? t("students.collapseDetails", "Restrânge detalii")
+                : t("students.expandDetails", "Extinde detalii")
+            }
           >
             <ChevronDownIcon
               className={`w-5 h-5 transition-transform duration-200 ${
@@ -145,7 +148,7 @@ export function StudentMobileCard({
               onClick={onEdit}
               className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-slate-100 transition"
             >
-              Editează
+              {t("common.edit", "Editează")}
             </button>
             <button
               type="button"
@@ -153,7 +156,7 @@ export function StudentMobileCard({
               disabled={deletePending}
               className="px-2.5 py-1 rounded-lg font-semibold text-rose-600 hover:bg-rose-50 transition disabled:opacity-50"
             >
-              Șterge
+              {deletePending ? t("common.deleting", "Se șterge...") : t("common.delete", "Șterge")}
             </button>
           </div>
 

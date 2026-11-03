@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   MenuIcon,
 } from "@/components/ui/icons";
+import { useTranslation } from "@/lib/i18n";
 
 export type MobileBottomNavProps = {
   canManageStudents: boolean;
@@ -31,6 +32,7 @@ export function MobileBottomNav({
   onOpenMobile,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const isRouteActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -42,23 +44,23 @@ export function MobileBottomNav({
   const fourthItem = isBillingAllowed
     ? {
         href: "/dashboard/invoices",
-        label: "Facturi",
+        label: t("nav.invoices", "Facturi"),
         Icon: InvoiceIcon,
         badge: overdueCount > 0 ? overdueCount : undefined,
       }
     : isSuperOrAdmin
-    ? {
-        href: "/dashboard/users",
-        label: "Utilizatori",
-        Icon: UsersIcon,
-        badge: undefined,
-      }
-    : {
-        href: "/dashboard",
-        label: "Panou",
-        Icon: DashboardIcon,
-        badge: undefined,
-      };
+      ? {
+          href: "/dashboard/users",
+          label: t("nav.users", "Utilizatori"),
+          Icon: UsersIcon,
+          badge: undefined,
+        }
+      : {
+          href: "/dashboard",
+          label: t("nav.dashboard", "Panou"),
+          Icon: DashboardIcon,
+          badge: undefined,
+        };
 
   return (
     <nav
@@ -77,7 +79,9 @@ export function MobileBottomNav({
             }`}
           >
             <UserCheckIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Prezență</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.attendance", "Prezență")}
+            </span>
           </Link>
         ) : (
           <Link
@@ -89,7 +93,9 @@ export function MobileBottomNav({
             }`}
           >
             <CalendarIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Orar</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.schedule", "Orar")}
+            </span>
           </Link>
         )}
 
@@ -104,7 +110,9 @@ export function MobileBottomNav({
             }`}
           >
             <CalendarIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Orar</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.schedule", "Orar")}
+            </span>
           </Link>
         ) : (
           <Link
@@ -116,7 +124,9 @@ export function MobileBottomNav({
             }`}
           >
             <DashboardIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Panou</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.dashboard", "Panou")}
+            </span>
           </Link>
         )}
 
@@ -125,13 +135,13 @@ export function MobileBottomNav({
           type="button"
           onClick={onOpenMobile}
           className="flex flex-col items-center justify-center min-w-[52px] -mt-3.5 group transition-transform active:scale-90 cursor-pointer shrink-0"
-          aria-label="Deschide meniul rapid"
+          aria-label={t("nav.openMenu", "Deschide meniul rapid")}
         >
           <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-b from-white via-slate-100 to-slate-200 text-slate-900 border border-white/80 shadow-md shadow-white/10 ring-4 ring-[#0c0e14] flex items-center justify-center group-hover:scale-105 group-hover:shadow-white/20 transition-all">
             <MenuIcon className="w-4 h-4 text-slate-900 stroke-[2.5]" />
           </div>
           <span className="text-[10px] font-semibold text-slate-300 group-hover:text-white tracking-tight leading-none mt-1">
-            Meniu
+            {t("nav.openMenu", "Meniu")}
           </span>
         </button>
 
@@ -146,7 +156,9 @@ export function MobileBottomNav({
             }`}
           >
             <StudentsIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Studenți</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.students", "Studenți")}
+            </span>
           </Link>
         ) : (
           <Link
@@ -158,7 +170,9 @@ export function MobileBottomNav({
             }`}
           >
             <BookOpenIcon className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] tracking-tight leading-none">Cursuri</span>
+            <span className="text-[10px] tracking-tight leading-none">
+              {t("nav.courses", "Cursuri")}
+            </span>
           </Link>
         )}
 
