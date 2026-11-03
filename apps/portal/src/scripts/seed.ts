@@ -19,6 +19,7 @@ import {
   attendanceRecords,
   learningResources,
   courseLearningResources,
+  storedFiles,
 } from "@brio-md/db";
 
 import fs from "fs";
@@ -74,14 +75,8 @@ function getPastSessionDates(scheduleDays: string[], count = 2): string[] {
   return dates.sort();
 }
 
-function ensureSamplePdfsExist(): void {
-  const targetDir = path.resolve(__dirname, "../../../learn/uploads/resources");
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-
-  const pdfFiles: Record<string, string> = {
-    "lego-spike-prime-manual.pdf": `%PDF-1.4
+const pdfFiles: Record<string, string> = {
+  "lego-spike-prime-manual.pdf": `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -291,7 +286,13 @@ startxref
 982
 %%EOF
 `,
-  };
+};
+
+function ensureSamplePdfsExist(): void {
+  const targetDir = path.resolve(__dirname, "../../../learn/uploads/resources");
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
 
   for (const [filename, content] of Object.entries(pdfFiles)) {
     const filePath = path.join(targetDir, filename);
@@ -1255,7 +1256,7 @@ async function seed() {
       ),
     );
 
-  // Purge any orphan local file records whose file is missing from disk
+  // Purge any orphan local file records whose file is missing from disk or Neon DB
   const existingLocalResources = await db
     .select()
     .from(learningResources)
@@ -1263,12 +1264,109 @@ async function seed() {
 
   for (const r of existingLocalResources) {
     const relPath = r.url.replace(/^\/api\/files\//, "");
+    if (/^\d+$/.test(relPath)) {
+      const fileId = parseInt(relPath, 10);
+      const [stored] = await db
+        .select()
+        .from(storedFiles)
+        .where(eq(storedFiles.id, fileId))
+        .limit(1);
+      if (!stored) {
+        await db.delete(learningResources).where(eq(learningResources.id, r.id));
+        await db.delete(courseMaterials).where(eq(courseMaterials.url, r.url));
+        console.log(`🗑️ Removed broken local resource with missing DB file: ${r.title} (${r.url})`);
+      }
+      continue;
+    }
+
     const fullPath = path.resolve(__dirname, "../../../learn/uploads", relPath);
     if (!fs.existsSync(fullPath)) {
       await db.delete(learningResources).where(eq(learningResources.id, r.id));
       await db.delete(courseMaterials).where(eq(courseMaterials.url, r.url));
       console.log(`🗑️ Removed broken local resource with missing file: ${r.title} (${r.url})`);
     }
+  }
+
+  // 10. Seed Sample Stored Files directly into Neon PostgreSQL
+  console.log("📦 Seeding persistent course documents into Neon stored_files...");
+
+  const DOCX_SAMPLE_BASE64 =
+    "UEsDBBQAAAAIAGyfY13XeYTq8QAAALgBAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH2QzU7DMBCE730Ky9cqccoBIZSkB36OwKE8wMreJFb9J69b2rdn00KREOVozXwz62nXB+/EHjPZGDq5qhspMOhobBg7+b55ru6koALBgIsBO3lEkut+0W6OCUkwHKiTUynpXinSE3qgOiYMrAwxeyj8zKNKoLcworppmlulYygYSlXmDNkvhGgfcYCdK+LpwMr5loyOpHg4e+e6TkJKzmoorKt9ML+Kqq+SmsmThyabaMkGqa6VzOL1jh/0lSfK1qB4g1xewLNRfcRslIl65xmu/0/649o4DFbjhZ/TUo4aiXh77+qL4sGG71+06jR8/wlQSwMEFAAAAAgAbJ9jXSAbhuqyAAAALgEAAAsAAABfcmVscy8ucmVsc43Puw6CMBQG4J2naM4uBQdjDIXFmLAafICmPZRGeklbL7y9HRzEODie23fyN93TzOSOIWpnGdRlBQStcFJbxeAynDZ7IDFxK/nsLDJYMELXFs0ZZ57yTZy0jyQjNjKYUvIHSqOY0PBYOo82T0YXDE+5DIp6Lq5cId1W1Y6GTwPagpAVS3rJIPSyBjIsHv/h3ThqgUcnbgZt+vHlayPLPChMDB4uSCrf7TKzQHNKuorZvgBQSwMEFAAAAAgAbJ9jXXc2ZKr2AAAAdAEAABEAAAB3b3JkL2RvY3VtZW50LnhtbG1QQW4CMQy88word1jooapWu4uQKKeeqrb3kBiwlMQrOylsX98sVW9cRjO2PCNPt73FAN8oSpx6s1mtDWBy7Cmde/P5cVi+GNBsk7eBE/ZmQjXbYdFdW8+uREwZqkPS9tqbS85j2zTqLhitrnjEVHcnlmhzlXJurix+FHaoWgNiaJ7W6+cmWkpmWABU1yP7aaZ3MQ4VZIY8fNERYeesxzjBEg6kFjzCW3FS4J2PnMlZUIJdOLNQjtQ1892Mcsfxoe/rDcVRphJg08Ie1QlhJojs66gmnEpyubZjBcEGUEw/LCUUghKyWOVEbvUwayZ//8zsv6/hF1BLAQIUAxQAAAAIAGyfY13XeYTq8QAAALgBAAATAAAAAAAAAAAAAACAAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQDFAAAAAgAbJ9jXSAbhuqyAAAALgEAAAsAAAAAAAAAAAAAAIABIgEAAF9yZWxzLy5yZWxzUEsBAhQDFAAAAAgAbJ9jXXc2ZKr2AAAAdAEAABEAAAAAAAAAAAAAAIAB/QEAAHdvcmQvZG9jdW1lbnQueG1sUEsFBgAAAAADAAMAuQAAACIDAAAAAA==";
+
+  const sampleFileEntries = [
+    {
+      filename: "lego-spike-prime-manual.pdf",
+      mimeType: "application/pdf",
+      dataBase64: Buffer.from(pdfFiles["lego-spike-prime-manual.pdf"]).toString("base64"),
+      sizeBytes: Buffer.byteLength(pdfFiles["lego-spike-prime-manual.pdf"]),
+    },
+    {
+      filename: "math-logic-worksheet.pdf",
+      mimeType: "application/pdf",
+      dataBase64: Buffer.from(pdfFiles["math-logic-worksheet.pdf"]).toString("base64"),
+      sizeBytes: Buffer.byteLength(pdfFiles["math-logic-worksheet.pdf"]),
+    },
+    {
+      filename: "english-grammar-practice.pdf",
+      mimeType: "application/pdf",
+      dataBase64: Buffer.from(pdfFiles["english-grammar-practice.pdf"]).toString("base64"),
+      sizeBytes: Buffer.byteLength(pdfFiles["english-grammar-practice.pdf"]),
+    },
+    {
+      filename: "1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf",
+      mimeType: "application/pdf",
+      dataBase64: Buffer.from(
+        pdfFiles[
+          "1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf"
+        ],
+      ).toString("base64"),
+      sizeBytes: Buffer.byteLength(
+        pdfFiles[
+          "1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf"
+        ],
+      ),
+    },
+    {
+      filename: "robotics-algorithms-worksheet.docx",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      dataBase64: DOCX_SAMPLE_BASE64,
+      sizeBytes: Buffer.from(DOCX_SAMPLE_BASE64, "base64").length,
+    },
+  ];
+
+  const fileMap: Record<string, number> = {};
+
+  for (const f of sampleFileEntries) {
+    let [stored] = await db
+      .select()
+      .from(storedFiles)
+      .where(and(eq(storedFiles.schoolId, school.id), eq(storedFiles.filename, f.filename)))
+      .limit(1);
+
+    if (!stored) {
+      [stored] = await db
+        .insert(storedFiles)
+        .values({
+          schoolId: school.id,
+          filename: f.filename,
+          mimeType: f.mimeType,
+          sizeBytes: f.sizeBytes,
+          dataBase64: f.dataBase64,
+        })
+        .returning();
+      console.log(`✅ Stored File in DB: ${f.filename} (id: ${stored.id})`);
+    } else {
+      [stored] = await db
+        .update(storedFiles)
+        .set({
+          mimeType: f.mimeType,
+          sizeBytes: f.sizeBytes,
+          dataBase64: f.dataBase64,
+        })
+        .where(eq(storedFiles.id, stored.id))
+        .returning();
+    }
+    fileMap[f.filename] = stored.id;
   }
 
   const sampleResources = [
@@ -1305,14 +1403,32 @@ async function seed() {
       title: "LEGO SPIKE Prime Ghid Didactic & Manual de Laborator",
       description: "Ghid complet pentru construcția și programarea modelelor robotice SPIKE Prime.",
       type: "pdf" as const,
-      url: "/api/files/resources/lego-spike-prime-manual.pdf",
+      url: `/api/files/${fileMap["lego-spike-prime-manual.pdf"]}`,
       metadata: {
         level: "intermediate",
         guidelines: "De studiat înainte de sesiunea practică de asamblare.",
+        originalName: "lego-spike-prime-manual.pdf",
+        mimeType: "application/pdf",
       },
       courseId: courseRobotics.id,
       sessionNumber: 1,
       orderIndex: 1,
+    },
+    {
+      title: "Fișă de Lucru: Algoritmi și Senzori Robotici (DOCX)",
+      description: "Fișă practică în format DOCX descărcabil cu întrebări și probleme aplicative.",
+      type: "worksheet" as const,
+      url: `/api/files/${fileMap["robotics-algorithms-worksheet.docx"]}`,
+      metadata: {
+        maxScore: 50,
+        instructions: "Descărcați fișierul DOCX, rezolvați cerințele și trimiteți tema.",
+        level: "intermediate",
+        originalName: "robotics-algorithms-worksheet.docx",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      },
+      courseId: courseRobotics.id,
+      sessionNumber: 3,
+      orderIndex: 2,
     },
     {
       title: "Video Tutorial: Calibrarea Senzorilor Ultrasonici",
@@ -1345,11 +1461,13 @@ async function seed() {
       title: "Fișă de Lucru: Probleme de Logică și Algoritmi",
       description: "Exerciții aplicative de gândire computațională și deducție logică.",
       type: "worksheet" as const,
-      url: "/api/files/resources/math-logic-worksheet.pdf",
+      url: `/api/files/${fileMap["math-logic-worksheet.pdf"]}`,
       metadata: {
         maxScore: 50,
         instructions: "Rezolvați exercițiile 1-4 din secțiunea de logică computațională.",
         level: "intermediate",
+        originalName: "math-logic-worksheet.pdf",
+        mimeType: "application/pdf",
       },
       courseId: courseMath.id,
       sessionNumber: 2,
@@ -1359,9 +1477,11 @@ async function seed() {
       title: "English Grammar in Use - Fișă de Exerciții A1-A2",
       description: "Manual de referință și exerciții practice pentru nivelul A1-A2.",
       type: "textbook" as const,
-      url: "/api/files/resources/english-grammar-practice.pdf",
+      url: `/api/files/${fileMap["english-grammar-practice.pdf"]}`,
       metadata: {
         level: "beginner",
+        originalName: "english-grammar-practice.pdf",
+        mimeType: "application/pdf",
       },
       courseId: courseEnglish.id,
       sessionNumber: 1,
@@ -1384,11 +1504,13 @@ async function seed() {
       description:
         "The task is to translate this text in English. Please do not use AI and do not cheat. The best what you can do first, to try by yourself, and what you really do not know we will discuss on the lecture. Good Luck!",
       type: "pdf" as const,
-      url: "/api/files/resources/1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf",
+      url: `/api/files/${fileMap["1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf"]}`,
       metadata: {
         level: "B2",
         guidelines: "Do it individually, please!",
         instructions: "Expected time: 20 mins",
+        originalName: "1791363119983-a00650ab-primul-an-de-facultate-este-o-perioada-plina-de-schimba-ri-s-i.pdf",
+        mimeType: "application/pdf",
       },
       courseId: courseEnglish.id,
       sessionNumber: 3,
