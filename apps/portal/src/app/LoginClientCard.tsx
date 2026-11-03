@@ -13,12 +13,6 @@ type LoginClientCardProps = {
 export function LoginClientCard({ error, onSubmitAction }: LoginClientCardProps) {
   const { t } = useTranslation();
 
-  const displayError = error
-    ? error.toLowerCase().includes("invalid") || error.toLowerCase().includes("credential")
-      ? t("auth.invalidCredentials", "Date de conectare invalide")
-      : error
-    : undefined;
-
   return (
     <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-xs w-full max-w-md relative">
       <div className="flex items-center justify-between mb-6">
@@ -30,7 +24,7 @@ export function LoginClientCard({ error, onSubmitAction }: LoginClientCardProps)
 
       <LoginForm
         variant="blue"
-        error={displayError}
+        error={error}
         onSubmit={onSubmitAction}
         labels={{
           email: t("auth.email", "Email"),
