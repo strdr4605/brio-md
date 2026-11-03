@@ -3,21 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { XIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/icons";
+import { StudentCsvPreviewTable } from "./StudentCsvPreviewTable";
+import { parseStudentCsv, type ParsedCandidate } from "@/lib/studentCsvParser";
 
 export type StudentCsvImportModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-};
-
-type ParsedCandidate = {
-  name: string;
-  phone: string;
-  parentName: string;
-  parentPhone: string;
-  age: number | null;
-  isValid: boolean;
-  error?: string;
 };
 
 export function StudentCsvImportModal({ isOpen, onClose, onSuccess }: StudentCsvImportModalProps) {
@@ -63,86 +55,6 @@ export function StudentCsvImportModal({ isOpen, onClose, onSuccess }: StudentCsv
 
   if (!isOpen) return null;
 
-  const parseCsvText = (text: string) => {
-    const lines = text
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-
-    if (lines.length === 0) {
-      setParseError("Fișierul este gol.");
-      return;
-    }
-
-    // Detect delimiter: semicolon or comma
-    const firstLine = lines[0];
-    const delimiter = firstLine.includes(";") ? ";" : ",";
-
-    const rows = lines.map((line) => {
-      // Split preserving simple quoted cells
-      return line.split(delimiter).map((col) => col.replace(/^["']|["']$/g, "").trim());
-    });
-
-    let headerOffset = 0;
-    const headerRow = rows[0].map((h) => h.toLowerCase());
-
-    let nameIdx = 0;
-    let phoneIdx = 1;
-    let parentNameIdx = 2;
-    let parentPhoneIdx = 3;
-    let ageIdx = 4;
-
-    const hasHeader =
-      headerRow.some((h) => h.includes("num") || h.includes("elev") || h.includes("student") || h.includes("имя") || h.includes("фио"));
-
-    if (hasHeader) {
-      headerOffset = 1;
-      headerRow.forEach((col, idx) => {
-        if (col.includes("parinte") || col.includes("mama") || col.includes("tata") || col.includes("родител")) {
-          if (col.includes("tel") || col.includes("phone")) parentPhoneIdx = idx;
-          else parentNameIdx = idx;
-        } else if (col.includes("num") || col.includes("elev") || col.includes("student") || col.includes("имя") || col.includes("фио")) {
-          nameIdx = idx;
-        } else if (col.includes("tel") || col.includes("phone") || col.includes("тел")) {
-          phoneIdx = idx;
-        } else if (col.includes("varst") || col.includes("virst") || col.includes("ani") || col.includes("возраст")) {
-          ageIdx = idx;
-        }
-      });
-    }
-
-    const parsed: ParsedCandidate[] = [];
-
-    for (let i = headerOffset; i < rows.length; i++) {
-      const row = rows[i];
-      const name = row[nameIdx] || "";
-      const phone = row[phoneIdx] || "";
-      const parentName = row[parentNameIdx] || "";
-      const parentPhone = row[parentPhoneIdx] || "";
-      const rawAge = parseInt(row[ageIdx], 10);
-      const age = !isNaN(rawAge) && rawAge > 0 && rawAge < 120 ? rawAge : null;
-
-      const hasValidPhone = Boolean(phone.replace(/\D/g, "") || parentPhone.replace(/\D/g, ""));
-      const isValid = Boolean(name.trim()) && hasValidPhone;
-
-      parsed.push({
-        name: name.trim(),
-        phone: phone.trim(),
-        parentName: parentName.trim(),
-        parentPhone: parentPhone.trim(),
-        age,
-        isValid,
-        error: !name.trim()
-          ? "Nume lipsă"
-          : !hasValidPhone
-            ? "Lipsește nr. de telefon"
-            : undefined,
-      });
-    }
-
-    setCandidates(parsed);
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -155,7 +67,12 @@ export function StudentCsvImportModal({ isOpen, onClose, onSuccess }: StudentCsv
     reader.onload = (event) => {
       try {
         const text = String(event.target?.result || "");
-        parseCsvText(text);
+        const result = parseStudentCsv(text);
+        if (result.error) {
+          setParseError(result.error);
+        } else {
+          setCandidates(result.candidates);
+        }
       } catch (err: any) {
         setParseError("Eroare la citirea fișierului CSV: " + err.message);
       } finally {
@@ -325,40 +242,7 @@ export function StudentCsvImportModal({ isOpen, onClose, onSuccess }: StudentCsv
                   </div>
 
                   {/* Preview Table */}
-                  <div className="border border-slate-200/80 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200">
-                        <tr>
-                          <th className="py-2 px-3">Status</th>
-                          <th className="py-2 px-3">Nume Elev</th>
-                          <th className="py-2 px-3">Telefon</th>
-                          <th className="py-2 px-3">Părinte & Tel</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {candidates.map((c, idx) => (
-                          <tr key={idx} className={c.isValid ? "hover:bg-slate-50" : "bg-rose-50/40"}>
-                            <td className="py-2 px-3">
-                              {c.isValid ? (
-                                <span className="inline-flex items-center text-emerald-600 font-bold text-[11px]">
-                                  ✓ Valid
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center text-rose-600 font-semibold text-[11px]" title={c.error}>
-                                  ⚠️ {c.error}
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-2 px-3 font-semibold text-slate-900">{c.name || "—"}</td>
-                            <td className="py-2 px-3 font-mono text-slate-600">{c.phone || "—"}</td>
-                            <td className="py-2 px-3 text-slate-600">
-                              {c.parentName ? `${c.parentName} (${c.parentPhone || "fără tel"})` : c.parentPhone || "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <StudentCsvPreviewTable candidates={candidates} />
                 </div>
               )}
 
