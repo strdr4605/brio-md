@@ -144,14 +144,16 @@ test.describe("QA Automated Pre-Flight Sweep (#251)", () => {
     // Submit form
     await page.locator('button[type="submit"]:has-text("Creează Student")').click();
 
-    // Verify row appeared
-    const studentItem = page.locator("text=" + testStudentName);
-    await expect(studentItem.first()).toBeVisible({ timeout: 15000 });
+    // Verify row appeared in visible table or mobile card
+    const visibleStudentRow = page
+      .locator("tr.group", { hasText: testStudentName })
+      .or(page.locator("a", { hasText: testStudentName }).filter({ visible: true }));
+    await expect(visibleStudentRow.first()).toBeVisible({ timeout: 15000 });
 
     // Clean up
     const deleteBtn = page
       .locator(`tr.group:has-text("${testStudentName}") button:has-text("Șterge")`)
-      .or(page.locator(`button:has-text("Șterge")`));
+      .or(page.locator(`button:has-text("Șterge")`).filter({ visible: true }));
     if ((await deleteBtn.count()) > 0) {
       await deleteBtn.first().click();
     }
