@@ -24,6 +24,7 @@ type AuthUser = {
   studentId?: number | null;
   schoolId?: number | null;
   lastChangedAt?: Date | null;
+  lastLoginAt?: Date | null;
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -43,10 +44,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const normalizedEmail = rawEmail.toLowerCase();
         const password = credentials.password as string;
 
+        const pilotMatch = normalizedEmail.match(/^(demo|teacher)([1-9])(@brio\.md)$/);
+        const paddedEmail = pilotMatch ? `${pilotMatch[1]}0${pilotMatch[2]}${pilotMatch[3]}` : null;
+
+        const emailConditions = [eq(users.email, normalizedEmail), eq(users.email, rawEmail)];
+        if (paddedEmail) {
+          emailConditions.push(eq(users.email, paddedEmail));
+        }
+
         const [user] = await db
           .select()
           .from(users)
-          .where(or(eq(users.email, normalizedEmail), eq(users.email, rawEmail)))
+          .where(or(...emailConditions))
           .limit(1);
 
         if (!user || !user.passwordHash) {
@@ -72,6 +81,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const lastLoginAt = new Date();
+        await db
+          .update(users)
+          .set({ lastLoginAt })
+          .where(eq(users.id, user.id));
+
         return {
           id: String(user.id),
           email: user.email,
@@ -82,6 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           studentId: user.studentId,
           schoolId: user.schoolId,
           lastChangedAt: user.lastChangedAt,
+          lastLoginAt,
         } as AuthUser;
       },
     }),

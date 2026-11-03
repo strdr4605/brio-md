@@ -47,6 +47,7 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 50 }),
   info: text("info"),
   active: boolean("active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
   lastChangedAt: timestamp("last_changed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
