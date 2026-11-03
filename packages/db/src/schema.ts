@@ -301,6 +301,17 @@ export const learningResources = pgTable("learning_resources", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Stored Files table (persists documents/PDFs/DOCX directly in DB)
+export const storedFiles = pgTable("stored_files", {
+  id: serial("id").primaryKey(),
+  schoolId: integer("school_id").references(() => schools.id),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  dataBase64: text("data_base64").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Course Learning Resources (junction table)
 export const courseLearningResources = pgTable(
   "course_learning_resources",
@@ -509,6 +520,14 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   invoices: many(invoices),
   payments: many(payments),
   learningResources: many(learningResources),
+  storedFiles: many(storedFiles),
+}));
+
+export const storedFilesRelations = relations(storedFiles, ({ one }) => ({
+  school: one(schools, {
+    fields: [storedFiles.schoolId],
+    references: [schools.id],
+  }),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
@@ -694,3 +713,6 @@ export type NewCourseLearningResource = typeof courseLearningResources.$inferIns
 
 export type StudentResourceSubmission = typeof studentResourceSubmissions.$inferSelect;
 export type NewStudentResourceSubmission = typeof studentResourceSubmissions.$inferInsert;
+
+export type StoredFile = typeof storedFiles.$inferSelect;
+export type NewStoredFile = typeof storedFiles.$inferInsert;
