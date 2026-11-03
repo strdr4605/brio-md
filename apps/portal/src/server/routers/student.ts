@@ -14,6 +14,7 @@ import { TRPCError } from "@trpc/server";
 import { phoneSchema } from "@/lib/phone";
 import { checkStudentCourseConflicts } from "../conflictChecker";
 import { getStudentLmsAccess, provisionStudentLmsAccess } from "../studentLmsService";
+import { bulkImportStudentsService } from "../studentBulkImportService";
 
 function getStudentRoles(user?: { permissions?: string[]; role?: string; schoolId?: number | null }) {
   const permissions = user?.permissions || [];
@@ -448,6 +449,52 @@ export const studentRouter = router({
       }
 
       return result;
+    }),
+
+  // Bulk import students from CSV / Excel
+  bulkImport: protectedProcedure
+    .input(
+      z.object({
+        students: z
+          .array(
+            z.object({
+              name: z.string().min(1, "Numele este obligatoriu"),
+              phone: z.string().optional().nullable(),
+              parentName: z.string().optional().nullable(),
+              parentPhone: z.string().optional().nullable(),
+              age: z.number().int().min(1).max(120).optional().nullable(),
+              info: z.string().optional().nullable(),
+            }),
+          )
+          .min(1, "Lista de studenți este goală")
+          .max(500, "Maxim 500 de studenți per import"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const user = ctx.user;
+      const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
+
+      if (!isSuper && !isAdmin && !isTeacher) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiunea de a importa studenți.",
+        });
+      }
+
+      const schoolId = user.schoolId;
+      if (!schoolId && !isSuper) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Niciun campus școlar asociat utilizatorului.",
+        });
+      }
+
+      return bulkImportStudentsService({
+        schoolId: schoolId ?? 1,
+        candidates: input.students,
+        db,
+      });
     }),
 
   // Update student

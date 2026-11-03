@@ -1,19 +1,17 @@
 # 🎓 Brio.md Pilot Program — 30 Isolated School Sandboxes
 
-Welcome to the **Brio.md Pilot Onboarding Kit**. This document contains pre-provisioned, isolated sandbox credentials for 30 educational institutions, tutors, and learning centers.
+Welcome to the **Brio.md Pilot Onboarding Kit**. This directory contains pre-provisioned, isolated sandbox credentials for 30 educational institutions, learning centers, and private tutors across Moldova.
 
 ---
 
 ## ⚡ Quick Access Portals
 
-| Portal | Audience | Live URL | Local Dev URL |
-| :--- | :--- | :--- | :--- |
-| **Director Portal** | School Directors, Center Admins | [https://in.brio.md](https://in.brio.md) | `http://localhost:3000` |
-| **Learning LMS** | Teachers, Tutors, Students | [https://learn.brio.md](https://learn.brio.md) | `http://localhost:3001` |
+| Portal | Audience | Custom Domain URL | Direct Vercel Hosting URL | Local Dev URL |
+| :--- | :--- | :--- | :--- | :--- |
+| **Director Portal** | School Directors, Center Admins | [https://in.brio.md](https://in.brio.md) | [https://brio-md-7wb3.vercel.app](https://brio-md-7wb3.vercel.app) | `http://localhost:3002` |
+| **Learning LMS** | Teachers, Tutors, Students | [https://learn.brio.md](https://learn.brio.md) | [https://brio-md-learn-ovk9.vercel.app](https://brio-md-learn-ovk9.vercel.app) | `http://localhost:3003` |
 
-> **Universal Pilot Password:** `BrioPilot2026!`  
-> *(Easy to remember: **Brio** + **Pilot** + year **2026** + **!**)*  
-> **Flexible Logins:** Both simple format (`demo1@brio.md`) and padded format (`demo01@brio.md`) work automatically.
+> 🔒 **Security Notice:** Each pilot institution has its own unique, dedicated email login and a distinct, non-guessable temporary password. This ensures complete privacy and prevents accidental or unauthorized cross-school access.
 
 ---
 
@@ -29,9 +27,9 @@ We are thrilled to welcome your academy to the exclusive Brio.md pilot program!
 
 Your dedicated, pre-configured sandbox school is live and ready for testing:
 • Login Portal: https://in.brio.md
-• Director Email: demo01@brio.md  (or demo1@brio.md)
-• Teacher Email:  teacher01@brio.md (or teacher1@brio.md)
-• Temporary Password: BrioPilot2026!
+• Director Email: [DIRECTOR_EMAIL]
+• Teacher Email:  [TEACHER_EMAIL]
+• Dedicated Password: [DEDICATED_PASSWORD]
 
 What is already included in your private sandbox:
 ✓ 15 pre-enrolled sample students with Moldovan contact details
@@ -52,11 +50,11 @@ Bună ziua!
 
 Vă urăm bun venit în programul gratuit de testare Brio.md!
 
-Cabinetul dedicat școlii dumneavoastră este complet configurat și activ:
+Cabinetul dedicat instituției dumneavoastră este complet configurat și activ:
 • Link de acces: https://in.brio.md
-• Email Director: demo01@brio.md  (sau demo1@brio.md)
-• Email Profesor: teacher01@brio.md (sau teacher1@brio.md)
-• Parolă temporară: BrioPilot2026!
+• Email Director: [DIRECTOR_EMAIL]
+• Email Profesor: [TEACHER_EMAIL]
+• Parolă dedicată: [DEDICATED_PASSWORD]
 
 Ce găsiți deja pregătit în sistem:
 ✓ 15 elevi demonstrativi cu date de contact locale
@@ -73,38 +71,38 @@ Echipa Brio.md
 
 ## 📋 Master Directory of 30 Pilot Accounts
 
-| Slot | Sandbox School | Director Login (Admin) | Teacher Login | Password | Assigned To |
-|:---:|:---|:---|:---|:---:|:---|
-| **01** | Demo School 1 | `demo01@brio.md` *(or demo1)* | `teacher01@brio.md` | `BrioPilot2026!` | Available |
-| **02** | Demo School 2 | `demo02@brio.md` *(or demo2)* | `teacher02@brio.md` | `BrioPilot2026!` | Available |
-| **03** | Demo School 3 | `demo03@brio.md` *(or demo3)* | `teacher03@brio.md` | `BrioPilot2026!` | Available |
-| **04** | Demo School 4 | `demo04@brio.md` *(or demo4)* | `teacher04@brio.md` | `BrioPilot2026!` | Available |
-| **05** | Demo School 5 | `demo05@brio.md` *(or demo5)* | `teacher05@brio.md` | `BrioPilot2026!` | Available |
-| **06** | Demo School 6 | `demo06@brio.md` *(or demo6)* | `teacher06@brio.md` | `BrioPilot2026!` | Available |
-| **07** | Demo School 7 | `demo07@brio.md` *(or demo7)* | `teacher07@brio.md` | `BrioPilot2026!` | Available |
-| **08** | Demo School 8 | `demo08@brio.md` *(or demo8)* | `teacher08@brio.md` | `BrioPilot2026!` | Available |
-| **09** | Demo School 9 | `demo09@brio.md` *(or demo9)* | `teacher09@brio.md` | `BrioPilot2026!` | Available |
-| **10** | Demo School 10 | `demo10@brio.md` | `teacher10@brio.md` | `BrioPilot2026!` | Available |
-| **11** | Demo School 11 | `demo11@brio.md` | `teacher11@brio.md` | `BrioPilot2026!` | Available |
-| **12** | Demo School 12 | `demo12@brio.md` | `teacher12@brio.md` | `BrioPilot2026!` | Available |
-| **13** | Demo School 13 | `demo13@brio.md` | `teacher13@brio.md` | `BrioPilot2026!` | Available |
-| **14** | Demo School 14 | `demo14@brio.md` | `teacher14@brio.md` | `BrioPilot2026!` | Available |
-| **15** | Demo School 15 | `demo15@brio.md` | `teacher15@brio.md` | `BrioPilot2026!` | Available |
-| **16** | Demo School 16 | `demo16@brio.md` | `teacher16@brio.md` | `BrioPilot2026!` | Available |
-| **17** | Demo School 17 | `demo17@brio.md` | `teacher17@brio.md` | `BrioPilot2026!` | Available |
-| **18** | Demo School 18 | `demo18@brio.md` | `teacher18@brio.md` | `BrioPilot2026!` | Available |
-| **19** | Demo School 19 | `demo19@brio.md` | `teacher19@brio.md` | `BrioPilot2026!` | Available |
-| **20** | Demo School 20 | `demo20@brio.md` | `teacher20@brio.md` | `BrioPilot2026!` | Available |
-| **21** | Demo School 21 | `demo21@brio.md` | `teacher21@brio.md` | `BrioPilot2026!` | Available |
-| **22** | Demo School 22 | `demo22@brio.md` | `teacher22@brio.md` | `BrioPilot2026!` | Available |
-| **23** | Demo School 23 | `demo23@brio.md` | `teacher23@brio.md` | `BrioPilot2026!` | Available |
-| **24** | Demo School 24 | `demo24@brio.md` | `teacher24@brio.md` | `BrioPilot2026!` | Available |
-| **25** | Demo School 25 | `demo25@brio.md` | `teacher25@brio.md` | `BrioPilot2026!` | Available |
-| **26** | Demo School 26 | `demo26@brio.md` | `teacher26@brio.md` | `BrioPilot2026!` | Available |
-| **27** | Demo School 27 | `demo27@brio.md` | `teacher27@brio.md` | `BrioPilot2026!` | Available |
-| **28** | Demo School 28 | `demo28@brio.md` | `teacher28@brio.md` | `BrioPilot2026!` | Available |
-| **29** | Demo School 29 | `demo29@brio.md` | `teacher29@brio.md` | `BrioPilot2026!` | Available |
-| **30** | Demo School 30 | `demo30@brio.md` | `teacher30@brio.md` | `BrioPilot2026!` | Available |
+| Slot | Institution / Sandbox | City | Type | Director Email | Teacher Email | Dedicated Password | Status |
+|:---:|:---|:---|:---:|:---|:---|:---:|:---:|
+| **01** | Liceul Orizont Chișinău | Chișinău | School | `orizont@brio.md` | `prof-orizont@brio.md` | `Orizont#72Brio!` | Available |
+| **02** | Academia Da Vinci | Chișinău | Center | `davinci@brio.md` | `prof-davinci@brio.md` | `DaVinci*91Vibe!` | Available |
+| **03** | Centrul Edu Prometeu | Chișinău | Center | `prometeu@brio.md` | `prof-prometeu@brio.md` | `Prometeu^34Edu!` | Available |
+| **04** | Quantum STEM Hub | Chișinău | Center | `quantum@brio.md` | `prof-quantum@brio.md` | `Quantum!88Stem#` | Available |
+| **05** | Centrul Lingvistic Eureka | Bălți | Center | `eureka@brio.md` | `prof-eureka@brio.md` | `Eureka#45Lang!` | Available |
+| **06** | Lumina Math & Logic | Chișinău | Center | `lumina@brio.md` | `prof-lumina@brio.md` | `Lumina*63Logic!` | Available |
+| **07** | Vector IT & Robotics | Chișinău | Center | `vector@brio.md` | `prof-vector@brio.md` | `Vector!29Code#` | Available |
+| **08** | Atlas Learning Studio | Orhei | Center | `atlas@brio.md` | `prof-atlas@brio.md` | `Atlas#81Learn!` | Available |
+| **09** | Nexus Educational Hub | Chișinău | Center | `nexus@brio.md` | `prof-nexus@brio.md` | `Nexus*17Hub!` | Available |
+| **10** | Aurora Foreign Languages | Cahul | Center | `aurora@brio.md` | `prof-aurora@brio.md` | `Aurora^52Poly!` | Available |
+| **11** | Zenith Tutoring Center | Chișinău | Tutor | `zenith@brio.md` | `prof-zenith@brio.md` | `Zenith!94Tutor#` | Available |
+| **12** | Intellect Study Club | Ungheni | Center | `intellect@brio.md` | `prof-intellect@brio.md` | `Intellect#36Study!` | Available |
+| **13** | Solaris Science Lab | Chișinău | Center | `solaris@brio.md` | `prof-solaris@brio.md` | `Solaris*48Lab!` | Available |
+| **14** | Apex Academic Center | Chișinău | School | `apex@brio.md` | `prof-apex@brio.md` | `Apex!73Acad#` | Available |
+| **15** | Nova English Academy | Bălți | Center | `nova@brio.md` | `prof-nova@brio.md` | `Nova#65Speak!` | Available |
+| **16** | Olympus Math & Physics | Chișinău | Center | `olympus@brio.md` | `prof-olympus@brio.md` | `Olympus*82Math!` | Available |
+| **17** | Sigma Coding School | Chișinău | Center | `sigma@brio.md` | `prof-sigma@brio.md` | `Sigma!19Dev#` | Available |
+| **18** | Academos Tutors Group | Strășeni | Tutor | `academos@brio.md` | `prof-academos@brio.md` | `Academos#47Group!` | Available |
+| **19** | Pulsar Kids Academy | Chișinău | Center | `pulsar@brio.md` | `prof-pulsar@brio.md` | `Pulsar*58Kids!` | Available |
+| **20** | Cosmos Robotics Space | Chișinău | Center | `cosmos@brio.md` | `prof-cosmos@brio.md` | `Cosmos!93Bot#` | Available |
+| **21** | Sparta Chess & Logic | Chișinău | Center | `sparta@brio.md` | `prof-sparta@brio.md` | `Sparta#26Chess!` | Available |
+| **22** | Horizon Polyglot Studio | Hîncești | Center | `horizon@brio.md` | `prof-horizon@brio.md` | `Horizon*61Voice!` | Available |
+| **23** | Athena Humanities Club | Chișinău | Center | `athena@brio.md` | `prof-athena@brio.md` | `Athena!85Arts#` | Available |
+| **24** | Prestige Baccalaureate | Chișinău | School | `prestige@brio.md` | `prof-prestige@brio.md` | `Prestige#39Bac!` | Available |
+| **25** | SmartHub Education | Ialoveni | Center | `smarthub@brio.md` | `prof-smarthub@brio.md` | `SmartHub*74Smart!` | Available |
+| **26** | Matrix Tech Academy | Chișinău | Center | `matrix@brio.md` | `prof-matrix@brio.md` | `Matrix!51Tech#` | Available |
+| **27** | Vanguard Art & Design | Chișinău | Center | `vanguard@brio.md` | `prof-vanguard@brio.md` | `Vanguard#68Art!` | Available |
+| **28** | Alfa Tutors Collective | Comrat | Tutor | `alfa@brio.md` | `prof-alfa@brio.md` | `Alfa*95Prep!` | Available |
+| **29** | Omega Olympiad Studio | Chișinău | Center | `omega@brio.md` | `prof-omega@brio.md` | `Omega!43Win#` | Available |
+| **30** | Meridian Future School | Chișinău | School | `meridian@brio.md` | `prof-meridian@brio.md` | `Meridian#87Next!` | Available |
 
 ---
 
@@ -113,8 +111,8 @@ Echipa Brio.md
 To check which directors have logged in and track their pilot engagement, run the included `pilot-audit.sql` query in the **Neon SQL Console**:
 
 ```bash
-# Or run directly via terminal:
-npm run seed:pilot   # Re-seeds or synchronizes all 30 sandboxes idempotently
+# Or run directly via terminal to synchronize all 30 sandboxes:
+npm run seed:pilot
 ```
 
 The audit query reports:
