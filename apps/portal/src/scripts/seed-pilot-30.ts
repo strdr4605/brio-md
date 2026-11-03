@@ -15,7 +15,7 @@ import {
 } from "@brio-md/db";
 import fs from "fs";
 import path from "path";
-import { GOLDEN_COURSES, GOLDEN_STUDENTS } from "./pilotData";
+import { GOLDEN_COURSES, GOLDEN_STUDENTS, PILOT_SCHOOLS } from "./pilotData";
 
 // Load environment variables if not present in process.env
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
@@ -47,31 +47,44 @@ async function seedPilotAccounts() {
     await db.insert(permissionDefinitions).values(perm).onConflictDoNothing();
   }
 
-  // Hash pilot password once for high performance
-  const pilotPasswordHash = await hash("BrioPilot2026!", 12);
-
-  // 2. Provision each of the 30 isolated pilot schools
-  for (let i = 1; i <= 30; i++) {
-    const pad = String(i).padStart(2, "0");
-    const schoolName = `Demo School ${i}`;
-    const adminEmail = `demo${pad}@brio.md`;
-    const teacherEmail = `teacher${pad}@brio.md`;
+  // 2. Provision each of the 30 isolated pilot schools with distinct credentials
+  for (const schoolConf of PILOT_SCHOOLS) {
+    const legacyName = `Demo School ${schoolConf.id}`;
+    const legacyAdminEmail = `demo${String(schoolConf.id).padStart(2, "0")}@brio.md`;
+    const legacyTeacherEmail = `teacher${String(schoolConf.id).padStart(2, "0")}@brio.md`;
+    const passwordHash = await hash(schoolConf.password, 12);
 
     // 2a. Find or create School
-    let [school] = await db.select().from(schools).where(eq(schools.name, schoolName)).limit(1);
+    let [school] = await db
+      .select()
+      .from(schools)
+      .where(inArray(schools.name, [schoolConf.name, legacyName]))
+      .limit(1);
+
     if (!school) {
-      [school] = await db.insert(schools).values({ name: schoolName }).returning();
+      [school] = await db.insert(schools).values({ name: schoolConf.name }).returning();
+    } else if (school.name !== schoolConf.name) {
+      [school] = await db
+        .update(schools)
+        .set({ name: schoolConf.name })
+        .where(eq(schools.id, school.id))
+        .returning();
     }
 
-    // 2b. Find or create Admin
-    let [admin] = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
+    // 2b. Find or create Admin with distinct password
+    let [admin] = await db
+      .select()
+      .from(users)
+      .where(inArray(users.email, [schoolConf.adminEmail, legacyAdminEmail]))
+      .limit(1);
+
     if (!admin) {
       [admin] = await db
         .insert(users)
         .values({
-          email: adminEmail,
-          passwordHash: pilotPasswordHash,
-          name: `Admin ${schoolName}`,
+          email: schoolConf.adminEmail,
+          passwordHash,
+          name: `Director ${schoolConf.name}`,
           role: "admin",
           permissions: ["admin", "manage_billing"],
           schoolId: school.id,
@@ -82,7 +95,9 @@ async function seedPilotAccounts() {
       [admin] = await db
         .update(users)
         .set({
-          passwordHash: pilotPasswordHash,
+          email: schoolConf.adminEmail,
+          name: `Director ${schoolConf.name}`,
+          passwordHash,
           schoolId: school.id,
           role: "admin",
           permissions: ["admin", "manage_billing"],
@@ -92,15 +107,20 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2c. Find or create Teacher
-    let [teacher] = await db.select().from(users).where(eq(users.email, teacherEmail)).limit(1);
+    // 2c. Find or create Teacher with distinct password
+    let [teacher] = await db
+      .select()
+      .from(users)
+      .where(inArray(users.email, [schoolConf.teacherEmail, legacyTeacherEmail]))
+      .limit(1);
+
     if (!teacher) {
       [teacher] = await db
         .insert(users)
         .values({
-          email: teacherEmail,
-          passwordHash: pilotPasswordHash,
-          name: `Profesor ${schoolName}`,
+          email: schoolConf.teacherEmail,
+          passwordHash,
+          name: `Profesor ${schoolConf.name}`,
           role: "teacher",
           permissions: ["teach"],
           schoolId: school.id,
@@ -111,7 +131,9 @@ async function seedPilotAccounts() {
       [teacher] = await db
         .update(users)
         .set({
-          passwordHash: pilotPasswordHash,
+          email: schoolConf.teacherEmail,
+          name: `Profesor ${schoolConf.name}`,
+          passwordHash,
           schoolId: school.id,
           role: "teacher",
           permissions: ["teach"],
@@ -246,7 +268,7 @@ async function seedPilotAccounts() {
       }
     }
 
-    console.log(`✅ [${i}/30] Provisioned ${schoolName} (${adminEmail})`);
+    console.log(`✅ [${schoolConf.id}/30] Provisioned ${schoolConf.name} (${schoolConf.adminEmail})`);
   }
 
   console.log("✨ All 30 isolated pilot demo schools provisioned successfully!");

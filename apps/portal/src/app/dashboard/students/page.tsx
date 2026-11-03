@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { StudentFormDrawer, type StudentFormStudent } from "@/components/dashboard/StudentForm";
+import { StudentCsvImportModal } from "@/components/dashboard/StudentCsvImportModal";
 import { StudentsTable } from "@/components/dashboard/StudentsTable";
 import { StudentKpiCards } from "@/components/dashboard/StudentKpiCards";
 import { StudentFiltersBar } from "@/components/dashboard/StudentFiltersBar";
@@ -23,6 +24,7 @@ export default function StudentiPage() {
   const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
 
   const [showForm, setShowForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentFormStudent | null>(null);
 
   useEffect(() => {
@@ -150,15 +152,27 @@ export default function StudentiPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            data-testid="add-student-button"
-            onClick={handleCreate}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
-          >
-            <PlusIcon className="w-4 h-4" />
-            <span>{t("students.addStudent", "Adaugă Student")}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            <button
+              type="button"
+              data-testid="import-csv-button"
+              onClick={() => setShowImportModal(true)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-sm font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              <span>📥</span>
+              <span>{t("students.importCsv", "Importă Excel / CSV")}</span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="add-student-button"
+              onClick={handleCreate}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span>{t("students.addStudent", "Adaugă Student")}</span>
+            </button>
+          </div>
         </div>
 
         {/* KPI Stats Bar */}
@@ -198,6 +212,15 @@ export default function StudentiPage() {
           currentUserSchoolId={session?.user?.schoolId ?? undefined}
         />
       )}
+
+      {/* Bulk CSV / Excel Import Modal */}
+      <StudentCsvImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={() => {
+          // Modal will show success view, no forced immediate close
+        }}
+      />
     </>
   );
 }
