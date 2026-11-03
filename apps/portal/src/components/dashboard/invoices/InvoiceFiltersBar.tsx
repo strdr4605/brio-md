@@ -41,7 +41,7 @@ export function InvoiceFiltersBar({
   return (
     <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs space-y-3.5 sm:space-y-4">
       {/* Top: Status Tabs + Quick Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between flex-wrap">
         {/* Status Tabs Pills */}
         <div className="inline-flex p-1 bg-slate-100 rounded-xl max-w-full overflow-x-auto scrollbar-none">
           {tabs.map((t) => {
@@ -86,7 +86,7 @@ export function InvoiceFiltersBar({
       </div>
 
       {/* Bottom: Secondary Filters (Type, Group, Reset) */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-2 border-t border-slate-100">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-2.5 sm:items-center pt-2 border-t border-slate-100 flex-wrap">
         <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold mr-1 w-full sm:w-auto">
           <FilterIcon className="w-3.5 h-3.5" />
           <span>Filtrează:</span>
