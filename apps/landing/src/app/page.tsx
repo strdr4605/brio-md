@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { STAFF_PORTAL_URL, LEARNING_PORTAL_URL } from "@/lib/config";
+import { PilotRequestButton } from "@/components/PilotRequestButton";
 
 export default function Home() {
   return (
@@ -32,17 +33,14 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a
-              href={LEARNING_PORTAL_URL}
-              className="text-sm font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 transition-colors hidden sm:inline-block"
-            >
-              Learning Portal
-            </a>
+            <PilotRequestButton variant="secondary" className="hidden sm:inline-flex text-xs py-2 px-3">
+              Solicită Acces Pilot
+            </PilotRequestButton>
             <a
               href={STAFF_PORTAL_URL}
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all duration-150 shadow-xs"
             >
-              Staff Portal
+              Intră în Portal
             </a>
           </div>
         </div>
@@ -70,17 +68,14 @@ export default function Home() {
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <a
-                  href={LEARNING_PORTAL_URL}
-                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all duration-150 shadow-xs"
-                >
-                  Intră în Learning Portal
-                </a>
+                <PilotRequestButton variant="primary">
+                  Solicită Acces Pilot (Gratuit)
+                </PilotRequestButton>
                 <a
                   href={STAFF_PORTAL_URL}
                   className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-all duration-150"
                 >
-                  Portal Staff & Profesori
+                  Intră în Portal Școală
                 </a>
               </div>
 
