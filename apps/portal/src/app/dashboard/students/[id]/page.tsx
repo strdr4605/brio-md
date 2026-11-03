@@ -227,8 +227,8 @@ export default function StudentProfilePage() {
         {/* Right Column (70% on lg:grid-cols-12): Tabbed Workspace */}
         <main className="col-span-12 lg:col-span-8 space-y-4">
           {/* Tab Navigation Header Bar */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+          <div className="bg-white border border-slate-200/80 rounded-2xl px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+            <div className="flex items-center gap-0.5 overflow-x-auto pb-1 sm:pb-0">
               {[
                 { id: "courses" as const, label: ACADEMIC_LABELS.tabs.courses, icon: BookOpenIcon, count: activeEnrollments.length },
                 { id: "attendance" as const, label: ACADEMIC_LABELS.tabs.attendance, icon: CalendarIcon },
@@ -239,7 +239,7 @@ export default function StudentProfilePage() {
                   key={id}
                   type="button"
                   onClick={() => handleTabChange(id)}
-                  className={`px-3 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
+                  className={`px-2.5 py-2 text-xs font-bold border-b-2 transition shrink-0 flex items-center gap-1.5 ${
                     activeTab === id
                       ? "border-slate-900 text-slate-900"
                       : "border-transparent text-slate-500 hover:text-slate-900"

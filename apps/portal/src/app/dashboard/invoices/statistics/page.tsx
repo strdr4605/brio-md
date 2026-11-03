@@ -141,7 +141,7 @@ function FinancialStatisticsContent() {
       />
 
       {/* Main View Mode Segmented Control (Brio DS Monochrome) */}
-      <div className="border-b border-slate-200/80 pb-2">
+      <div className="border-b border-slate-200/80 pb-2 max-w-full overflow-x-auto no-scrollbar">
         <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/60 shadow-xs">
           <button
             type="button"

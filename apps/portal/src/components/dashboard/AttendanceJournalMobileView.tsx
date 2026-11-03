@@ -183,7 +183,7 @@ export function AttendanceJournalMobileView({
 
               <div
                 ref={dateScrollRef}
-                className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth flex-1"
+                className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth flex-1 min-w-0"
               >
                 {dates.map((d) => {
                   const isSelected = d.date === selectedDate;
@@ -198,7 +198,7 @@ export function AttendanceJournalMobileView({
                       onClick={() => setSelectedDate(d.date)}
                       className={`flex flex-col items-center justify-center min-w-[52px] py-2 px-1.5 rounded-xl border transition cursor-pointer shrink-0 active:scale-95 ${
                         isSelected
-                          ? "bg-blue-600 border-blue-600 text-white shadow-xs scale-102 ring-2 ring-blue-400/40"
+                          ? "bg-blue-600 border-blue-600 text-white shadow-xs ring-2 ring-blue-400/40"
                           : d.isToday
                             ? "bg-blue-50/80 border-blue-300 text-blue-900"
                             : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700"

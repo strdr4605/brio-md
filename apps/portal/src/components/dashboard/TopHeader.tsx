@@ -187,7 +187,7 @@ export function TopHeader({
           title={t("nav.accountSettings", "Setări cont")}
           className="flex items-center gap-2 pl-2 hover:opacity-80 transition group active:scale-[0.98]"
         >
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shadow-xs ring-2 ring-slate-100 group-hover:scale-105 transition-transform">
+          <div data-no-translate="true" className="w-8 h-8 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shadow-xs ring-2 ring-slate-100 group-hover:scale-105 transition-transform">
             {userName ? userName.charAt(0).toUpperCase() : "U"}
           </div>
           <div className="hidden sm:flex flex-col text-left">

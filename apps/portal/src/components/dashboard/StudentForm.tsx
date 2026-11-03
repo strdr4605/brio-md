@@ -364,7 +364,7 @@ export function StudentFormDrawer({
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   {t("students.parentPhone", "Telefon părinte")}{" "}
                   <span className="text-slate-400 font-normal text-xs">
-                    {t("students.orParentPhone", "(sau telefon student)*")}
+                    {t("students.orStudentPhone", "(sau telefon student)*")}
                   </span>
                 </label>
                 <input

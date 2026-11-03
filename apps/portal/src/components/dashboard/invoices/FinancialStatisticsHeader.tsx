@@ -43,9 +43,9 @@ export function FinancialStatisticsHeader({
         </div>
 
         {/* Right: Temporal Presets & CSV Export */}
-        <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start xl:self-auto max-w-full">
           {/* Date Presets Segmented Control */}
-          <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/60 shadow-xs">
+          <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/60 shadow-xs max-w-full overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => setPreset("mtd")}

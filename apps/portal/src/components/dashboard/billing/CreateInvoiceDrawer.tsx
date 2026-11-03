@@ -362,7 +362,7 @@ export function CreateInvoiceDrawer({
               {studentId && studentName && !isSearchingStudents ? (
                 <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
+                    <div data-no-translate="true" className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
                       {studentName.charAt(0).toUpperCase()}
                     </div>
                     <div>

@@ -95,7 +95,7 @@ export function PrintReceiptModal({ isOpen, onClose, invoice }: PrintReceiptModa
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b border-slate-200 pb-6">
             <div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                <div data-no-translate="true" className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">
                   V
                 </div>
                 <span className="text-lg font-black tracking-tight text-slate-900 uppercase">
