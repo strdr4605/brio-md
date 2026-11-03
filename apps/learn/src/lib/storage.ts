@@ -1,8 +1,10 @@
 import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
+import { db } from "@/lib/db";
+import { storedFiles } from "@brio-md/db";
 
-const STORAGE_DRIVER = process.env.STORAGE_DRIVER || "local";
+const STORAGE_DRIVER = process.env.STORAGE_DRIVER || "db";
 const S3_ENDPOINT = process.env.S3_ENDPOINT;
 const S3_REGION = process.env.S3_REGION || "us-east-1";
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
@@ -14,6 +16,7 @@ export type UploadFileInput = {
   buffer: Buffer | Uint8Array;
   filename: string;
   contentType: string;
+  schoolId?: number;
 };
 
 export type UploadFileOutput = {
@@ -76,7 +79,38 @@ export async function uploadFileToStorage(
     };
   }
 
-  // Local filesystem driver (default for development and Docker dev)
+  // Database driver (persists directly into Neon PostgreSQL stored_files)
+  if (STORAGE_DRIVER === "db" || STORAGE_DRIVER === "local") {
+    try {
+      const base64 = Buffer.isBuffer(input.buffer)
+        ? input.buffer.toString("base64")
+        : Buffer.from(input.buffer).toString("base64");
+
+      const [record] = await db
+        .insert(storedFiles)
+        .values({
+          filename: safeName,
+          mimeType: input.contentType,
+          sizeBytes: input.buffer.length,
+          dataBase64: base64,
+          schoolId: input.schoolId,
+        })
+        .returning();
+
+      if (record) {
+        return {
+          url: `/api/files/${record.id}`,
+          key: String(record.id),
+          size: input.buffer.length,
+          contentType: input.contentType,
+        };
+      }
+    } catch {
+      // Fallback to local disk if DB insertion fails
+    }
+  }
+
+  // Local filesystem fallback driver
   const uploadsDir = path.join(process.cwd(), "uploads", "resources");
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });

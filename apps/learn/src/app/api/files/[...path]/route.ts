@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { storedFiles } from "@brio-md/db";
 
 const MIME_MAP: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -26,6 +29,30 @@ export async function GET(
     const resolved = await context.params;
     const pathSegments = resolved.path || [];
 
+    // 1. If requesting by numeric ID (e.g. /api/files/1), fetch from Neon stored_files
+    if (pathSegments.length === 1 && /^\d+$/.test(pathSegments[0])) {
+      const fileId = parseInt(pathSegments[0], 10);
+      const [stored] = await db
+        .select()
+        .from(storedFiles)
+        .where(eq(storedFiles.id, fileId))
+        .limit(1);
+
+      if (stored) {
+        const buffer = Buffer.from(stored.dataBase64, "base64");
+        return new Response(buffer, {
+          status: 200,
+          headers: {
+            "Content-Type": stored.mimeType || "application/octet-stream",
+            "Content-Disposition": `inline; filename="${encodeURIComponent(stored.filename)}"`,
+            "Cache-Control": "public, max-age=86400",
+            "Content-Length": String(buffer.length),
+          },
+        });
+      }
+      return new NextResponse("Fișierul nu a fost găsit.", { status: 404 });
+    }
+
     const uploadsBaseDir = path.resolve(process.cwd(), "uploads");
     const filePath = path.resolve(uploadsBaseDir, ...pathSegments);
 
@@ -34,6 +61,27 @@ export async function GET(
     }
 
     if (!fs.existsSync(filePath)) {
+      // Fallback: check stored_files in DB by filename
+      const filename = pathSegments[pathSegments.length - 1];
+      const [stored] = await db
+        .select()
+        .from(storedFiles)
+        .where(eq(storedFiles.filename, filename))
+        .limit(1);
+
+      if (stored) {
+        const buffer = Buffer.from(stored.dataBase64, "base64");
+        return new Response(buffer, {
+          status: 200,
+          headers: {
+            "Content-Type": stored.mimeType || "application/octet-stream",
+            "Content-Disposition": `inline; filename="${encodeURIComponent(stored.filename)}"`,
+            "Cache-Control": "public, max-age=86400",
+            "Content-Length": String(buffer.length),
+          },
+        });
+      }
+
       return new NextResponse("Fișierul nu a fost găsit.", { status: 404 });
     }
 
