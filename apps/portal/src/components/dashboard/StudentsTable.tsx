@@ -9,6 +9,7 @@ import { Card, CardHeader, StatusDot, EmptyState } from "@brio-md/ui";
 import { StudentCoursesCell } from "./StudentCoursesCell";
 import { StudentRowDetails } from "./StudentRowDetails";
 import { StudentMobileCard } from "./StudentMobileCard";
+import { useTranslation } from "@/lib/i18n";
 
 export type StudentTableItem = {
   id: number;
@@ -44,6 +45,7 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
   deletePending = false,
 }: StudentsTableProps<T>) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
 
   const toggleExpand = (id: number) => {
@@ -53,7 +55,9 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
   if (isLoading) {
     return (
       <Card className="p-12 text-center">
-        <p className="text-sm text-slate-500">Se încarcă catalogul...</p>
+        <p className="text-sm text-slate-500">
+          {t("students.loadingCatalog", "Se încarcă catalogul...")}
+        </p>
       </Card>
     );
   }
@@ -62,12 +66,12 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
     return (
       <Card>
         <CardHeader
-          title="Registru Elevi"
-          description="Registru și dosare elevi"
+          title={t("students.registryTitle", "Registru Elevi")}
+          description={t("students.registryDesc", "Registru și dosare elevi")}
         />
         <EmptyState
-          title="Nu au fost găsiți elevi"
-          description="Încercați să modificați termenii de căutare"
+          title={t("students.noStudentsFound", "Nu au fost găsiți elevi")}
+          description={t("students.modifySearch", "Încercați să modificați termenii de căutare")}
         />
       </Card>
     );
@@ -76,8 +80,12 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
   return (
     <Card className="overflow-hidden">
       <CardHeader
-        title="Registru Elevi"
-        description={`${students.length} ${students.length === 1 ? "elev înregistrat" : "elevi înregistrați"}`}
+        title={t("students.registryTitle", "Registru Elevi")}
+        description={`${students.length} ${
+          students.length === 1
+            ? t("students.registeredSingular", "elev înregistrat")
+            : t("students.registeredPlural", "elevi înregistrați")
+        }`}
       />
       {/* Mobile Card List (Thumb-friendly touch view) */}
       <div className="block md:hidden divide-y divide-slate-100">
@@ -106,176 +114,183 @@ export function StudentsTable<T extends StudentTableItem = StudentTableItem>({
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 <th className="w-12 px-4 py-3.5 text-center"></th>
-                <th className="px-4 py-3.5">Student</th>
-                <th className="px-4 py-3.5">Statut</th>
-                <th className="px-4 py-3.5">Telefon Contact</th>
-                <th className="px-4 py-3.5">Școală</th>
-                <th className="px-4 py-3.5">Cursuri Asignate</th>
-                <th className="px-4 py-3.5 text-right">Acțiuni</th>
+                <th className="px-4 py-3.5">{t("students.student", "Student")}</th>
+                <th className="px-4 py-3.5">{t("common.status", "Statut")}</th>
+                <th className="px-4 py-3.5">{t("students.contactPhone", "Telefon Contact")}</th>
+                <th className="px-4 py-3.5">{t("common.school", "Școală")}</th>
+                <th className="px-4 py-3.5">{t("students.assignedCourses", "Cursuri Asignate")}</th>
+                <th className="px-4 py-3.5 text-right">{t("common.actions", "Acțiuni")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-            {students.map((student) => {
-              const school = schools.find((s) => s.id === student.schoolId);
-              const isExpanded = expandedStudentId === student.id;
-              const displayPhone = student.phone || student.parentPhone;
-              const hasNoCourses = !student.courses || student.courses.length === 0;
-              const studentAvailableCourses = courses.filter(
-                (c) => !c.schoolId || !student.schoolId || c.schoolId === student.schoolId,
-              );
+              {students.map((student) => {
+                const school = schools.find((s) => s.id === student.schoolId);
+                const isExpanded = expandedStudentId === student.id;
+                const displayPhone = student.phone || student.parentPhone;
+                const hasNoCourses = !student.courses || student.courses.length === 0;
+                const studentAvailableCourses = courses.filter(
+                  (c) => !c.schoolId || !student.schoolId || c.schoolId === student.schoolId,
+                );
 
-              return (
-                <Fragment key={student.id}>
-                  {/* Summary Row */}
-                  <tr
-                    onClick={() => router.push(`/dashboard/students/${student.id}`)}
-                    className={`group cursor-pointer transition-colors duration-150 ${
-                      isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/80"
-                    }`}
-                  >
-                    {/* Expand/Collapse Chevron Button */}
-                    <td className="px-4 py-3.5 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpand(student.id);
-                        }}
-                        className="w-7 h-7 rounded-lg text-slate-400 group-hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 cursor-pointer mx-auto"
-                        aria-label={isExpanded ? "Restrânge detalii" : "Extinde detalii"}
-                      >
-                        <ChevronDownIcon
-                          className={`w-4 h-4 transition-transform duration-200 ${
-                            isExpanded ? "rotate-0 text-slate-900" : "-rotate-90"
-                          }`}
-                        />
-                      </button>
-                    </td>
-
-                    {/* Student Name & Avatar */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        {hasNoCourses ? (
-                          <div
-                            className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs select-none"
-                            title="Fără curs asignat"
-                          >
-                            {student.name ? student.name.charAt(0).toUpperCase() : "S"}
-                          </div>
-                        ) : (
-                          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                            {student.name ? student.name.charAt(0).toUpperCase() : "S"}
-                          </div>
-                        )}
-                        <div>
-                          <Link
-                            href={`/dashboard/students/${student.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="font-bold text-slate-900 text-sm block hover:text-slate-700 hover:underline transition"
-                          >
-                            {student.name}
-                          </Link>
-                          <span className="text-xs text-slate-400">
-                            {student.age ? `${student.age} ani` : "Vârstă N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
-                      <StatusDot
-                        status={student.active !== false ? "active" : "inactive"}
-                        label={student.active !== false ? "Activ" : "Inactiv"}
-                        pill
-                      />
-                    </td>
-
-                    {/* Contact Phone */}
-                    <td className="px-4 py-3.5 text-xs text-slate-600">
-                      {displayPhone ? (
-                        <a
-                          href={`tel:${displayPhone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="font-medium text-slate-700 hover:text-slate-900 inline-flex items-center gap-1.5"
+                return (
+                  <Fragment key={student.id}>
+                    {/* Summary Row */}
+                    <tr
+                      onClick={() => router.push(`/dashboard/students/${student.id}`)}
+                      className={`group cursor-pointer transition-colors duration-150 ${
+                        isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/80"
+                      }`}
+                    >
+                      {/* Expand/Collapse Chevron Button */}
+                      <td className="px-4 py-3.5 text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(student.id);
+                          }}
+                          className="w-7 h-7 rounded-lg text-slate-400 group-hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 cursor-pointer mx-auto"
+                          aria-label={
+                            isExpanded
+                              ? t("students.collapseDetails", "Restrânge detalii")
+                              : t("students.expandDetails", "Extinde detalii")
+                          }
                         >
-                          {formatPhone(displayPhone)}
-                          {!student.phone && student.parentPhone && (
-                            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
-                              părinte
-                            </span>
+                          <ChevronDownIcon
+                            className={`w-4 h-4 transition-transform duration-200 ${
+                              isExpanded ? "rotate-0 text-slate-900" : "-rotate-90"
+                            }`}
+                          />
+                        </button>
+                      </td>
+
+                      {/* Student Name & Avatar */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          {hasNoCourses ? (
+                            <div
+                              className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs select-none"
+                              title="Fără curs asignat"
+                            >
+                              {student.name ? student.name.charAt(0).toUpperCase() : "S"}
+                            </div>
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                              {student.name ? student.name.charAt(0).toUpperCase() : "S"}
+                            </div>
                           )}
-                        </a>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </td>
+                          <div>
+                            <Link
+                              href={`/dashboard/students/${student.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="font-bold text-slate-900 text-sm block hover:text-slate-700 hover:underline transition"
+                            >
+                              {student.name}
+                            </Link>
+                            <span className="text-xs text-slate-400">
+                              {student.age ? `${student.age} ani` : "Vârstă N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                    {/* School */}
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
-                        {school?.name || "Campus Principal"}
-                      </span>
-                    </td>
+                      {/* Status Badge */}
+                      <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                        <StatusDot
+                          status={student.active !== false ? "active" : "inactive"}
+                          label={student.active !== false ? "Activ" : "Inactiv"}
+                          pill
+                        />
+                      </td>
 
-                    {/* Assigned Courses (Interactive Popover) */}
-                    <td className="px-4 py-3.5 min-w-[220px]" onClick={(e) => e.stopPropagation()}>
-                      <StudentCoursesCell
-                        studentId={student.id}
-                        currentCourses={(student as any).courses || []}
-                        availableCourses={studentAvailableCourses}
-                      />
-                    </td>
+                      {/* Contact Phone */}
+                      <td className="px-4 py-3.5 text-xs text-slate-600">
+                        {displayPhone ? (
+                          <a
+                            href={`tel:${displayPhone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-medium text-slate-700 hover:text-slate-900 inline-flex items-center gap-1.5"
+                          >
+                            {formatPhone(displayPhone)}
+                            {!student.phone && student.parentPhone && (
+                              <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
+                                părinte
+                              </span>
+                            )}
+                          </a>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </td>
 
-                    {/* Actions */}
-                    <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="inline-flex items-center gap-2">
-                        <Link
-                          href={`/dashboard/students/${student.id}`}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
-                        >
-                          Profil
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => onEdit(student)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-                        >
-                          Editează
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(student.id)}
-                          disabled={deletePending}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition disabled:opacity-50 cursor-pointer"
-                        >
-                          Șterge
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                      {/* School */}
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
+                          {school?.name || "Campus Principal"}
+                        </span>
+                      </td>
 
-                  {/* Expandable Details Row */}
-                  {isExpanded && (
-                    <tr>
-                      <td colSpan={7} className="p-0">
-                        <StudentRowDetails
-                          student={student}
-                          schoolName={school?.name}
+                      {/* Assigned Courses (Interactive Popover) */}
+                      <td
+                        className="px-4 py-3.5 min-w-[220px]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <StudentCoursesCell
+                          studentId={student.id}
+                          currentCourses={(student as any).courses || []}
                           availableCourses={studentAvailableCourses}
                         />
                       </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="inline-flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/students/${student.id}`}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
+                          >
+                            Profil
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => onEdit(student)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                          >
+                            Editează
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(student.id)}
+                            disabled={deletePending}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition disabled:opacity-50 cursor-pointer"
+                          >
+                            Șterge
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  )}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
+
+                    {/* Expandable Details Row */}
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={7} className="p-0">
+                          <StudentRowDetails
+                            student={student}
+                            schoolName={school?.name}
+                            availableCourses={studentAvailableCourses}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {/* Mobile touch swipe gradient indicator */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent sm:hidden" />
       </div>
-      {/* Mobile touch swipe gradient indicator */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent sm:hidden" />
-    </div>
-  </Card>
+    </Card>
   );
 }

@@ -8,13 +8,18 @@ import { StudentsTable } from "@/components/dashboard/StudentsTable";
 import { StudentKpiCards } from "@/components/dashboard/StudentKpiCards";
 import { StudentFiltersBar } from "@/components/dashboard/StudentFiltersBar";
 import { StudentsIcon, PlusIcon } from "@/components/ui/icons";
+import { useTranslation } from "@/lib/i18n";
 
 export default function StudentiPage() {
+  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const permissions = (session?.user?.permissions ?? []) as string[];
   const role = session?.user?.role;
   const isSuperOrAdmin =
-    permissions.includes("super") || permissions.includes("admin") || role === "superadmin" || role === "admin";
+    permissions.includes("super") ||
+    permissions.includes("admin") ||
+    role === "superadmin" ||
+    role === "admin";
   const canManageStudents = isSuperOrAdmin || permissions.includes("teach") || role === "teacher";
 
   const [showForm, setShowForm] = useState(false);
@@ -46,14 +51,20 @@ export default function StudentiPage() {
   });
 
   const handleDelete = (id: number) => {
-    if (confirm("Sigur doriți să ștergeți acest student?")) {
+    if (confirm(t("students.deleteConfirm", "Sigur doriți să ștergeți acest student?"))) {
       deleteMutation.mutate({ id });
     }
   };
 
-  const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, { enabled: canManageStudents });
-  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, { enabled: canManageStudents });
-  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, { enabled: canManageStudents });
+  const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
+    enabled: canManageStudents,
+  });
+  const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
+    enabled: canManageStudents,
+  });
+  const { data: courses = [] } = trpc.user.listCourses.useQuery(undefined, {
+    enabled: canManageStudents,
+  });
 
   const filteredStudents = useMemo(() => {
     return students
@@ -92,8 +103,15 @@ export default function StudentiPage() {
         <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
           <StudentsIcon className="w-6 h-6" />
         </div>
-        <h2 className="text-base font-bold text-slate-900">Acces Restricționat</h2>
-        <p className="text-sm text-slate-500 mt-1">Nu ai permisiuni suficiente pentru catalogul de studenți.</p>
+        <h2 className="text-base font-bold text-slate-900">
+          {t("students.restrictedAccess", "Acces Restricționat")}
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">
+          {t(
+            "students.restrictedDesc",
+            "Nu ai permisiuni suficiente pentru catalogul de studenți.",
+          )}
+        </p>
       </div>
     );
   }
@@ -108,65 +126,65 @@ export default function StudentiPage() {
     setShowForm(true);
   };
 
-  const unenrolledCount = students.filter(
-    (s: any) => !s.courses || s.courses.length === 0,
-  ).length;
+  const unenrolledCount = students.filter((s: any) => !s.courses || s.courses.length === 0).length;
 
   return (
     <>
       <div className="space-y-6 animate-fade-in-up">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Catalog Studenți</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/80">
-              {students.length} total
-            </span>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                {t("students.title", "Catalog Studenți")}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/80">
+                {students.length} {t("common.total", "total")}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {t(
+                "students.subtitle",
+                "Gestionează datele de contact, înscrierile și activitatea fiecărui elev.",
+              )}
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Gestionează datele de contact, înscrierile și activitatea fiecărui elev.
-          </p>
+
+          <button
+            type="button"
+            data-testid="add-student-button"
+            onClick={handleCreate}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>{t("students.addStudent", "Adaugă Student")}</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          data-testid="add-student-button"
-          onClick={handleCreate}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
-        >
-          <PlusIcon className="w-4 h-4" />
-          <span>Adaugă Student</span>
-        </button>
-      </div>
+        {/* KPI Stats Bar */}
+        <StudentKpiCards totalStudents={students.length} unenrolledCount={unenrolledCount} />
 
-      {/* KPI Stats Bar */}
-      <StudentKpiCards
-        totalStudents={students.length}
-        unenrolledCount={unenrolledCount}
-      />
+        {/* Filters Toolbar */}
+        <StudentFiltersBar
+          search={search}
+          setSearch={setSearch}
+          selectedSchoolId={selectedSchoolId}
+          setSelectedSchoolId={setSelectedSchoolId}
+          schools={schools}
+          courseFilter={courseFilter}
+          setCourseFilter={setCourseFilter}
+        />
 
-      {/* Filters Toolbar */}
-      <StudentFiltersBar
-        search={search}
-        setSearch={setSearch}
-        selectedSchoolId={selectedSchoolId}
-        setSelectedSchoolId={setSelectedSchoolId}
-        schools={schools}
-        courseFilter={courseFilter}
-        setCourseFilter={setCourseFilter}
-      />
-
-      {/* Main Table with Smart Expandable Rows */}
-      <StudentsTable
-        students={filteredStudents}
-        schools={schools}
-        courses={courses}
-        isLoading={isLoading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        deletePending={deleteMutation.isPending}
-      />
+        {/* Main Table with Smart Expandable Rows */}
+        <StudentsTable
+          students={filteredStudents}
+          schools={schools}
+          courses={courses}
+          isLoading={isLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          deletePending={deleteMutation.isPending}
+        />
       </div>
 
       {/* Edit / Create Drawer */}

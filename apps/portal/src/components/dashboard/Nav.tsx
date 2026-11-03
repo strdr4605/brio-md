@@ -5,13 +5,24 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import {
-  DashboardIcon, UsersIcon, StudentsIcon, BookOpenIcon, CalendarIcon,
-  SettingsIcon, ChevronDownIcon, ChevronLeftIcon,
-  ChevronRightIcon, LogOutIcon, UserCheckIcon, BarChartIcon, InvoiceIcon,
+  DashboardIcon,
+  UsersIcon,
+  StudentsIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  SettingsIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LogOutIcon,
+  UserCheckIcon,
+  BarChartIcon,
+  InvoiceIcon,
 } from "@/components/ui/icons";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileMenuHub } from "./MobileMenuHub";
 import { trpc } from "@/lib/trpc";
+import { useTranslation } from "@/lib/i18n";
 
 export type NavProps = {
   userName?: string;
@@ -35,6 +46,7 @@ export function Nav({
   onCloseMobile,
 }: NavProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const isSuperAdmin = permissions?.includes("super") || role === "superadmin";
   const isSuperOrAdmin = isSuperAdmin || permissions?.includes("admin") || role === "admin";
   const isBillingAllowed = permissions?.includes("manage_billing") || isSuperOrAdmin;
@@ -99,9 +111,7 @@ export function Nav({
         }`}
         title={label}
       >
-        <IconComponent
-          className={`w-6 h-6 shrink-0 ${active ? "text-white" : "text-slate-400"}`}
-        />
+        <IconComponent className={`w-6 h-6 shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
         <span className="text-[15px] font-semibold flex-1 truncate">{label}</span>
         {Boolean(badgeCount && badgeCount > 0) && (
           <span
@@ -127,8 +137,8 @@ export function Nav({
           <button
             onClick={onToggleCollapse}
             className="w-11 h-11 rounded-xl bg-slate-800 text-white font-extrabold text-base flex items-center justify-center hover:bg-slate-700 transition group shadow-xs"
-            title="Extinde meniul"
-            aria-label="Extinde meniul"
+            title={t("nav.expandMenu", "Extinde meniul")}
+            aria-label={t("nav.expandMenu", "Extinde meniul")}
           >
             <ChevronRightIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
@@ -137,7 +147,7 @@ export function Nav({
             <Link
               href="/dashboard"
               className="flex items-center gap-3 group min-w-0"
-              title="Acasă Dashboard"
+              title={t("nav.dashboard", "Acasă Dashboard")}
             >
               <div className="w-10 h-10 rounded-xl bg-slate-800 text-white font-extrabold text-lg flex items-center justify-center shadow-xs group-hover:scale-105 transition shrink-0">
                 B
@@ -147,7 +157,7 @@ export function Nav({
                   Brio<span className="text-blue-500">.md</span>
                 </span>
                 <span className="text-xs uppercase font-bold tracking-wider text-slate-400 mt-1">
-                  Portal Management
+                  {t("nav.brandSubtitle", "Portal Management")}
                 </span>
               </div>
             </Link>
@@ -155,8 +165,8 @@ export function Nav({
             <button
               onClick={onToggleCollapse}
               className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition"
-              title="Restrânge meniul"
-              aria-label="Restrânge meniul"
+              title={t("nav.collapseMenu", "Restrânge meniul")}
+              aria-label={t("nav.collapseMenu", "Restrânge meniul")}
             >
               <ChevronLeftIcon className="w-4 h-4" />
             </button>
@@ -165,15 +175,23 @@ export function Nav({
       </div>
 
       {/* Navigation List */}
-      <nav className={`flex-1 py-4 space-y-3.5 overflow-y-auto overflow-x-hidden scrollbar-thin ${collapsed ? "px-2" : "px-3"}`}>
+      <nav
+        className={`flex-1 py-4 space-y-3.5 overflow-y-auto overflow-x-hidden scrollbar-thin ${collapsed ? "px-2" : "px-3"}`}
+      >
         {/* Principal / Overview */}
         <div className="space-y-1">
           {!collapsed && (
             <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
-              Prezentare
+              {t("nav.overview", "Prezentare")}
             </div>
           )}
-          {renderNavLink("/dashboard", "Panou Principal", DashboardIcon, undefined, collapsed)}
+          {renderNavLink(
+            "/dashboard",
+            t("nav.dashboard", "Panou Principal"),
+            DashboardIcon,
+            undefined,
+            collapsed,
+          )}
         </div>
 
         {/* Group: Gestiune Academică */}
@@ -187,7 +205,7 @@ export function Nav({
                 onClick={() => setAcademicOpen((prev) => !prev)}
                 className="w-full flex items-center justify-between px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400 hover:text-slate-200 transition group"
               >
-                <span>Gestiune Academică</span>
+                <span>{t("nav.academicManagement", "Gestiune Academică")}</span>
                 <ChevronDownIcon
                   className={`w-4 h-4 transition-transform duration-200 ${
                     academicOpen ? "rotate-0" : "-rotate-90"
@@ -198,13 +216,61 @@ export function Nav({
 
             {(academicOpen || collapsed) && (
               <div className="space-y-1">
-                {canManageStudents && renderNavLink("/dashboard/attendance", "Prezență", UserCheckIcon, undefined, collapsed)}
-                {renderNavLink("/dashboard/schedule", "Orar & Săli", CalendarIcon, undefined, collapsed)}
-                {canManageStudents && renderNavLink("/dashboard/students", "Studenți", StudentsIcon, undefined, collapsed)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/courses", "Cursuri", BookOpenIcon, undefined, collapsed)}
-                {isBillingAllowed && renderNavLink("/dashboard/invoices", "Facturare", InvoiceIcon, overdueCount, collapsed)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/invoices/statistics", "Statistici Financiare", BarChartIcon, undefined, collapsed)}
-                {isSuperOrAdmin && renderNavLink("/dashboard/users", "Utilizatori", UsersIcon, undefined, collapsed)}
+                {canManageStudents &&
+                  renderNavLink(
+                    "/dashboard/attendance",
+                    t("nav.attendance", "Prezență"),
+                    UserCheckIcon,
+                    undefined,
+                    collapsed,
+                  )}
+                {renderNavLink(
+                  "/dashboard/schedule",
+                  t("nav.schedule", "Orar & Săli"),
+                  CalendarIcon,
+                  undefined,
+                  collapsed,
+                )}
+                {canManageStudents &&
+                  renderNavLink(
+                    "/dashboard/students",
+                    t("nav.students", "Studenți"),
+                    StudentsIcon,
+                    undefined,
+                    collapsed,
+                  )}
+                {isSuperOrAdmin &&
+                  renderNavLink(
+                    "/dashboard/courses",
+                    t("nav.courses", "Cursuri"),
+                    BookOpenIcon,
+                    undefined,
+                    collapsed,
+                  )}
+                {isBillingAllowed &&
+                  renderNavLink(
+                    "/dashboard/invoices",
+                    t("nav.invoices", "Facturare"),
+                    InvoiceIcon,
+                    overdueCount,
+                    collapsed,
+                  )}
+                {isSuperOrAdmin &&
+                  renderNavLink(
+                    "/dashboard/invoices/statistics",
+                    t("nav.financialStats", "Statistici Financiare"),
+                    BarChartIcon,
+                    undefined,
+                    collapsed,
+                  )}
+                {isSuperOrAdmin &&
+                  renderNavLink(
+                    "/dashboard/users",
+                    t("nav.users", "Utilizatori"),
+                    UsersIcon,
+                    undefined,
+                    collapsed,
+                  )}
               </div>
             )}
           </div>
@@ -216,29 +282,37 @@ export function Nav({
             <div className="border-t border-white/[0.08] my-2 mx-1" />
           ) : (
             <div className="px-3.5 pb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">
-              Sistem
+              {t("nav.system", "Sistem")}
             </div>
           )}
-          {renderNavLink("/dashboard/settings", "Setări", SettingsIcon, undefined, collapsed)}
+          {renderNavLink(
+            "/dashboard/settings",
+            t("nav.settings", "Setări"),
+            SettingsIcon,
+            undefined,
+            collapsed,
+          )}
         </div>
       </nav>
 
       {/* User Profile & Sign Out Footer */}
-      <div className={`border-t border-white/[0.08] bg-black/30 shrink-0 ${collapsed ? "p-2.5" : "p-3.5"}`}>
+      <div
+        className={`border-t border-white/[0.08] bg-black/30 shrink-0 ${collapsed ? "p-2.5" : "p-3.5"}`}
+      >
         {collapsed ? (
           <div className="flex flex-col items-center gap-2">
             <Link
               href="/dashboard/settings"
               className="w-10 h-10 rounded-xl bg-slate-800 text-white font-bold text-xs flex items-center justify-center ring-1 ring-white/10 hover:scale-105 transition"
-              title={`Profil: ${userName || "Utilizator"}`}
+              title={`Profil: ${userName || t("nav.userFallback", "Utilizator")}`}
             >
               {userName ? userName.charAt(0).toUpperCase() : "U"}
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="w-10 h-10 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition active:scale-95"
-              title="Deconectare"
-              aria-label="Deconectare"
+              title={t("nav.signOut", "Deconectare")}
+              aria-label={t("nav.signOut", "Deconectare")}
             >
               <LogOutIcon className="w-5 h-5" />
             </button>
@@ -248,14 +322,14 @@ export function Nav({
             <Link
               href="/dashboard/settings"
               className="flex items-center gap-3 min-w-0 group"
-              title="Setări cont"
+              title={t("nav.accountSettings", "Setări cont")}
             >
               <div className="w-9 h-9 rounded-full bg-slate-800 text-white font-bold text-sm flex items-center justify-center shrink-0 ring-1 ring-white/20 group-hover:scale-105 transition">
                 {userName ? userName.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="min-w-0 flex flex-col text-left">
                 <span className="text-sm font-semibold text-slate-100 truncate leading-tight group-hover:text-blue-400 transition-colors">
-                  {userName || "Utilizator"}
+                  {userName || t("nav.userFallback", "Utilizator")}
                 </span>
                 <span className="text-xs text-slate-400 uppercase font-bold tracking-wider truncate mt-0.5">
                   {role || "Staff"}
@@ -266,8 +340,8 @@ export function Nav({
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 active:scale-95"
-              title="Deconectare"
-              aria-label="Deconectare"
+              title={t("nav.signOut", "Deconectare")}
+              aria-label={t("nav.signOut", "Deconectare")}
             >
               <LogOutIcon className="w-5 h-5" />
             </button>
