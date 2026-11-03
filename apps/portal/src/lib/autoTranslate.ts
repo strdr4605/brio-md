@@ -1734,6 +1734,31 @@ const EXACT_PHRASES: Record<string, [string, string]> = {
     "Напр.: Болен, отпросился, соревнование...",
     "e.g. Sick, excused by parents, competition...",
   ],
+  "Importă Excel / CSV": ["Импорт из Excel / CSV", "Import Excel / CSV"],
+  "Importă Elevi din Excel / CSV": ["Импорт учеников из Excel / CSV", "Import Students from Excel / CSV"],
+  "Încarcă lista de elevi pentru transfer rapid": [
+    "Загрузите список учеников для быстрого переноса",
+    "Upload student list for quick transfer",
+  ],
+  "Import Finalizat cu Succes!": ["Импорт успешно завершён!", "Import Completed Successfully!"],
+  "Vezi Catalogul Actualizat": ["Перейти к обновлённому каталогу", "View Updated Catalog"],
+  "Formate suportate:": ["Поддерживаемые форматы:", "Supported formats:"],
+  "sau export din Excel.": ["или экспорт из Excel.", "or Excel export."],
+  "Descarcă Model CSV": ["Скачать шаблон CSV", "Download CSV Template"],
+  "Se analizează fișierul...": ["Анализ файла...", "Analyzing file..."],
+  "Apasă aici pentru a alege fișierul CSV": [
+    "Нажмите здесь, чтобы выбрать файл CSV",
+    "Click here to choose a CSV file",
+  ],
+  "Coloane: Nume, Telefon, Părinte, Telefon Părinte, Vârstă": [
+    "Колонки: Имя, Телефон, Родитель, Телефон родителя, Возраст",
+    "Columns: Name, Phone, Parent, Parent Phone, Age",
+  ],
+  "Schimbă fișierul": ["Сменить файл", "Change file"],
+  "Se importă...": ["Импортируется...", "Importing..."],
+  "Nume Elev": ["Имя ученика", "Student Name"],
+  "Părinte & Tel": ["Родитель и тел.", "Parent & Phone"],
+  "✓ Valid": ["✓ Корректно", "✓ Valid"],
   "Astăzi": ["Сегодня", "Today"],
 };
 

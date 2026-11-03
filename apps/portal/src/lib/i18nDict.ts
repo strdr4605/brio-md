@@ -318,6 +318,7 @@ const RAW_DICTIONARY = {
       title: "Students Catalog",
       subtitle: "Manage contact details, enrollments, and activity for every student.",
       addStudent: "Add Student",
+      importCsv: "Import Excel / CSV",
       registryTitle: "Student Registry",
       registryDesc: "Student records and dossiers",
       registeredSingular: "registered student",
