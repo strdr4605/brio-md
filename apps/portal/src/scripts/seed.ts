@@ -312,10 +312,14 @@ async function seed() {
       .insert(schools)
       .values({
         name: "Vibe Academy",
+        schemaName: "tenant_vibe_academy",
       })
       .returning();
     console.log("✅ Created school:", school.name);
   } else {
+    if (!school.schemaName) {
+      await db.update(schools).set({ schemaName: "tenant_vibe_academy" }).where(eq(schools.id, school.id));
+    }
     console.log("ℹ️ Using existing school:", school.name, `(id: ${school.id})`);
   }
 

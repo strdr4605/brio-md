@@ -73,6 +73,7 @@ Echipa Brio.md
 
 | Slot | Institution / Sandbox | City | Type | Director Email | Teacher Email | Dedicated Password | Status |
 |:---:|:---|:---|:---:|:---|:---|:---:|:---:|
+| **HQ** | Vibe Academy | Chișinău | Center | `vibe@brio.md` | `teacher@vibe.md` | `Vibe#2026Brio!` | Active |
 | **01** | Liceul Orizont Chișinău | Chișinău | School | `orizont@brio.md` | `prof-orizont@brio.md` | `Orizont#72Brio!` | Available |
 | **02** | Academia Da Vinci | Chișinău | Center | `davinci@brio.md` | `prof-davinci@brio.md` | `DaVinci*91Vibe!` | Available |
 | **03** | Centrul Edu Prometeu | Chișinău | Center | `prometeu@brio.md` | `prof-prometeu@brio.md` | `Prometeu^34Edu!` | Available |
