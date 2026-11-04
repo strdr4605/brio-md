@@ -18,7 +18,7 @@ type SessionUser = {
 // Context type
 export type Context = {
   user: SessionUser | null;
-  db: ReturnType<typeof getTenantDb>;
+  db?: ReturnType<typeof getTenantDb>;
 };
 
 // tRPC initialization
