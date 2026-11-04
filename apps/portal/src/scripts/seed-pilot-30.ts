@@ -12,6 +12,8 @@ import {
   groups,
   studentGroupEnrollments,
   studentCourseProgress,
+  sanitizeTenantSchemaName,
+  provisionTenantSchema,
 } from "@brio-md/db";
 import fs from "fs";
 import path from "path";
@@ -57,29 +59,21 @@ async function seedPilotAccounts() {
     const legacyTeacherEmail = `teacher${String(schoolConf.id).padStart(2, "0")}@brio.md`;
     const passwordHash = await hash(schoolConf.password, 10);
 
-    // 2a. Find or create School
-    let [school] = await db
-      .select()
-      .from(schools)
-      .where(inArray(schools.name, [schoolConf.name, legacyName]))
-      .limit(1);
+    // 2a. Find or create School with isolated tenant schema
+    const schemaName = sanitizeTenantSchemaName(schoolConf.name);
+    let [school] = await db.select().from(schools).where(inArray(schools.name, [schoolConf.name, legacyName])).limit(1);
 
     if (!school) {
-      [school] = await db.insert(schools).values({ name: schoolConf.name }).returning();
-    } else if (school.name !== schoolConf.name) {
-      [school] = await db
-        .update(schools)
-        .set({ name: schoolConf.name })
-        .where(eq(schools.id, school.id))
-        .returning();
+      [school] = await db.insert(schools).values({ name: schoolConf.name, schemaName }).returning();
+    } else {
+      [school] = await db.update(schools).set({ name: schoolConf.name, schemaName }).where(eq(schools.id, school.id)).returning();
     }
 
+    // Provision the isolated PostgreSQL schema for this tenant
+    await provisionTenantSchema(sql, schemaName);
+
     // 2b. Ensure branded Director exists with distinct password
-    let [admin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, schoolConf.adminEmail))
-      .limit(1);
+    let [admin] = await db.select().from(users).where(eq(users.email, schoolConf.adminEmail)).limit(1);
 
     if (!admin) {
       [admin] = await db
