@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import type { getTenantDb } from "./tenantDb";
 
 // Session user type
 type SessionUser = {
@@ -10,12 +11,14 @@ type SessionUser = {
   permissions: string[];
   courseIds: number[];
   schoolId: number | null;
+  schemaName?: string | null;
   expired?: boolean;
 };
 
 // Context type
-type Context = {
+export type Context = {
   user: SessionUser | null;
+  db: ReturnType<typeof getTenantDb>;
 };
 
 // tRPC initialization
