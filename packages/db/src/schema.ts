@@ -15,6 +15,7 @@ import {
 export const schools = pgTable("schools", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
+  schemaName: varchar("schema_name", { length: 100 }).unique(),
   address: text("address"),
   phone: varchar("phone", { length: 50 }),
   email: varchar("email", { length: 255 }),
