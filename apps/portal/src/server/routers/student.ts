@@ -405,7 +405,7 @@ export const studentRouter = router({
         .returning();
 
       if (input.courseIds && input.courseIds.length > 0) {
-        await db.insert(studentCourseProgress).values(
+        await (ctx.db || db).insert(studentCourseProgress).values(
           input.courseIds.map((courseId) => ({
             studentId: result.id,
             courseId,
@@ -529,7 +529,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(students).where(eq(students.id, input.id)).limit(1);
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
@@ -627,7 +627,7 @@ export const studentRouter = router({
 
         const toInsert = courseIds.filter((cid) => !existingIds.has(cid));
         if (toInsert.length > 0) {
-          await db.insert(studentCourseProgress).values(
+          await (ctx.db || db).insert(studentCourseProgress).values(
             toInsert.map((courseId) => ({
               studentId: id,
               courseId,
@@ -803,7 +803,7 @@ export const studentRouter = router({
 
       const toInsert = uniqueCourseIds.filter((cid) => !existingIds.has(cid));
       if (toInsert.length > 0) {
-        await db.insert(studentCourseProgress).values(
+        await (ctx.db || db).insert(studentCourseProgress).values(
           toInsert.map((courseId) => ({
             studentId: input.studentId,
             courseId,
@@ -826,7 +826,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a șterge studenți" });
       }
 
-      const [existing] = await db.select().from(students).where(eq(students.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(students).where(eq(students.id, input.id)).limit(1);
 
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
@@ -836,7 +836,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți șterge un student din altă școală" });
       }
 
-      await db.delete(students).where(eq(students.id, input.id));
+      await (ctx.db || db).delete(students).where(eq(students.id, input.id));
 
       return { success: true };
     }),
