@@ -231,7 +231,7 @@ export const groupRouter = router({
       const user = ctx.user;
       if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const [existing] = await db.select().from(groups).where(eq(groups.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(groups).where(eq(groups.id, input.id)).limit(1);
 
       if (!existing) {
         throw new TRPCError({
@@ -316,7 +316,7 @@ export const groupRouter = router({
         });
       }
 
-      const [existing] = await db.select().from(groups).where(eq(groups.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(groups).where(eq(groups.id, input.id)).limit(1);
 
       if (!existing) {
         throw new TRPCError({
