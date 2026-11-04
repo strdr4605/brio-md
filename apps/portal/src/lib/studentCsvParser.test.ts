@@ -37,3 +37,4 @@ describe("parseStudentCsv", () => {
     expect(res.candidates[0].error).toBe("Lipsește nr. de telefon");
   });
 });
+
