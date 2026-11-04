@@ -47,12 +47,15 @@ async function seedPilotAccounts() {
     await db.insert(permissionDefinitions).values(perm).onConflictDoNothing();
   }
 
-  // 2. Provision each of the 30 isolated pilot schools with distinct credentials
+  // Hash generic pilot password once for high performance (supports demo01..30)
+  const genericPilotPasswordHash = await hash("BrioPilot2026!", 10);
+
+  // 2. Provision each of the 30 isolated pilot schools with both distinct and demo credentials
   for (const schoolConf of PILOT_SCHOOLS) {
     const legacyName = `Demo School ${schoolConf.id}`;
     const legacyAdminEmail = `demo${String(schoolConf.id).padStart(2, "0")}@brio.md`;
     const legacyTeacherEmail = `teacher${String(schoolConf.id).padStart(2, "0")}@brio.md`;
-    const passwordHash = await hash(schoolConf.password, 12);
+    const passwordHash = await hash(schoolConf.password, 10);
 
     // 2a. Find or create School
     let [school] = await db
@@ -71,11 +74,11 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2b. Find or create Admin with distinct password
+    // 2b. Ensure branded Director exists with distinct password
     let [admin] = await db
       .select()
       .from(users)
-      .where(inArray(users.email, [schoolConf.adminEmail, legacyAdminEmail]))
+      .where(eq(users.email, schoolConf.adminEmail))
       .limit(1);
 
     if (!admin) {
@@ -95,7 +98,6 @@ async function seedPilotAccounts() {
       [admin] = await db
         .update(users)
         .set({
-          email: schoolConf.adminEmail,
           name: `Director ${schoolConf.name}`,
           passwordHash,
           schoolId: school.id,
@@ -107,11 +109,41 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2c. Find or create Teacher with distinct password
+    // 2c. Ensure generic demo admin (demo01..30@brio.md) exists for internal testing & legacy compatibility
+    let [demoAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, legacyAdminEmail))
+      .limit(1);
+
+    if (!demoAdmin) {
+      await db.insert(users).values({
+        email: legacyAdminEmail,
+        passwordHash: genericPilotPasswordHash,
+        name: `Admin Demo ${schoolConf.id}`,
+        role: "admin",
+        permissions: ["admin", "manage_billing"],
+        schoolId: school.id,
+        active: true,
+      });
+    } else {
+      await db
+        .update(users)
+        .set({
+          passwordHash: genericPilotPasswordHash,
+          schoolId: school.id,
+          role: "admin",
+          permissions: ["admin", "manage_billing"],
+          active: true,
+        })
+        .where(eq(users.id, demoAdmin.id));
+    }
+
+    // 2d. Ensure branded Teacher exists with distinct password
     let [teacher] = await db
       .select()
       .from(users)
-      .where(inArray(users.email, [schoolConf.teacherEmail, legacyTeacherEmail]))
+      .where(eq(users.email, schoolConf.teacherEmail))
       .limit(1);
 
     if (!teacher) {
@@ -131,7 +163,6 @@ async function seedPilotAccounts() {
       [teacher] = await db
         .update(users)
         .set({
-          email: schoolConf.teacherEmail,
           name: `Profesor ${schoolConf.name}`,
           passwordHash,
           schoolId: school.id,
@@ -143,7 +174,37 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2d. Find or create the 2 Golden Template Courses
+    // 2e. Ensure generic demo teacher (teacher01..30@brio.md) exists
+    let [demoTeacher] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, legacyTeacherEmail))
+      .limit(1);
+
+    if (!demoTeacher) {
+      await db.insert(users).values({
+        email: legacyTeacherEmail,
+        passwordHash: genericPilotPasswordHash,
+        name: `Profesor Demo ${schoolConf.id}`,
+        role: "teacher",
+        permissions: ["teach"],
+        schoolId: school.id,
+        active: true,
+      });
+    } else {
+      await db
+        .update(users)
+        .set({
+          passwordHash: genericPilotPasswordHash,
+          schoolId: school.id,
+          role: "teacher",
+          permissions: ["teach"],
+          active: true,
+        })
+        .where(eq(users.id, demoTeacher.id));
+    }
+
+    // 2f. Find or create the 2 Golden Template Courses
     const seededCourses = [];
     for (const cData of GOLDEN_COURSES) {
       let [c] = await db
