@@ -145,7 +145,7 @@ export function ScheduleEventModal({
 
             {/* Teacher */}
             <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+              <div data-no-translate="true" className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
                 P
               </div>
               <div>

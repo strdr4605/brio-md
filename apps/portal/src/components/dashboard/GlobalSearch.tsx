@@ -99,11 +99,11 @@ export function GlobalSearch() {
         onClick={() => setIsOpen(true)}
         className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/80 text-xs text-slate-500 hover:text-slate-800 transition shadow-inner group w-64 lg:w-72 justify-between"
       >
-        <div className="flex items-center gap-2 truncate">
-          <SearchIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <SearchIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0" />
           <span className="truncate">Caută elev, părinte, telefon...</span>
         </div>
-        <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-xs">
+        <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-xs shrink-0 whitespace-nowrap">
           CTRL + K
         </kbd>
       </button>

@@ -60,7 +60,7 @@ export function RevenueDistributionChart({
       {/* 2. Bottom Row: Monthly Trend (2 cols) & Model Distribution (1 col) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Monthly Revenue Trend */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
               <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export function RevenueDistributionChart({
                 return (
                   <div
                     key={t.month}
-                    className="flex-1 flex flex-col items-center min-w-[50px] group"
+                    className="relative flex-1 flex flex-col items-center min-w-[50px] group"
                   >
                     {/* Tooltip on hover */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -translate-y-12 bg-slate-900 text-white text-[10px] rounded-lg py-1 px-2 pointer-events-none shadow-md whitespace-nowrap z-20">
