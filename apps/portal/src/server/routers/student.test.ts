@@ -311,10 +311,9 @@ describe("studentRouter", () => {
   });
 
   describe("list", () => {
-    it("returns students for teacher without restricting to teacher school", async () => {
+    it("returns students for teacher strictly within teacher's school", async () => {
       const mockStudents = [
         { id: 1, name: "Student School 1", schoolId: 1 },
-        { id: 2, name: "Student School 2", schoolId: 2 },
       ];
       const mockEnrollments = [{ studentId: 1, courseId: 101, courseName: "Matematică" }];
 
@@ -366,13 +365,6 @@ describe("studentRouter", () => {
           courses: [{ id: 101, name: "Matematică" }],
           groups: [],
         },
-        {
-          id: 2,
-          name: "Student School 2",
-          schoolId: 2,
-          courses: [],
-          groups: [],
-        },
       ]);
     });
 
@@ -393,8 +385,32 @@ describe("studentRouter", () => {
   });
 
   describe("update", () => {
-    it("updates student when caller is teacher even in another school", async () => {
+    it("throws FORBIDDEN when caller is teacher in another school", async () => {
       const mockStudent = { id: 10, name: "Student", schoolId: 99 };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockStudent]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.update({ id: 10, name: "Updated Student" })).rejects.toThrow(TRPCError);
+    });
+
+    it("updates student when caller is teacher in their own school", async () => {
+      const mockStudent = { id: 10, name: "Student", schoolId: 1 };
       const mockUpdated = { ...mockStudent, name: "Updated Student" };
 
       (db.select as any).mockReturnValue({
@@ -665,11 +681,39 @@ describe("studentRouter", () => {
       expect(db.delete).toHaveBeenCalled();
     });
 
-    it("deletes a student when caller is teacher", async () => {
+    it("throws FORBIDDEN when teacher tries to delete student from another school", async () => {
       const mockStudent = {
         id: 1,
         name: "Other School Student",
         schoolId: 99,
+      };
+
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([mockStudent]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.delete({ id: 1 })).rejects.toThrow(TRPCError);
+    });
+
+    it("deletes a student when caller is teacher in own school", async () => {
+      const mockStudent = {
+        id: 1,
+        name: "Own School Student",
+        schoolId: 1,
       };
 
       (db.select as any).mockReturnValue({

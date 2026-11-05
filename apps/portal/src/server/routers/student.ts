@@ -139,7 +139,7 @@ export const studentRouter = router({
         });
       }
 
-      if (!isSuper && !isTeacher && isAdmin && row.schoolId !== user.schoolId) {
+      if (!isSuper && row.schoolId !== user.schoolId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu poți vizualiza un student din altă școală",
@@ -215,11 +215,17 @@ export const studentRouter = router({
       const user = ctx.user;
       const { isSuper, isAdmin, isTeacher } = getStudentRoles(user);
 
+      if (!isSuper && !isAdmin && !isTeacher) {
+        return [];
+      }
+
       const conditions = [];
 
-      if (!isSuper && !isTeacher) {
-        if (!isAdmin || !user.schoolId) return [];
+      if (!isSuper) {
+        if (!user.schoolId) return [];
         conditions.push(eq(students.schoolId, user.schoolId));
+      } else if (input?.schoolId) {
+        conditions.push(eq(students.schoolId, input.schoolId));
       }
 
       if (input?.search) {
@@ -232,9 +238,6 @@ export const studentRouter = router({
             ilike(students.parentPhone, q),
           ),
         );
-      }
-      if (input?.schoolId) {
-        conditions.push(eq(students.schoolId, input.schoolId));
       }
       if (input?.active !== undefined) {
         conditions.push(eq(students.active, input.active));
@@ -371,8 +374,13 @@ export const studentRouter = router({
 
       await checkStudentCourseConflicts(db, input.courseIds, input.groupIds);
 
-      const assignedSchoolId =
-        isSuper || isTeacher ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
+      const assignedSchoolId = isSuper ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
+      if (!isSuper && !assignedSchoolId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Niciun campus școlar asociat utilizatorului.",
+        });
+      }
 
       // Require at least one contact phone number (student or parent)
       if (!input.phone?.trim() && !input.parentPhone?.trim()) {
@@ -534,7 +542,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
+      if (!isSuper && existing.schoolId !== user.schoolId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
       }
 
@@ -741,7 +749,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && !isTeacher && isAdmin && student.schoolId !== user.schoolId) {
+      if (!isSuper && student.schoolId !== user.schoolId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
       }
 
@@ -832,7 +840,7 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && !isTeacher && isAdmin && existing.schoolId !== user.schoolId) {
+      if (!isSuper && existing.schoolId !== user.schoolId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți șterge un student din altă școală" });
       }
 
