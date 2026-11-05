@@ -26,7 +26,7 @@ Dear Director,
 We are thrilled to welcome your academy to the exclusive Brio.md pilot program!
 
 Your dedicated, pre-configured sandbox school is live and ready for testing:
-• Login Portal: https://in.brio.md
+• Login Portal: https://brio-md-7wb3.vercel.app (Custom domain https://in.brio.md requires DNS CNAME)
 • Director Email: [DIRECTOR_EMAIL]
 • Teacher Email:  [TEACHER_EMAIL]
 • Dedicated Password: [DEDICATED_PASSWORD]
@@ -51,7 +51,7 @@ Bună ziua!
 Vă urăm bun venit în programul gratuit de testare Brio.md!
 
 Cabinetul dedicat instituției dumneavoastră este complet configurat și activ:
-• Link de acces: https://in.brio.md
+• Link de acces: https://brio-md-7wb3.vercel.app (sau https://in.brio.md după propagarea DNS)
 • Email Director: [DIRECTOR_EMAIL]
 • Email Profesor: [TEACHER_EMAIL]
 • Parolă dedicată: [DEDICATED_PASSWORD]

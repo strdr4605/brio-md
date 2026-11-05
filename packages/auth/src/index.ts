@@ -42,7 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const rawEmail = (credentials.email as string).trim();
         const normalizedEmail = rawEmail.toLowerCase();
-        const password = credentials.password as string;
+        const password = (credentials.password as string).trim();
 
         const pilotMatch = normalizedEmail.match(/^(demo|teacher|pilot|prof-pilot)([1-9])(@brio\.md)$/);
         const paddedEmail = pilotMatch ? `${pilotMatch[1]}0${pilotMatch[2]}${pilotMatch[3]}` : null;
