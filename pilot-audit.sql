@@ -23,8 +23,11 @@ FROM users u
 JOIN schools s ON u.school_id = s.id
 LEFT JOIN students st ON st.school_id = s.id
 LEFT JOIN courses c ON c.school_id = s.id
-WHERE u.email LIKE 'demo%@brio.md'
+WHERE u.email LIKE 'pilot%@brio.md'
+   OR u.email LIKE 'prof-pilot%@brio.md'
+   OR u.email LIKE 'demo%@brio.md'
    OR u.email LIKE 'teacher%@brio.md'
+   OR s.name LIKE 'Pilot Sandbox %'
    OR s.name LIKE 'Demo School %'
 GROUP BY
   u.id,
