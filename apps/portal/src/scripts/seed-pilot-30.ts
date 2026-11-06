@@ -12,6 +12,8 @@ import {
   groups,
   studentGroupEnrollments,
   studentCourseProgress,
+  sanitizeTenantSchemaName,
+  provisionTenantSchema,
 } from "@brio-md/db";
 import fs from "fs";
 import path from "path";
@@ -47,36 +49,31 @@ async function seedPilotAccounts() {
     await db.insert(permissionDefinitions).values(perm).onConflictDoNothing();
   }
 
-  // 2. Provision each of the 30 isolated pilot schools with distinct credentials
+  // Hash generic pilot password once for high performance (supports demo01..30)
+  const genericPilotPasswordHash = await hash("BrioPilot2026!", 10);
+
+  // 2. Provision each of the 30 isolated pilot schools with both distinct and demo credentials
   for (const schoolConf of PILOT_SCHOOLS) {
     const legacyName = `Demo School ${schoolConf.id}`;
     const legacyAdminEmail = `demo${String(schoolConf.id).padStart(2, "0")}@brio.md`;
     const legacyTeacherEmail = `teacher${String(schoolConf.id).padStart(2, "0")}@brio.md`;
-    const passwordHash = await hash(schoolConf.password, 12);
+    const passwordHash = await hash(schoolConf.password, 10);
 
-    // 2a. Find or create School
-    let [school] = await db
-      .select()
-      .from(schools)
-      .where(inArray(schools.name, [schoolConf.name, legacyName]))
-      .limit(1);
+    // 2a. Find or create School with isolated tenant schema
+    const schemaName = sanitizeTenantSchemaName(schoolConf.name);
+    let [school] = await db.select().from(schools).where(inArray(schools.name, [schoolConf.name, legacyName])).limit(1);
 
     if (!school) {
-      [school] = await db.insert(schools).values({ name: schoolConf.name }).returning();
-    } else if (school.name !== schoolConf.name) {
-      [school] = await db
-        .update(schools)
-        .set({ name: schoolConf.name })
-        .where(eq(schools.id, school.id))
-        .returning();
+      [school] = await db.insert(schools).values({ name: schoolConf.name, schemaName }).returning();
+    } else {
+      [school] = await db.update(schools).set({ name: schoolConf.name, schemaName }).where(eq(schools.id, school.id)).returning();
     }
 
-    // 2b. Find or create Admin with distinct password
-    let [admin] = await db
-      .select()
-      .from(users)
-      .where(inArray(users.email, [schoolConf.adminEmail, legacyAdminEmail]))
-      .limit(1);
+    // Provision the isolated PostgreSQL schema for this tenant
+    await provisionTenantSchema(sql, schemaName);
+
+    // 2b. Ensure branded Director exists with distinct password
+    let [admin] = await db.select().from(users).where(eq(users.email, schoolConf.adminEmail)).limit(1);
 
     if (!admin) {
       [admin] = await db
@@ -95,7 +92,6 @@ async function seedPilotAccounts() {
       [admin] = await db
         .update(users)
         .set({
-          email: schoolConf.adminEmail,
           name: `Director ${schoolConf.name}`,
           passwordHash,
           schoolId: school.id,
@@ -107,11 +103,41 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2c. Find or create Teacher with distinct password
+    // 2c. Ensure generic demo admin (demo01..30@brio.md) exists for internal testing & legacy compatibility
+    let [demoAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, legacyAdminEmail))
+      .limit(1);
+
+    if (!demoAdmin) {
+      await db.insert(users).values({
+        email: legacyAdminEmail,
+        passwordHash: genericPilotPasswordHash,
+        name: `Admin Demo ${schoolConf.id}`,
+        role: "admin",
+        permissions: ["admin", "manage_billing"],
+        schoolId: school.id,
+        active: true,
+      });
+    } else {
+      await db
+        .update(users)
+        .set({
+          passwordHash: genericPilotPasswordHash,
+          schoolId: school.id,
+          role: "admin",
+          permissions: ["admin", "manage_billing"],
+          active: true,
+        })
+        .where(eq(users.id, demoAdmin.id));
+    }
+
+    // 2d. Ensure branded Teacher exists with distinct password
     let [teacher] = await db
       .select()
       .from(users)
-      .where(inArray(users.email, [schoolConf.teacherEmail, legacyTeacherEmail]))
+      .where(eq(users.email, schoolConf.teacherEmail))
       .limit(1);
 
     if (!teacher) {
@@ -131,7 +157,6 @@ async function seedPilotAccounts() {
       [teacher] = await db
         .update(users)
         .set({
-          email: schoolConf.teacherEmail,
           name: `Profesor ${schoolConf.name}`,
           passwordHash,
           schoolId: school.id,
@@ -143,7 +168,37 @@ async function seedPilotAccounts() {
         .returning();
     }
 
-    // 2d. Find or create the 2 Golden Template Courses
+    // 2e. Ensure generic demo teacher (teacher01..30@brio.md) exists
+    let [demoTeacher] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, legacyTeacherEmail))
+      .limit(1);
+
+    if (!demoTeacher) {
+      await db.insert(users).values({
+        email: legacyTeacherEmail,
+        passwordHash: genericPilotPasswordHash,
+        name: `Profesor Demo ${schoolConf.id}`,
+        role: "teacher",
+        permissions: ["teach"],
+        schoolId: school.id,
+        active: true,
+      });
+    } else {
+      await db
+        .update(users)
+        .set({
+          passwordHash: genericPilotPasswordHash,
+          schoolId: school.id,
+          role: "teacher",
+          permissions: ["teach"],
+          active: true,
+        })
+        .where(eq(users.id, demoTeacher.id));
+    }
+
+    // 2f. Find or create the 2 Golden Template Courses
     const seededCourses = [];
     for (const cData of GOLDEN_COURSES) {
       let [c] = await db
@@ -208,65 +263,71 @@ async function seedPilotAccounts() {
       seededGroups.push(g);
     }
 
-    // 2f. Batch clone Golden Template Students (15 students)
-    const existingStudents = await db
-      .select({ id: students.id, phone: students.phone })
-      .from(students)
-      .where(eq(students.schoolId, school.id));
-
-    const existingPhones = new Set(existingStudents.map((s) => s.phone));
-    const missingStudents = GOLDEN_STUDENTS.filter((st) => !existingPhones.has(st.phone)).map((st) => ({
-      ...st,
-      schoolId: school.id,
-      active: true,
-    }));
-
-    if (missingStudents.length > 0) {
-      await db.insert(students).values(missingStudents);
-    }
-
-    const allSchoolStudents = await db
+    // 2f. Seed single example student (1 student per pilot sandbox)
+    const sampleStudent = GOLDEN_STUDENTS[0];
+    let [sampleStudentRow] = await db
       .select({ id: students.id })
       .from(students)
-      .where(eq(students.schoolId, school.id));
+      .where(and(eq(students.schoolId, school.id), eq(students.phone, sampleStudent.phone)))
+      .limit(1);
 
-    // 2g. Batch enroll students & set progress
-    if (seededGroups.length >= 2 && allSchoolStudents.length > 0) {
-      const studentIds = allSchoolStudents.map((s) => s.id);
-      const existingEnrollments = await db
-        .select({ studentId: studentGroupEnrollments.studentId, groupId: studentGroupEnrollments.groupId })
-        .from(studentGroupEnrollments)
-        .where(inArray(studentGroupEnrollments.studentId, studentIds));
+    if (!sampleStudentRow) {
+      [sampleStudentRow] = await db
+        .insert(students)
+        .values({ ...sampleStudent, schoolId: school.id, active: true })
+        .returning();
+    }
 
-      const enrolledKeys = new Set(existingEnrollments.map((e) => `${e.studentId}-${e.groupId}`));
-      const newEnrollments = [];
-      const newProgress = [];
-
-      for (const [stIdx, student] of allSchoolStudents.entries()) {
-        const assignedGroup = stIdx < 8 ? seededGroups[0] : seededGroups[1];
-        if (assignedGroup && !enrolledKeys.has(`${student.id}-${assignedGroup.id}`)) {
-          newEnrollments.push({
-            studentId: student.id,
-            groupId: assignedGroup.id,
-            courseId: assignedGroup.courseId,
-            status: "active" as const,
-          });
-          newProgress.push({
-            studentId: student.id,
-            courseId: assignedGroup.courseId,
-            status: "in_progress" as const,
-            completedSessions: 3,
-          });
-        }
-      }
-
-      if (newEnrollments.length > 0) {
-        await db.insert(studentGroupEnrollments).values(newEnrollments);
-      }
-      if (newProgress.length > 0) {
-        await db.insert(studentCourseProgress).values(newProgress).onConflictDoNothing();
+    const allSchoolStudents = await db.select({ id: students.id }).from(students).where(eq(students.schoolId, school.id));
+    if (allSchoolStudents.length > 1) {
+      const extraIds = allSchoolStudents.filter((s) => s.id !== sampleStudentRow.id).map((s) => s.id);
+      if (extraIds.length > 0) {
+        await db.delete(studentCourseProgress).where(inArray(studentCourseProgress.studentId, extraIds));
+        await db.delete(studentGroupEnrollments).where(inArray(studentGroupEnrollments.studentId, extraIds));
+        await db.delete(students).where(inArray(students.id, extraIds));
       }
     }
+
+    // 2g. Enroll sample student into the first group
+    if (seededGroups[0]) {
+      await db
+        .insert(studentGroupEnrollments)
+        .values({
+          studentId: sampleStudentRow.id,
+          groupId: seededGroups[0].id,
+          courseId: seededGroups[0].courseId,
+          status: "active",
+        })
+        .onConflictDoNothing();
+      await db
+        .insert(studentCourseProgress)
+        .values({
+          studentId: sampleStudentRow.id,
+          courseId: seededGroups[0].courseId,
+          status: "in_progress",
+          completedSessions: 3,
+        })
+        .onConflictDoNothing();
+    }
+
+    // 2h. Seed isolated tenant schema with the 1 example student & course
+    const safeSchema = schemaName.replace(/"/g, '""');
+    await sql.unsafe(`
+      INSERT INTO "${safeSchema}"."courses" ("id", "name", "description", "monthly_fee")
+      VALUES (1, 'General English A1-A2', 'Foundational English course focusing on vocabulary and grammar.', 1200)
+      ON CONFLICT ("id") DO NOTHING;
+      INSERT INTO "${safeSchema}"."groups" ("id", "course_id", "name", "day_of_week", "start_time", "end_time", "cabinet", "monthly_fee")
+      VALUES (1, 1, 'Grupa A - Engleză', 1, '15:00', '16:00', 'Sala 101', 1200)
+      ON CONFLICT ("id") DO NOTHING;
+      INSERT INTO "${safeSchema}"."students" ("id", "name", "phone", "email", "parent_name", "parent_phone", "age", "status")
+      VALUES (1, '${sampleStudent.name}', '${sampleStudent.phone}', 'alex@example.md', '${sampleStudent.parentName}', '${sampleStudent.parentPhone}', ${sampleStudent.age}, 'active')
+      ON CONFLICT ("id") DO NOTHING;
+      INSERT INTO "${safeSchema}"."student_group_enrollments" ("student_id", "group_id", "status")
+      SELECT 1, 1, 'active'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM "${safeSchema}"."student_group_enrollments" WHERE "student_id" = 1 AND "group_id" = 1
+      );
+    `);
 
     console.log(`✅ [${schoolConf.id}/30] Provisioned ${schoolConf.name} (${schoolConf.adminEmail})`);
   }

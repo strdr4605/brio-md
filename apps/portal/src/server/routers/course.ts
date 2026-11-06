@@ -62,7 +62,8 @@ export const courseRouter = router({
         conditions.push(eq(courses.active, input.active));
       }
 
-      const result = await db
+      const targetDb = ctx.db || db;
+      const result = await targetDb
         .select({
           id: courses.id,
           name: courses.name,
@@ -175,7 +176,7 @@ export const courseRouter = router({
         .returning();
 
       if (input.materials && input.materials.length > 0) {
-        await db.insert(courseMaterials).values(
+        await (ctx.db || db).insert(courseMaterials).values(
           input.materials.map((m, idx) => ({
             courseId: course.id,
             title: m.title,
@@ -209,7 +210,7 @@ export const courseRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { isSuper, user } = assertSuperOrAdmin(ctx.user);
 
-      const [existing] = await db.select().from(courses).where(eq(courses.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(courses).where(eq(courses.id, input.id)).limit(1);
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Cursul nu a fost găsit." });
       }
@@ -245,9 +246,9 @@ export const courseRouter = router({
         .returning();
 
       if (input.materials !== undefined) {
-        await db.delete(courseMaterials).where(eq(courseMaterials.courseId, input.id));
+        await (ctx.db || db).delete(courseMaterials).where(eq(courseMaterials.courseId, input.id));
         if (input.materials.length > 0) {
-          await db.insert(courseMaterials).values(
+          await (ctx.db || db).insert(courseMaterials).values(
             input.materials.map((m, idx) => ({
               courseId: input.id,
               title: m.title,
@@ -267,7 +268,7 @@ export const courseRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { isSuper, user } = assertSuperOrAdmin(ctx.user);
 
-      const [existing] = await db.select().from(courses).where(eq(courses.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(courses).where(eq(courses.id, input.id)).limit(1);
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Cursul nu a fost găsit." });
       }
@@ -276,7 +277,7 @@ export const courseRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți șterge acest curs." });
       }
 
-      await db.delete(courses).where(eq(courses.id, input.id));
+      await (ctx.db || db).delete(courses).where(eq(courses.id, input.id));
       return { success: true };
     }),
 
@@ -285,7 +286,7 @@ export const courseRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { isSuper, user } = assertSuperOrAdmin(ctx.user);
 
-      const [existing] = await db.select().from(courses).where(eq(courses.id, input.id)).limit(1);
+      const [existing] = await (ctx.db || db).select().from(courses).where(eq(courses.id, input.id)).limit(1);
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Cursul nu a fost găsit." });
       }

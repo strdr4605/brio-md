@@ -32,7 +32,7 @@ Your dedicated, pre-configured sandbox school is live and ready for testing:
 • Dedicated Password: [DEDICATED_PASSWORD]
 
 What is already included in your private sandbox:
-✓ 15 pre-enrolled sample students with Moldovan contact details
+✓ 1 pre-enrolled sample student (ready for CSV / Excel student bulk import)
 ✓ 2 active courses ("General English" and "Applied Mathematics")
 ✓ Interactive attendance catalog and tuition invoicing module
 
@@ -57,7 +57,7 @@ Cabinetul dedicat instituției dumneavoastră este complet configurat și activ:
 • Parolă dedicată: [DEDICATED_PASSWORD]
 
 Ce găsiți deja pregătit în sistem:
-✓ 15 elevi demonstrativi cu date de contact locale
+✓ 1 elev demonstrativ ca model (pregătit pentru importul elevilor reali prin CSV / Excel)
 ✓ 2 cursuri active cu orar săptămânal și grupe de studiu
 ✓ Catalog digital pentru prezență și modul de facturare/abonamente
 
