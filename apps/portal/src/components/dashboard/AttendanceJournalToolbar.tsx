@@ -26,7 +26,7 @@ export function AttendanceJournalToolbar({
   totalDebtAmount = 0,
 }: AttendanceJournalToolbarProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 shadow-xs">
+    <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 shadow-xs flex-wrap">
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">
@@ -80,7 +80,7 @@ export function AttendanceJournalToolbar({
       </div>
 
       {/* Search Input */}
-      <div className="relative flex items-center min-w-[160px] sm:min-w-[200px]">
+      <div className="relative flex items-center w-full sm:w-auto sm:min-w-[200px]">
         <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
         <input
           type="text"

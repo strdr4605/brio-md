@@ -134,7 +134,7 @@ export default function StudentiPage() {
     <>
       <div className="space-y-6 animate-fade-in-up">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between flex-wrap">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">
@@ -167,7 +167,7 @@ export default function StudentiPage() {
               type="button"
               data-testid="add-student-button"
               onClick={handleCreate}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs hover:shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
               <PlusIcon className="w-4 h-4" />
               <span>{t("students.addStudent", "Adaugă Student")}</span>
