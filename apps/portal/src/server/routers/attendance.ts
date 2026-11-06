@@ -324,7 +324,7 @@ export const attendanceRouter = router({
         });
       }
 
-      if (!isSuper && !isTeacher && isAdmin && student.schoolId && user.schoolId && student.schoolId !== user.schoolId) {
+      if (!isSuper && student.schoolId && user.schoolId && student.schoolId !== user.schoolId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nu poți vizualiza date din altă școală.",

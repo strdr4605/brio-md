@@ -2,15 +2,22 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 export function assertTeacherGroupAccess(
-  group: { id: number; teacherId: number | null },
-  user: { id: string; role: string; permissions: string[] },
+  group: { id: number; teacherId: number | null; schoolId?: number | null },
+  user: { id: string; role: string; permissions: string[]; schoolId?: number | null },
 ) {
   const permissions = user.permissions || [];
   const role = user.role;
   const isSuper = permissions.includes("super") || role === "superadmin";
   const isAdmin = permissions.includes("admin") || role === "admin";
 
-  // Admins have global permission across all groups and dates
+  if (!isSuper && group.schoolId && user.schoolId && group.schoolId !== user.schoolId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Nu poți accesa grupe din altă școală.",
+    });
+  }
+
+  // Admins have global permission across all groups in their school
   if (isSuper || isAdmin) {
     return { isAdmin: true };
   }

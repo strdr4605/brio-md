@@ -26,7 +26,7 @@ Dear Director,
 We are thrilled to welcome your academy to the exclusive Brio.md pilot program!
 
 Your dedicated, pre-configured sandbox school is live and ready for testing:
-• Login Portal: https://in.brio.md
+• Login Portal: https://brio-md-7wb3.vercel.app (Custom domain https://in.brio.md requires DNS CNAME)
 • Director Email: [DIRECTOR_EMAIL]
 • Teacher Email:  [TEACHER_EMAIL]
 • Dedicated Password: [DEDICATED_PASSWORD]
@@ -51,7 +51,7 @@ Bună ziua!
 Vă urăm bun venit în programul gratuit de testare Brio.md!
 
 Cabinetul dedicat instituției dumneavoastră este complet configurat și activ:
-• Link de acces: https://in.brio.md
+• Link de acces: https://brio-md-7wb3.vercel.app (sau https://in.brio.md după propagarea DNS)
 • Email Director: [DIRECTOR_EMAIL]
 • Email Profesor: [TEACHER_EMAIL]
 • Parolă dedicată: [DEDICATED_PASSWORD]
@@ -71,39 +71,38 @@ Echipa Brio.md
 
 ## 📋 Master Directory of 30 Pilot Accounts
 
-| Slot | Institution / Sandbox | City | Type | Director Email | Teacher Email | Dedicated Password | Status |
+| Slot | Sandbox Environment | City | Type | Director Email | Teacher Email | Dedicated Password | Status |
 |:---:|:---|:---|:---:|:---|:---|:---:|:---:|
-| **HQ** | Vibe Academy | Chișinău | Center | `vibe@brio.md` | `teacher@vibe.md` | `Vibe#2026Brio!` | Active |
-| **01** | Liceul Orizont Chișinău | Chișinău | School | `orizont@brio.md` | `prof-orizont@brio.md` | `Orizont#72Brio!` | Available |
-| **02** | Academia Da Vinci | Chișinău | Center | `davinci@brio.md` | `prof-davinci@brio.md` | `DaVinci*91Vibe!` | Available |
-| **03** | Centrul Edu Prometeu | Chișinău | Center | `prometeu@brio.md` | `prof-prometeu@brio.md` | `Prometeu^34Edu!` | Available |
-| **04** | Quantum STEM Hub | Chișinău | Center | `quantum@brio.md` | `prof-quantum@brio.md` | `Quantum!88Stem#` | Available |
-| **05** | Centrul Lingvistic Eureka | Bălți | Center | `eureka@brio.md` | `prof-eureka@brio.md` | `Eureka#45Lang!` | Available |
-| **06** | Lumina Math & Logic | Chișinău | Center | `lumina@brio.md` | `prof-lumina@brio.md` | `Lumina*63Logic!` | Available |
-| **07** | Vector IT & Robotics | Chișinău | Center | `vector@brio.md` | `prof-vector@brio.md` | `Vector!29Code#` | Available |
-| **08** | Atlas Learning Studio | Orhei | Center | `atlas@brio.md` | `prof-atlas@brio.md` | `Atlas#81Learn!` | Available |
-| **09** | Nexus Educational Hub | Chișinău | Center | `nexus@brio.md` | `prof-nexus@brio.md` | `Nexus*17Hub!` | Available |
-| **10** | Aurora Foreign Languages | Cahul | Center | `aurora@brio.md` | `prof-aurora@brio.md` | `Aurora^52Poly!` | Available |
-| **11** | Zenith Tutoring Center | Chișinău | Tutor | `zenith@brio.md` | `prof-zenith@brio.md` | `Zenith!94Tutor#` | Available |
-| **12** | Intellect Study Club | Ungheni | Center | `intellect@brio.md` | `prof-intellect@brio.md` | `Intellect#36Study!` | Available |
-| **13** | Solaris Science Lab | Chișinău | Center | `solaris@brio.md` | `prof-solaris@brio.md` | `Solaris*48Lab!` | Available |
-| **14** | Apex Academic Center | Chișinău | School | `apex@brio.md` | `prof-apex@brio.md` | `Apex!73Acad#` | Available |
-| **15** | Nova English Academy | Bălți | Center | `nova@brio.md` | `prof-nova@brio.md` | `Nova#65Speak!` | Available |
-| **16** | Olympus Math & Physics | Chișinău | Center | `olympus@brio.md` | `prof-olympus@brio.md` | `Olympus*82Math!` | Available |
-| **17** | Sigma Coding School | Chișinău | Center | `sigma@brio.md` | `prof-sigma@brio.md` | `Sigma!19Dev#` | Available |
-| **18** | Academos Tutors Group | Strășeni | Tutor | `academos@brio.md` | `prof-academos@brio.md` | `Academos#47Group!` | Available |
-| **19** | Pulsar Kids Academy | Chișinău | Center | `pulsar@brio.md` | `prof-pulsar@brio.md` | `Pulsar*58Kids!` | Available |
-| **20** | Cosmos Robotics Space | Chișinău | Center | `cosmos@brio.md` | `prof-cosmos@brio.md` | `Cosmos!93Bot#` | Available |
-| **21** | Sparta Chess & Logic | Chișinău | Center | `sparta@brio.md` | `prof-sparta@brio.md` | `Sparta#26Chess!` | Available |
-| **22** | Horizon Polyglot Studio | Hîncești | Center | `horizon@brio.md` | `prof-horizon@brio.md` | `Horizon*61Voice!` | Available |
-| **23** | Athena Humanities Club | Chișinău | Center | `athena@brio.md` | `prof-athena@brio.md` | `Athena!85Arts#` | Available |
-| **24** | Prestige Baccalaureate | Chișinău | School | `prestige@brio.md` | `prof-prestige@brio.md` | `Prestige#39Bac!` | Available |
-| **25** | SmartHub Education | Ialoveni | Center | `smarthub@brio.md` | `prof-smarthub@brio.md` | `SmartHub*74Smart!` | Available |
-| **26** | Matrix Tech Academy | Chișinău | Center | `matrix@brio.md` | `prof-matrix@brio.md` | `Matrix!51Tech#` | Available |
-| **27** | Vanguard Art & Design | Chișinău | Center | `vanguard@brio.md` | `prof-vanguard@brio.md` | `Vanguard#68Art!` | Available |
-| **28** | Alfa Tutors Collective | Comrat | Tutor | `alfa@brio.md` | `prof-alfa@brio.md` | `Alfa*95Prep!` | Available |
-| **29** | Omega Olympiad Studio | Chișinău | Center | `omega@brio.md` | `prof-omega@brio.md` | `Omega!43Win#` | Available |
-| **30** | Meridian Future School | Chișinău | School | `meridian@brio.md` | `prof-meridian@brio.md` | `Meridian#87Next!` | Available |
+| **01** | Pilot Sandbox 01 | Chișinău | Sandbox | `pilot01@brio.md` | `prof-pilot01@brio.md` | `7pfYLLdN9ECFJjGG` | Available |
+| **02** | Pilot Sandbox 02 | Chișinău | Sandbox | `pilot02@brio.md` | `prof-pilot02@brio.md` | `rhxz2mwDkDf3uZhD` | Available |
+| **03** | Pilot Sandbox 03 | Chișinău | Sandbox | `pilot03@brio.md` | `prof-pilot03@brio.md` | `tfNczcHXBdbhPcuX` | Available |
+| **04** | Pilot Sandbox 04 | Chișinău | Sandbox | `pilot04@brio.md` | `prof-pilot04@brio.md` | `zS9LfqVCMM6RvLX2` | Available |
+| **05** | Pilot Sandbox 05 | Chișinău | Sandbox | `pilot05@brio.md` | `prof-pilot05@brio.md` | `vg2Ey54JMWnwKpgz` | Available |
+| **06** | Pilot Sandbox 06 | Chișinău | Sandbox | `pilot06@brio.md` | `prof-pilot06@brio.md` | `MDXywAvQptCxLr24` | Available |
+| **07** | Pilot Sandbox 07 | Chișinău | Sandbox | `pilot07@brio.md` | `prof-pilot07@brio.md` | `VnDmgLEmAvMWccXx` | Available |
+| **08** | Pilot Sandbox 08 | Chișinău | Sandbox | `pilot08@brio.md` | `prof-pilot08@brio.md` | `NxJeWW7GESxNG4yC` | Available |
+| **09** | Pilot Sandbox 09 | Chișinău | Sandbox | `pilot09@brio.md` | `prof-pilot09@brio.md` | `YAyPYWuybFhxgK8m` | Available |
+| **10** | Pilot Sandbox 10 | Chișinău | Sandbox | `pilot10@brio.md` | `prof-pilot10@brio.md` | `nggMw2ksv96NwQvC` | Available |
+| **11** | Pilot Sandbox 11 | Chișinău | Sandbox | `pilot11@brio.md` | `prof-pilot11@brio.md` | `wjGW4PvDLBdsJuuC` | Available |
+| **12** | Pilot Sandbox 12 | Chișinău | Sandbox | `pilot12@brio.md` | `prof-pilot12@brio.md` | `s2Jx7fzxFvU9xbCD` | Available |
+| **13** | Pilot Sandbox 13 | Chișinău | Sandbox | `pilot13@brio.md` | `prof-pilot13@brio.md` | `NKkypnUQt39vnGqb` | Available |
+| **14** | Pilot Sandbox 14 | Chișinău | Sandbox | `pilot14@brio.md` | `prof-pilot14@brio.md` | `NSYYbrLb6TJSbfXE` | Available |
+| **15** | Pilot Sandbox 15 | Chișinău | Sandbox | `pilot15@brio.md` | `prof-pilot15@brio.md` | `ZzQPjLEYpwzEmVX3` | Available |
+| **16** | Pilot Sandbox 16 | Chișinău | Sandbox | `pilot16@brio.md` | `prof-pilot16@brio.md` | `tVRcdpcBdkaHVjhB` | Available |
+| **17** | Pilot Sandbox 17 | Chișinău | Sandbox | `pilot17@brio.md` | `prof-pilot17@brio.md` | `yWEaqHCXdB5vcLp8` | Available |
+| **18** | Pilot Sandbox 18 | Chișinău | Sandbox | `pilot18@brio.md` | `prof-pilot18@brio.md` | `esXKbwpAqscJqfhx` | Available |
+| **19** | Pilot Sandbox 19 | Chișinău | Sandbox | `pilot19@brio.md` | `prof-pilot19@brio.md` | `maCkjm2ytQZss24B` | Available |
+| **20** | Pilot Sandbox 20 | Chișinău | Sandbox | `pilot20@brio.md` | `prof-pilot20@brio.md` | `4nF4r2XmHgaJdZ4C` | Available |
+| **21** | Pilot Sandbox 21 | Chișinău | Sandbox | `pilot21@brio.md` | `prof-pilot21@brio.md` | `nmPTsKrFKCba899D` | Available |
+| **22** | Pilot Sandbox 22 | Chișinău | Sandbox | `pilot22@brio.md` | `prof-pilot22@brio.md` | `rEztHtSB8xExvDS9` | Available |
+| **23** | Pilot Sandbox 23 | Chișinău | Sandbox | `pilot23@brio.md` | `prof-pilot23@brio.md` | `xBw4ZwsYFHTCbMnk` | Available |
+| **24** | Pilot Sandbox 24 | Chișinău | Sandbox | `pilot24@brio.md` | `prof-pilot24@brio.md` | `rGtGwmPc6BXafNLm` | Available |
+| **25** | Pilot Sandbox 25 | Chișinău | Sandbox | `pilot25@brio.md` | `prof-pilot25@brio.md` | `jeaBKzQduBU4Knzz` | Available |
+| **26** | Pilot Sandbox 26 | Chișinău | Sandbox | `pilot26@brio.md` | `prof-pilot26@brio.md` | `9gdeCPAdX5EQG4xS` | Available |
+| **27** | Pilot Sandbox 27 | Chișinău | Sandbox | `pilot27@brio.md` | `prof-pilot27@brio.md` | `ssnxcDWcHSWtSepN` | Available |
+| **28** | Pilot Sandbox 28 | Chișinău | Sandbox | `pilot28@brio.md` | `prof-pilot28@brio.md` | `XVgJ3fGyRv2TZpJm` | Available |
+| **29** | Pilot Sandbox 29 | Chișinău | Sandbox | `pilot29@brio.md` | `prof-pilot29@brio.md` | `37AvFQs3AwBKybTC` | Available |
+| **30** | Pilot Sandbox 30 | Chișinău | Sandbox | `pilot30@brio.md` | `prof-pilot30@brio.md` | `hgKDLrfH34Dq6n36` | Available |
 
 ---
 

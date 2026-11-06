@@ -1,31 +1,31 @@
 Slot,Institution Name,City,Type,Director Email,Teacher Email,Dedicated Password,Director Portal URL,Learning LMS URL
-1,Liceul Orizont Chișinău,Chișinău,School,orizont@brio.md,prof-orizont@brio.md,Orizont#72Brio!,https://in.brio.md,https://learn.brio.md
-2,Academia Da Vinci,Chișinău,Center,davinci@brio.md,prof-davinci@brio.md,DaVinci*91Vibe!,https://in.brio.md,https://learn.brio.md
-3,Centrul Edu Prometeu,Chișinău,Center,prometeu@brio.md,prof-prometeu@brio.md,Prometeu^34Edu!,https://in.brio.md,https://learn.brio.md
-4,Quantum STEM Hub,Chișinău,Center,quantum@brio.md,prof-quantum@brio.md,Quantum!88Stem#,https://in.brio.md,https://learn.brio.md
-5,Centrul Lingvistic Eureka,Bălți,Center,eureka@brio.md,prof-eureka@brio.md,Eureka#45Lang!,https://in.brio.md,https://learn.brio.md
-6,Lumina Math & Logic,Chișinău,Center,lumina@brio.md,prof-lumina@brio.md,Lumina*63Logic!,https://in.brio.md,https://learn.brio.md
-7,Vector IT & Robotics,Chișinău,Center,vector@brio.md,prof-vector@brio.md,Vector!29Code#,https://in.brio.md,https://learn.brio.md
-8,Atlas Learning Studio,Orhei,Center,atlas@brio.md,prof-atlas@brio.md,Atlas#81Learn!,https://in.brio.md,https://learn.brio.md
-9,Nexus Educational Hub,Chișinău,Center,nexus@brio.md,prof-nexus@brio.md,Nexus*17Hub!,https://in.brio.md,https://learn.brio.md
-10,Aurora Foreign Languages,Cahul,Center,aurora@brio.md,prof-aurora@brio.md,Aurora^52Poly!,https://in.brio.md,https://learn.brio.md
-11,Zenith Tutoring Center,Chișinău,Tutor,zenith@brio.md,prof-zenith@brio.md,Zenith!94Tutor#,https://in.brio.md,https://learn.brio.md
-12,Intellect Study Club,Ungheni,Center,intellect@brio.md,prof-intellect@brio.md,Intellect#36Study!,https://in.brio.md,https://learn.brio.md
-13,Solaris Science Lab,Chișinău,Center,solaris@brio.md,prof-solaris@brio.md,Solaris*48Lab!,https://in.brio.md,https://learn.brio.md
-14,Apex Academic Center,Chișinău,School,apex@brio.md,prof-apex@brio.md,Apex!73Acad#,https://in.brio.md,https://learn.brio.md
-15,Nova English Academy,Bălți,Center,nova@brio.md,prof-nova@brio.md,Nova#65Speak!,https://in.brio.md,https://learn.brio.md
-16,Olympus Math & Physics,Chișinău,Center,olympus@brio.md,prof-olympus@brio.md,Olympus*82Math!,https://in.brio.md,https://learn.brio.md
-17,Sigma Coding School,Chișinău,Center,sigma@brio.md,prof-sigma@brio.md,Sigma!19Dev#,https://in.brio.md,https://learn.brio.md
-18,Academos Tutors Group,Strășeni,Tutor,academos@brio.md,prof-academos@brio.md,Academos#47Group!,https://in.brio.md,https://learn.brio.md
-19,Pulsar Kids Academy,Chișinău,Center,pulsar@brio.md,prof-pulsar@brio.md,Pulsar*58Kids!,https://in.brio.md,https://learn.brio.md
-20,Cosmos Robotics Space,Chișinău,Center,cosmos@brio.md,prof-cosmos@brio.md,Cosmos!93Bot#,https://in.brio.md,https://learn.brio.md
-21,Sparta Chess & Logic,Chișinău,Center,sparta@brio.md,prof-sparta@brio.md,Sparta#26Chess!,https://in.brio.md,https://learn.brio.md
-22,Horizon Polyglot Studio,Hîncești,Center,horizon@brio.md,prof-horizon@brio.md,Horizon*61Voice!,https://in.brio.md,https://learn.brio.md
-23,Athena Humanities Club,Chișinău,Center,athena@brio.md,prof-athena@brio.md,Athena!85Arts#,https://in.brio.md,https://learn.brio.md
-24,Prestige Baccalaureate,Chișinău,School,prestige@brio.md,prof-prestige@brio.md,Prestige#39Bac!,https://in.brio.md,https://learn.brio.md
-25,SmartHub Education,Ialoveni,Center,smarthub@brio.md,prof-smarthub@brio.md,SmartHub*74Smart!,https://in.brio.md,https://learn.brio.md
-26,Matrix Tech Academy,Chișinău,Center,matrix@brio.md,prof-matrix@brio.md,Matrix!51Tech#,https://in.brio.md,https://learn.brio.md
-27,Vanguard Art & Design,Chișinău,Center,vanguard@brio.md,prof-vanguard@brio.md,Vanguard#68Art!,https://in.brio.md,https://learn.brio.md
-28,Alfa Tutors Collective,Comrat,Tutor,alfa@brio.md,prof-alfa@brio.md,Alfa*95Prep!,https://in.brio.md,https://learn.brio.md
-29,Omega Olympiad Studio,Chișinău,Center,omega@brio.md,prof-omega@brio.md,Omega!43Win#,https://in.brio.md,https://learn.brio.md
-30,Meridian Future School,Chișinău,School,meridian@brio.md,prof-meridian@brio.md,Meridian#87Next!,https://in.brio.md,https://learn.brio.md
+1,Pilot Sandbox 01,Chișinău,school,pilot01@brio.md,prof-pilot01@brio.md,7pfYLLdN9ECFJjGG,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+2,Pilot Sandbox 02,Chișinău,school,pilot02@brio.md,prof-pilot02@brio.md,rhxz2mwDkDf3uZhD,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+3,Pilot Sandbox 03,Chișinău,school,pilot03@brio.md,prof-pilot03@brio.md,tfNczcHXBdbhPcuX,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+4,Pilot Sandbox 04,Chișinău,school,pilot04@brio.md,prof-pilot04@brio.md,zS9LfqVCMM6RvLX2,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+5,Pilot Sandbox 05,Chișinău,school,pilot05@brio.md,prof-pilot05@brio.md,vg2Ey54JMWnwKpgz,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+6,Pilot Sandbox 06,Chișinău,school,pilot06@brio.md,prof-pilot06@brio.md,MDXywAvQptCxLr24,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+7,Pilot Sandbox 07,Chișinău,school,pilot07@brio.md,prof-pilot07@brio.md,VnDmgLEmAvMWccXx,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+8,Pilot Sandbox 08,Chișinău,school,pilot08@brio.md,prof-pilot08@brio.md,NxJeWW7GESxNG4yC,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+9,Pilot Sandbox 09,Chișinău,school,pilot09@brio.md,prof-pilot09@brio.md,YAyPYWuybFhxgK8m,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+10,Pilot Sandbox 10,Chișinău,school,pilot10@brio.md,prof-pilot10@brio.md,nggMw2ksv96NwQvC,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+11,Pilot Sandbox 11,Chișinău,school,pilot11@brio.md,prof-pilot11@brio.md,wjGW4PvDLBdsJuuC,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+12,Pilot Sandbox 12,Chișinău,school,pilot12@brio.md,prof-pilot12@brio.md,s2Jx7fzxFvU9xbCD,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+13,Pilot Sandbox 13,Chișinău,school,pilot13@brio.md,prof-pilot13@brio.md,NKkypnUQt39vnGqb,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+14,Pilot Sandbox 14,Chișinău,school,pilot14@brio.md,prof-pilot14@brio.md,NSYYbrLb6TJSbfXE,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+15,Pilot Sandbox 15,Chișinău,school,pilot15@brio.md,prof-pilot15@brio.md,ZzQPjLEYpwzEmVX3,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+16,Pilot Sandbox 16,Chișinău,school,pilot16@brio.md,prof-pilot16@brio.md,tVRcdpcBdkaHVjhB,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+17,Pilot Sandbox 17,Chișinău,school,pilot17@brio.md,prof-pilot17@brio.md,yWEaqHCXdB5vcLp8,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+18,Pilot Sandbox 18,Chișinău,school,pilot18@brio.md,prof-pilot18@brio.md,esXKbwpAqscJqfhx,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+19,Pilot Sandbox 19,Chișinău,school,pilot19@brio.md,prof-pilot19@brio.md,maCkjm2ytQZss24B,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+20,Pilot Sandbox 20,Chișinău,school,pilot20@brio.md,prof-pilot20@brio.md,4nF4r2XmHgaJdZ4C,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+21,Pilot Sandbox 21,Chișinău,school,pilot21@brio.md,prof-pilot21@brio.md,nmPTsKrFKCba899D,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+22,Pilot Sandbox 22,Chișinău,school,pilot22@brio.md,prof-pilot22@brio.md,rEztHtSB8xExvDS9,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+23,Pilot Sandbox 23,Chișinău,school,pilot23@brio.md,prof-pilot23@brio.md,xBw4ZwsYFHTCbMnk,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+24,Pilot Sandbox 24,Chișinău,school,pilot24@brio.md,prof-pilot24@brio.md,rGtGwmPc6BXafNLm,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+25,Pilot Sandbox 25,Chișinău,school,pilot25@brio.md,prof-pilot25@brio.md,jeaBKzQduBU4Knzz,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+26,Pilot Sandbox 26,Chișinău,school,pilot26@brio.md,prof-pilot26@brio.md,9gdeCPAdX5EQG4xS,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+27,Pilot Sandbox 27,Chișinău,school,pilot27@brio.md,prof-pilot27@brio.md,ssnxcDWcHSWtSepN,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+28,Pilot Sandbox 28,Chișinău,school,pilot28@brio.md,prof-pilot28@brio.md,XVgJ3fGyRv2TZpJm,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+29,Pilot Sandbox 29,Chișinău,school,pilot29@brio.md,prof-pilot29@brio.md,37AvFQs3AwBKybTC,https://brio-md-7wb3.vercel.app,https://learn.brio.md
+30,Pilot Sandbox 30,Chișinău,school,pilot30@brio.md,prof-pilot30@brio.md,hgKDLrfH34Dq6n36,https://brio-md-7wb3.vercel.app,https://learn.brio.md

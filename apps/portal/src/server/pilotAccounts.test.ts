@@ -204,4 +204,87 @@ describe("Pilot Accounts Multi-Tenant Isolation (Issue #247)", () => {
     expect(result).toEqual({ success: true });
     expect(db.delete).toHaveBeenCalledTimes(1);
   });
+
+  const profPilot03User = {
+    id: "103",
+    name: "Profesor Pilot Sandbox 03",
+    email: "prof-pilot03@brio.md",
+    role: "teacher",
+    permissions: ["teach"],
+    courseIds: [1, 2],
+    schoolId: 3,
+  };
+
+  it("filters students strictly by school_id when pilot teacher logs in, seeing exactly 15 students", async () => {
+    const school3Students = Array.from({ length: 15 }, (_, i) => ({
+      id: i + 31,
+      name: `Student ${i + 1}`,
+      schoolId: 3,
+      phone: `+373693000${String(i + 1).padStart(2, "0")}`,
+      active: true,
+    }));
+
+    (db.select as any)
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue(school3Students),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          innerJoin: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          }),
+        }),
+      });
+
+    const caller = studentRouter.createCaller({ user: profPilot03User });
+    const studentsList = await caller.list();
+
+    expect(studentsList).toHaveLength(15);
+    expect(studentsList.every((s) => s.schoolId === 3)).toBe(true);
+  });
+
+  it("prevents teacher from deleting student from another school", async () => {
+    const studentFromSchool1 = {
+      id: 1,
+      name: "School 1 Student",
+      schoolId: 1,
+      phone: "+37369000001",
+      active: true,
+    };
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([studentFromSchool1]),
+        }),
+      }),
+    });
+
+    const caller = studentRouter.createCaller({ user: profPilot03User });
+
+    await expect(caller.delete({ id: 1 })).rejects.toThrow(
+      new TRPCError({
+        code: "FORBIDDEN",
+        message: "Nu poți șterge un student din altă școală",
+      }),
+    );
+    expect(db.delete).not.toHaveBeenCalled();
+  });
 });
