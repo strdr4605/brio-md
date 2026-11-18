@@ -14,23 +14,45 @@ export const HOURS = [
   "18:00", "19:00", "20:00",
 ];
 
-export type AcademicPair = {
-  index: number;
+export type TimeSlot = {
+  key: string;
   label: string;
   startMinutes: number;
-  endMinutes: number;
 };
 
-// Standard Academic Pairs
-export const ACADEMIC_PAIRS: AcademicPair[] = [
-  { index: 1, label: "08:00 - 09:30", startMinutes: 8 * 60, endMinutes: 9 * 60 + 30 },
-  { index: 2, label: "09:45 - 11:15", startMinutes: 9 * 60 + 45, endMinutes: 11 * 60 + 15 },
-  { index: 3, label: "11:30 - 13:00", startMinutes: 11 * 60 + 30, endMinutes: 13 * 60 },
-  { index: 4, label: "13:30 - 15:00", startMinutes: 13 * 60 + 30, endMinutes: 15 * 60 },
-  { index: 5, label: "15:15 - 16:45", startMinutes: 15 * 60 + 15, endMinutes: 16 * 60 + 45 },
-  { index: 6, label: "17:00 - 18:30", startMinutes: 17 * 60, endMinutes: 18 * 60 + 30 },
-  { index: 7, label: "18:45 - 20:15", startMinutes: 18 * 60 + 45, endMinutes: 20 * 60 + 15 },
-];
+const NO_TIME_SLOT: TimeSlot = { key: "none", label: "Oră nestabilită", startMinutes: Infinity };
+
+function pad(n: number) {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
+// Derives a matrix row from a group's real lesson time (e.g. "10:00-12:00" or "17:30")
+export function getTimeSlot(timeStr: string | null | undefined): TimeSlot {
+  const times = [...(timeStr || "").matchAll(/(\d{1,2})[:.](\d{2})/g)];
+  if (times.length === 0) return NO_TIME_SLOT;
+  const [start, end] = times.map((m) => `${pad(parseInt(m[1], 10))}:${m[2]}`);
+  const label = end ? `${start} - ${end}` : start;
+  const startMinutes = parseInt(times[0][1], 10) * 60 + parseInt(times[0][2], 10);
+  return { key: label, label, startMinutes };
+}
+
+export function hasScheduleDay(group: { scheduleDays?: string[] | null }, dayKey: string) {
+  return (group.scheduleDays || []).some((d) => d.toLowerCase() === dayKey.toLowerCase());
+}
+
+export function getTimeSlotsForDay(
+  groups: { scheduleDays?: string[] | null; scheduleTime?: string | null }[],
+  dayKey: string
+): TimeSlot[] {
+  const slots = new Map<string, TimeSlot>();
+  groups.forEach((g) => {
+    if (hasScheduleDay(g, dayKey)) {
+      const slot = getTimeSlot(g.scheduleTime);
+      slots.set(slot.key, slot);
+    }
+  });
+  return [...slots.values()].sort((a, b) => a.startMinutes - b.startMinutes);
+}
 
 // Clean Monochrome Enterprise styling tokens for schedule cards
 export const SCHEDULE_CARD_THEME = {
@@ -50,40 +72,6 @@ export function parseStartHour(timeStr: string | null | undefined): string {
   const hour = parseInt(match[1], 10);
   const formattedHour = hour < 10 ? `0${hour}:00` : `${hour}:00`;
   return HOURS.includes(formattedHour) ? formattedHour : "09:00";
-}
-
-export function matchAcademicPairIndex(timeStr: string | null | undefined): number {
-  if (!timeStr) return 1;
-  const match = timeStr.match(/(\d{1,2}):(\d{2})/);
-  if (!match) return 1;
-  const minutes = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-
-  let closestIndex = 1;
-  let minDiff = Infinity;
-
-  ACADEMIC_PAIRS.forEach((pair) => {
-    const diff = Math.abs(pair.startMinutes - minutes);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closestIndex = pair.index;
-    }
-  });
-
-  return closestIndex;
-}
-
-export function getOccupiedPairIndicesForDay(
-  groups: { scheduleDays?: string[] | null; scheduleTime?: string | null }[],
-  dayKey: string
-): Set<number> {
-  const indices = new Set<number>();
-  groups.forEach((g) => {
-    const hasDay = (g.scheduleDays || []).some((d) => d.toLowerCase() === dayKey.toLowerCase());
-    if (hasDay && g.scheduleTime) {
-      indices.add(matchAcademicPairIndex(g.scheduleTime));
-    }
-  });
-  return indices;
 }
 
 export function getOccupiedHoursForDay(

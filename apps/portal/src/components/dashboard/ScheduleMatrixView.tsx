@@ -4,9 +4,9 @@ import { Fragment, useMemo } from "react";
 import { GroupItem } from "./GroupFormModal";
 import {
   DAYS_OF_WEEK,
-  ACADEMIC_PAIRS,
-  matchAcademicPairIndex,
-  getOccupiedPairIndicesForDay,
+  getTimeSlot,
+  getTimeSlotsForDay,
+  hasScheduleDay,
 } from "./scheduleTypes";
 import { ShieldCheckIcon, UsersIcon } from "@/components/ui/icons";
 
@@ -28,9 +28,7 @@ export function ScheduleMatrixView({
   // Filter groups to those with classes on this day when a single day is chosen
   const displayGroups = useMemo(() => {
     if (selectedDay && selectedDay !== "all") {
-      const dayGroups = groups.filter((g) =>
-        (g.scheduleDays || []).some((d) => d.toLowerCase() === selectedDay.toLowerCase())
-      );
+      const dayGroups = groups.filter((g) => hasScheduleDay(g, selectedDay));
       return dayGroups.length > 0 ? dayGroups : groups;
     }
     return groups;
@@ -45,10 +43,7 @@ export function ScheduleMatrixView({
     if (!hideEmptySlots) {
       return allAcademic;
     }
-    const active = allAcademic.filter((d) => {
-      const occupiedPairs = getOccupiedPairIndicesForDay(displayGroups, d.key);
-      return occupiedPairs.size > 0;
-    });
+    const active = allAcademic.filter((d) => getTimeSlotsForDay(displayGroups, d.key).length > 0);
     return active.length > 0 ? active : allAcademic;
   }, [selectedDay, hideEmptySlots, displayGroups]);
 
@@ -115,23 +110,20 @@ export function ScheduleMatrixView({
           {/* Table Body: Days and Academic Pairs */}
           <tbody className="divide-y divide-slate-100">
             {daysToShow.map((day) => {
-              const occupiedPairSet = getOccupiedPairIndicesForDay(displayGroups, day.key);
-              const pairsForDay =
-                hideEmptySlots && occupiedPairSet.size > 0
-                  ? ACADEMIC_PAIRS.filter((p) => occupiedPairSet.has(p.index))
-                  : ACADEMIC_PAIRS;
+              const slots = getTimeSlotsForDay(displayGroups, day.key);
+              const slotsForDay = slots.length > 0 ? slots : [{ key: "empty", label: "—" }];
 
               return (
                 <Fragment key={day.key}>
-                  {pairsForDay.map((pair, pairIdx) => (
+                  {slotsForDay.map((slot, slotIdx) => (
                     <tr
-                      key={`${day.key}_${pair.index}`}
+                      key={`${day.key}_${slot.key}`}
                       className="hover:bg-slate-50/50 transition divide-x divide-slate-100 border-b border-slate-100"
                     >
-                      {/* Sticky Day Column (spans pairsForDay.length rows) */}
-                      {pairIdx === 0 && (
+                      {/* Sticky Day Column (spans slotsForDay.length rows) */}
+                      {slotIdx === 0 && (
                         <td
-                          rowSpan={pairsForDay.length}
+                          rowSpan={slotsForDay.length}
                           className="sticky left-0 z-20 bg-slate-50 font-extrabold text-slate-800 text-center border-r border-slate-200 p-1.5 sm:p-2 uppercase tracking-widest text-[11px] sm:text-xs align-middle w-[36px] sm:w-[44px] min-w-[36px] sm:min-w-[44px]"
                           style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
                         >
@@ -141,21 +133,16 @@ export function ScheduleMatrixView({
                         </td>
                       )}
 
-                      {/* Pair Time Cell (sticky next to Day column) */}
+                      {/* Lesson Time Cell (sticky next to Day column) */}
                       <td className="sticky left-[36px] sm:left-[44px] z-10 bg-white/95 backdrop-blur-xs px-1.5 sm:px-2 py-2 text-center font-semibold text-slate-700 border-r border-slate-200 min-w-[95px] sm:min-w-[115px] w-[95px] sm:w-[115px]">
-                        <div className="text-[11px] font-extrabold text-slate-900">{pair.label}</div>
-                        <div className="text-[9px] text-slate-400 uppercase font-bold mt-0.5">
-                          Perechea {pair.index}
-                        </div>
+                        <div className="text-[11px] font-extrabold text-slate-900">{slot.label}</div>
                       </td>
 
                       {/* Group Columns Cells */}
                       {displayGroups.map((group) => {
-                        const hasDay = (group.scheduleDays || []).some(
-                          (d) => d.toLowerCase() === day.key
-                        );
-                        const pairMatch = matchAcademicPairIndex(group.scheduleTime) === pair.index;
-                        const isOccupied = hasDay && pairMatch;
+                        const isOccupied =
+                          hasScheduleDay(group, day.key) &&
+                          getTimeSlot(group.scheduleTime).key === slot.key;
 
                         if (!isOccupied) {
                           return (
@@ -210,7 +197,7 @@ export function ScheduleMatrixView({
                               {/* Exact time & Student Count */}
                               <div className="flex items-center justify-between text-[9px] text-slate-500">
                                 <span className="truncate font-medium">
-                                  {group.scheduleTime || pair.label}
+                                  {group.scheduleTime || slot.label}
                                 </span>
                                 <span className="font-bold text-slate-900 bg-slate-100 px-1 py-0.5 rounded">
                                   {group.studentCount ?? 0} el.
