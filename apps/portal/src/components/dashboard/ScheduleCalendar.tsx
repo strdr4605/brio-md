@@ -8,6 +8,7 @@ import { ScheduleEventModal } from "./ScheduleEventModal";
 import { CourseGroupsDrawer } from "./CourseGroupsDrawer";
 import { ScheduleAttendanceModal } from "./ScheduleAttendanceModal";
 import { ScheduleMatrixView } from "./ScheduleMatrixView";
+import { UnscheduledGroupsNotice } from "./UnscheduledGroupsNotice";
 import { ScheduleRoomView } from "./ScheduleRoomView";
 import { ScheduleWeekView } from "./ScheduleWeekView";
 import { ScheduleKpiCards } from "./ScheduleKpiCards";
@@ -47,6 +48,10 @@ export function ScheduleCalendar() {
       (g) => g.scheduleDays && g.scheduleDays.length > 0 && Boolean(g.scheduleTime)
     );
   }, [groups]);
+
+  const unscheduledGroups = useMemo(() => {
+    return (groups as GroupItem[]).filter((g) => !scheduledGroups.includes(g));
+  }, [groups, scheduledGroups]);
 
   const rooms = useMemo(() => {
     return Array.from(
@@ -153,6 +158,12 @@ export function ScheduleCalendar() {
         totalStudents={totalStudents}
         conflictSlotsCount={conflictSlotsCount}
         isLoading={isLoading}
+      />
+
+      <UnscheduledGroupsNotice
+        groups={unscheduledGroups}
+        canEdit={isSuperOrAdmin}
+        onEdit={(grp) => setGroupToEdit(grp)}
       />
 
       {/* Decomposed Modular Filters & Toolbar */}
