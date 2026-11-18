@@ -145,7 +145,7 @@ export function GroupFormModal({
     const payload = {
       name: name.trim(),
       scheduleDays,
-      scheduleTime: scheduleTime.trim() || null,
+      scheduleTime: scheduleTime.trim(),
       room: room.trim() || null,
       teacherId: typeof teacherId === "number" ? teacherId : null,
       active,
