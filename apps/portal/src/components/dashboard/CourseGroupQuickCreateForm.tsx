@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { DAYS_OF_WEEK } from "./scheduleTypes";
+
+export type CourseGroupQuickCreateData = {
+  name: string;
+  scheduleDays: string[];
+  scheduleTime: string;
+  room: string | null;
+};
 
 export type CourseGroupQuickCreateFormProps = {
-  onSubmit: (data: { name: string; scheduleTime: string | null; room: string | null }) => void;
+  onSubmit: (data: CourseGroupQuickCreateData) => void;
   onCancel: () => void;
   isSubmitting: boolean;
   error?: string | null;
@@ -16,15 +24,24 @@ export function CourseGroupQuickCreateForm({
   error,
 }: CourseGroupQuickCreateFormProps) {
   const [name, setName] = useState("");
+  const [scheduleDays, setScheduleDays] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState("");
   const [room, setRoom] = useState("");
+  const isValid = Boolean(name.trim() && scheduleDays.length > 0 && scheduleTime.trim());
+
+  const toggleDay = (key: string) => {
+    setScheduleDays((prev) =>
+      prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key],
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!isValid) return;
     onSubmit({
       name: name.trim(),
-      scheduleTime: scheduleTime.trim() || null,
+      scheduleDays,
+      scheduleTime: scheduleTime.trim(),
       room: room.trim() || null,
     });
   };
@@ -45,7 +62,7 @@ export function CourseGroupQuickCreateForm({
           </label>
           <input
             type="text"
-            placeholder="ex: Grupa A - Marți 17:30"
+            placeholder="ex: Grupa A"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
@@ -54,7 +71,7 @@ export function CourseGroupQuickCreateForm({
         </div>
         <div>
           <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-            Program Orar
+            Interval Orar *
           </label>
           <input
             type="text"
@@ -77,6 +94,31 @@ export function CourseGroupQuickCreateForm({
           />
         </div>
       </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+          Zile de desfășurare *
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {DAYS_OF_WEEK.map((day) => {
+            const selected = scheduleDays.includes(day.key);
+            return (
+              <button
+                key={day.key}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => toggleDay(day.key)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                  selected
+                    ? "bg-slate-900 text-white"
+                    : "bg-white border border-slate-300 text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {day.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="flex justify-end gap-2 pt-1">
         <button
           type="button"
@@ -87,7 +129,7 @@ export function CourseGroupQuickCreateForm({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || !name.trim()}
+          disabled={isSubmitting || !isValid}
           className="px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition disabled:opacity-50"
         >
           {isSubmitting ? "Se creează..." : "Salvează Grupa"}

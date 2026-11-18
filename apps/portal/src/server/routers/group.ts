@@ -30,12 +30,22 @@ const studentCountSql = sql<number>`COALESCE((
   WHERE ${studentGroupEnrollments.groupId} = ${groups.id} AND ${studentGroupEnrollments.status} = 'active'
 ), 0)`.as("student_count");
 
+// A group must have a weekly schedule, otherwise it never appears in the timetable
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const scheduleDaysSchema = z
+  .array(z.string().refine((d) => DAY_KEYS.includes(d), "Zi de desfășurare invalidă"))
+  .min(1, "Alege cel puțin o zi de desfășurare");
+const scheduleTimeSchema = z
+  .string()
+  .trim()
+  .regex(/\d{1,2}[:.]\d{2}/, "Intervalul orar este obligatoriu (ex: 17:30 - 19:00)");
+
 export const createGroupSchema = z.object({
   name: z.string().trim().min(1, "Numele grupei este obligatoriu"),
   courseId: z.number().int().positive("ID-ul cursului este invalid"),
   schoolId: z.number().int().positive().optional().nullable(),
-  scheduleDays: z.array(z.string()).default([]),
-  scheduleTime: z.string().trim().optional().nullable(),
+  scheduleDays: scheduleDaysSchema,
+  scheduleTime: scheduleTimeSchema,
   room: z.string().trim().optional().nullable(),
   teacherId: z.number().int().positive().optional().nullable(),
   active: z.boolean().default(true),
@@ -44,8 +54,8 @@ export const createGroupSchema = z.object({
 export const updateGroupSchema = z.object({
   id: z.number().int().positive("ID invalid"),
   name: z.string().trim().min(1, "Numele grupei este obligatoriu"),
-  scheduleDays: z.array(z.string()).default([]),
-  scheduleTime: z.string().trim().optional().nullable(),
+  scheduleDays: scheduleDaysSchema,
+  scheduleTime: scheduleTimeSchema,
   room: z.string().trim().optional().nullable(),
   teacherId: z.number().int().positive().optional().nullable(),
   active: z.boolean().optional(),

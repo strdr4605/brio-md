@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
-import { groupRouter } from "./group";
+import { groupRouter, createGroupSchema } from "./group";
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -342,6 +342,8 @@ describe("groupRouter", () => {
         caller.create({
           courseId: 10,
           name: "Test Group",
+          scheduleDays: ["mon"],
+          scheduleTime: "17:30 - 18:30",
         }),
       ).rejects.toThrow(TRPCError);
     });
@@ -417,6 +419,8 @@ describe("groupRouter", () => {
         caller.update({
           id: 1,
           name: "Hacked Group",
+          scheduleDays: ["mon"],
+          scheduleTime: "17:30 - 18:30",
         }),
       ).rejects.toThrow(TRPCError);
     });
@@ -472,6 +476,7 @@ describe("groupRouter", () => {
         id: 1,
         name: "Grupa Mea Actualizata",
         scheduleDays: ["mon"],
+        scheduleTime: "17:30 - 18:30",
       });
 
       expect(result.name).toBe("Grupa Mea Actualizata");
@@ -510,6 +515,8 @@ describe("groupRouter", () => {
         caller.update({
           id: 1,
           name: "Unauthorized Update",
+          scheduleDays: ["mon"],
+          scheduleTime: "17:30 - 18:30",
         }),
       ).rejects.toThrow(TRPCError);
     });
@@ -540,6 +547,31 @@ describe("groupRouter", () => {
       const result = await caller.toggleActive({ id: 1, active: false });
 
       expect(result.active).toBe(false);
+    });
+  });
+
+  describe("schedule validation", () => {
+    const base = { courseId: 10, name: "Robotică" };
+
+    it("rejects a group without days or time", () => {
+      expect(
+        createGroupSchema.safeParse({ ...base, scheduleDays: [], scheduleTime: "17:30 - 19:30" })
+          .success,
+      ).toBe(false);
+      expect(
+        createGroupSchema.safeParse({ ...base, scheduleDays: ["fri"], scheduleTime: "" }).success,
+      ).toBe(false);
+      expect(
+        createGroupSchema.safeParse({ ...base, scheduleDays: ["vineri"], scheduleTime: "17:30" })
+          .success,
+      ).toBe(false);
+    });
+
+    it("accepts a group with days and time", () => {
+      expect(
+        createGroupSchema.safeParse({ ...base, scheduleDays: ["fri"], scheduleTime: "17:30-19:30" })
+          .success,
+      ).toBe(true);
     });
   });
 });

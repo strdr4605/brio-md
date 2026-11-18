@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { XIcon, PlusIcon, UsersIcon, CalendarIcon } from "@/components/ui/icons";
 import { EnrollmentDrawer } from "./EnrollmentDrawer";
 import { CourseRosterMemberRow } from "./CourseRosterMemberRow";
-import { CourseGroupQuickCreateForm } from "./CourseGroupQuickCreateForm";
+import { CourseGroupQuickCreateForm, type CourseGroupQuickCreateData } from "./CourseGroupQuickCreateForm";
 
 type Props = {
   isOpen: boolean;
@@ -79,10 +79,11 @@ export function CourseGroupsDrawer({
     onError: (err) => setCreateGroupError(err.message),
   });
 
-  const handleCreateGroup = (data: { name: string; scheduleTime: string | null; room: string | null }) => {
+  const handleCreateGroup = (data: CourseGroupQuickCreateData) => {
     createGroupMutation.mutate({
       name: data.name,
       courseId,
+      scheduleDays: data.scheduleDays,
       scheduleTime: data.scheduleTime,
       room: data.room,
       schoolId: schoolId || null,
