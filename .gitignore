@@ -10,3 +10,9 @@ playwright-report/
 uploads/
 apps/*/uploads/
 .neon
+.DS_Store
+
+# Local docs
+docs/
+INVEST_STORIES.md
+TRACED_REQUIREMENTS.md
