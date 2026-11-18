@@ -136,6 +136,7 @@ export function GroupFormModal({
       setError("Numele grupei este obligatoriu.");
       return;
     }
+    if (!scheduleDays.length || !scheduleTime.trim()) return setError("Alege zilele și ora.");
     if (liveConflicts.length > 0) {
       setError(liveConflicts[0].message);
       return;
