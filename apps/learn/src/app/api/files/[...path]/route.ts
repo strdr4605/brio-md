@@ -2,8 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { eq } from "drizzle-orm";
+import { auth } from "@brio-md/auth";
 import { db } from "@/lib/db";
 import { storedFiles } from "@brio-md/db";
+
+type FileSessionUser = {
+  role?: string | null;
+  permissions?: string[] | null;
+  schoolId?: number | null;
+  expired?: boolean;
+};
+
+type StoredFile = typeof storedFiles.$inferSelect;
+
+function storedFileResponse(user: FileSessionUser, stored: StoredFile) {
+  const isSuper = user.role === "superadmin" || (user.permissions ?? []).includes("super");
+  if (!isSuper && stored.schoolId !== null && stored.schoolId !== user.schoolId) {
+    return new NextResponse("Acces interzis.", { status: 403 });
+  }
+
+  const buffer = Buffer.from(stored.dataBase64, "base64");
+  const headers: Record<string, string> = {
+    "Content-Type": stored.mimeType || "application/octet-stream",
+    "Content-Disposition": `inline; filename="${encodeURIComponent(stored.filename)}"`,
+    "Cache-Control": "private, max-age=3600",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Length": String(buffer.length),
+  };
+  if (stored.mimeType === "image/svg+xml") {
+    headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'";
+  }
+  return new Response(buffer, { status: 200, headers });
+}
 
 const MIME_MAP: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -26,6 +56,12 @@ export async function GET(
   context: { params: Promise<{ path: string[] }> },
 ) {
   try {
+    const session = await auth().catch(() => null);
+    const user = session?.user as FileSessionUser | undefined;
+    if (!user || user.expired) {
+      return new NextResponse("Autentificare necesară.", { status: 401 });
+    }
+
     const resolved = await context.params;
     const pathSegments = resolved.path || [];
 
@@ -39,16 +75,7 @@ export async function GET(
         .limit(1);
 
       if (stored) {
-        const buffer = Buffer.from(stored.dataBase64, "base64");
-        return new Response(buffer, {
-          status: 200,
-          headers: {
-            "Content-Type": stored.mimeType || "application/octet-stream",
-            "Content-Disposition": `inline; filename="${encodeURIComponent(stored.filename)}"`,
-            "Cache-Control": "public, max-age=86400",
-            "Content-Length": String(buffer.length),
-          },
-        });
+        return storedFileResponse(user, stored);
       }
       return new NextResponse("Fișierul nu a fost găsit.", { status: 404 });
     }
@@ -70,16 +97,7 @@ export async function GET(
         .limit(1);
 
       if (stored) {
-        const buffer = Buffer.from(stored.dataBase64, "base64");
-        return new Response(buffer, {
-          status: 200,
-          headers: {
-            "Content-Type": stored.mimeType || "application/octet-stream",
-            "Content-Disposition": `inline; filename="${encodeURIComponent(stored.filename)}"`,
-            "Cache-Control": "public, max-age=86400",
-            "Content-Length": String(buffer.length),
-          },
-        });
+        return storedFileResponse(user, stored);
       }
 
       return new NextResponse("Fișierul nu a fost găsit.", { status: 404 });
