@@ -5,6 +5,7 @@ import { groups, courses, users, studentGroupEnrollments } from "@/db/schema";
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { checkGroupConflicts } from "../conflictChecker";
+import { assertSchoolScope } from "../tenantGuards";
 
 export function assertGroupAccess(
   user: { id: string; role: string; permissions: string[]; schoolId: number | null },
@@ -19,8 +20,9 @@ export function assertGroupAccess(
   if (!isSuper && !isAdmin && !isTeacher) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiuni suficiente pentru a accesa grupele." });
   }
-  if (!isSuper && isAdmin && schoolId && user.schoolId && schoolId !== user.schoolId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai acces la grupele din altă școală." });
+  // undefined = no target record yet (e.g. list without filter); null/number = enforce ownership
+  if (schoolId !== undefined) {
+    assertSchoolScope(user, schoolId, "Nu ai acces la grupele din altă școală.");
   }
   return { isSuper, isAdmin, isTeacher };
 }
@@ -267,12 +269,7 @@ export const groupRouter = router({
         });
       }
 
-      if (!isSuper && user.schoolId && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu ai permisiunea de a modifica o grupă din altă școală.",
-        });
-      }
+      assertSchoolScope(user, existing.schoolId, "Nu ai permisiunea de a modifica o grupă din altă școală.");
 
       await checkGroupConflicts(db, {
         schoolId: existing.schoolId,
@@ -335,12 +332,7 @@ export const groupRouter = router({
         });
       }
 
-      if (!isSuper && user.schoolId && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu ai permisiuni pentru această școală.",
-        });
-      }
+      assertSchoolScope(user, existing.schoolId, "Nu ai permisiuni pentru această școală.");
 
       const [updated] = await db
         .update(groups)

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { parseScheduleTimeRange, getSchoolCurrentTime } from "./attendanceUtils";
 
 export async function findTeacherActiveSession(
-  user: { id: string; role: string; permissions: string[] },
+  user: { id: string; role: string; permissions: string[]; schoolId?: number | null },
 ) {
   const userIdNumber = Number(user.id);
   if (!userIdNumber) return { activeSession: null };
@@ -29,7 +29,7 @@ export async function findTeacherActiveSession(
     .where(and(eq(groups.teacherId, userIdNumber), eq(groups.active, true)));
 
   // If admin/superadmin with no assigned groups, inspect all active groups for school
-  if (targetGroups.length === 0 && (isSuper || isAdmin)) {
+  if (targetGroups.length === 0 && (isSuper || (isAdmin && user.schoolId))) {
     targetGroups = await db
       .select({
         id: groups.id,
@@ -41,7 +41,11 @@ export async function findTeacherActiveSession(
       })
       .from(groups)
       .leftJoin(courses, eq(groups.courseId, courses.id))
-      .where(eq(groups.active, true));
+      .where(
+        isSuper
+          ? eq(groups.active, true)
+          : and(eq(groups.active, true), eq(groups.schoolId, user.schoolId as number)),
+      );
   }
 
   // Filter groups scheduled today

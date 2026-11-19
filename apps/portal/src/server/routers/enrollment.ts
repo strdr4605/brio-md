@@ -12,6 +12,7 @@ import {
 import { db } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { checkStudentGroupConflicts } from "../conflictChecker";
+import { assertSchoolScope } from "../tenantGuards";
 
 export function assertAdminAccess(
   user: { id: string; role: string; permissions: string[]; schoolId: number | null },
@@ -26,9 +27,7 @@ export function assertAdminAccess(
   if (!isSuper && !isAdmin && !isTeacher) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiuni suficiente pentru gestiunea înscrierilor." });
   }
-  if (!isSuper && isAdmin && targetSchoolId && user.schoolId && targetSchoolId !== user.schoolId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Nu ai permisiunea de a modifica date din altă școală." });
-  }
+  assertSchoolScope(user, targetSchoolId, "Nu ai permisiunea de a modifica date din altă școală.");
   return { isSuper, isAdmin, isTeacher };
 }
 
@@ -530,7 +529,20 @@ export const enrollmentRouter = router({
         });
       }
 
-      await db.delete(studentGroupEnrollments).where(condition);
+      const [target] = await db
+        .select({ id: studentGroupEnrollments.id, schoolId: groups.schoolId })
+        .from(studentGroupEnrollments)
+        .innerJoin(groups, eq(studentGroupEnrollments.groupId, groups.id))
+        .where(condition)
+        .limit(1);
+
+      if (!target) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Înscrierea nu a fost găsită." });
+      }
+
+      assertAdminAccess(user, target.schoolId);
+
+      await db.delete(studentGroupEnrollments).where(eq(studentGroupEnrollments.id, target.id));
       return { success: true };
     }),
 });
