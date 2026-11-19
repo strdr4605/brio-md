@@ -27,7 +27,6 @@ export const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
-  "image/svg+xml",
   "application/octet-stream",
 ]);
 
@@ -49,7 +48,6 @@ export const ALLOWED_EXTENSIONS = new Set([
   ".jpeg",
   ".gif",
   ".webp",
-  ".svg",
 ]);
 
 export async function POST(req: NextRequest) {
@@ -126,6 +124,7 @@ export async function POST(req: NextRequest) {
       buffer,
       filename,
       contentType,
+      schoolId: (session.user as { schoolId?: number | null }).schoolId ?? undefined,
     });
 
     return NextResponse.json({

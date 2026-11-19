@@ -8,11 +8,54 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("@brio-md/auth", () => ({
+  auth: vi.fn(),
+}));
+
 import { db } from "@/lib/db";
+import { auth } from "@brio-md/auth";
+
+const mockSession = (user: Record<string, unknown> | null) =>
+  vi.mocked(auth as unknown as () => Promise<unknown>).mockResolvedValue(user ? { user } : null);
 
 describe("GET /api/files/[...path] in Learn", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSession({ role: "student", permissions: [], schoolId: 1 });
+  });
+
+  it("returns 401 when there is no session", async () => {
+    mockSession(null);
+    const req = new NextRequest("http://localhost:3003/api/files/10");
+    const res = await GET(req, { params: Promise.resolve({ path: ["10"] }) });
+
+    expect(res.status).toBe(401);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when the stored file belongs to another school", async () => {
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([
+            {
+              id: 11,
+              schoolId: 2,
+              filename: "private.pdf",
+              mimeType: "application/pdf",
+              sizeBytes: 3,
+              dataBase64: Buffer.from("abc").toString("base64"),
+              createdAt: new Date(),
+            },
+          ]),
+        }),
+      }),
+    } as any);
+
+    const req = new NextRequest("http://localhost:3003/api/files/11");
+    const res = await GET(req, { params: Promise.resolve({ path: ["11"] }) });
+
+    expect(res.status).toBe(403);
   });
 
   it("returns 404 when numeric id is requested but not in stored_files", async () => {
@@ -66,7 +109,7 @@ describe("GET /api/files/[...path] in Learn", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("application/pdf");
     expect(res.headers.get("Content-Disposition")).toContain('inline; filename="robotics-guide.pdf"');
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=3600");
 
     const arrayBuffer = await res.arrayBuffer();
     expect(Buffer.from(arrayBuffer).toString()).toBe(samplePdfRaw);

@@ -8,11 +8,64 @@ vi.mock("@/db", () => ({
   },
 }));
 
+vi.mock("@brio-md/auth", () => ({
+  auth: vi.fn(),
+}));
+
 import { db } from "@/db";
+import { auth } from "@brio-md/auth";
+
+const mockSession = (user: Record<string, unknown> | null) =>
+  vi.mocked(auth as unknown as () => Promise<unknown>).mockResolvedValue(user ? { user } : null);
+
+const mockFileLookup = (rows: unknown[]) => {
+  vi.mocked(db.select).mockReturnValue({
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue(rows) }),
+    }),
+  } as any);
+};
+
+const foreignFile = {
+  id: 50,
+  schoolId: 2,
+  filename: "private.pdf",
+  mimeType: "application/pdf",
+  sizeBytes: 3,
+  dataBase64: Buffer.from("abc").toString("base64"),
+  createdAt: new Date(),
+};
 
 describe("GET /api/files/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSession({ role: "teacher", permissions: ["teach"], schoolId: 1 });
+  });
+
+  it("returns 401 when there is no session", async () => {
+    mockSession(null);
+    const req = new NextRequest("http://localhost:3002/api/files/42");
+    const res = await GET(req, { params: Promise.resolve({ id: "42" }) });
+
+    expect(res.status).toBe(401);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when the file belongs to another school", async () => {
+    mockFileLookup([foreignFile]);
+    const req = new NextRequest("http://localhost:3002/api/files/50");
+    const res = await GET(req, { params: Promise.resolve({ id: "50" }) });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("lets a superadmin download files from any school", async () => {
+    mockSession({ role: "superadmin", permissions: ["super"], schoolId: null });
+    mockFileLookup([foreignFile]);
+    const req = new NextRequest("http://localhost:3002/api/files/50");
+    const res = await GET(req, { params: Promise.resolve({ id: "50" }) });
+
+    expect(res.status).toBe(200);
   });
 
   it("returns 400 when file id is not a valid positive integer", async () => {
@@ -79,7 +132,7 @@ describe("GET /api/files/[id]", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("application/pdf");
     expect(res.headers.get("Content-Disposition")).toContain('inline; filename="sample-guide.pdf"');
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=3600");
     expect(res.headers.get("Content-Length")).toBe(String(mockFileRecord.sizeBytes));
 
     const arrayBuffer = await res.arrayBuffer();
@@ -121,7 +174,7 @@ describe("GET /api/files/[id]", () => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     );
     expect(res.headers.get("Content-Disposition")).toContain('inline; filename="worksheet.docx"');
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=3600");
 
     const arrayBuffer = await res.arrayBuffer();
     const resultBuffer = Buffer.from(arrayBuffer);
