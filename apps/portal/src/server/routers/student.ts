@@ -15,6 +15,7 @@ import { phoneSchema } from "@/lib/phone";
 import { checkStudentCourseConflicts } from "../conflictChecker";
 import { getStudentLmsAccess, provisionStudentLmsAccess } from "../studentLmsService";
 import { bulkImportStudentsService } from "../studentBulkImportService";
+import { assertSchoolScope, getTeacherAssignedStudentIds } from "../tenantGuards";
 
 function getStudentRoles(user?: { permissions?: string[]; role?: string; schoolId?: number | null }) {
   const permissions = user?.permissions || [];
@@ -139,11 +140,16 @@ export const studentRouter = router({
         });
       }
 
-      if (!isSuper && row.schoolId !== user.schoolId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Nu poți vizualiza un student din altă școală",
-        });
+      assertSchoolScope(user, row.schoolId, "Nu poți vizualiza un student din altă școală");
+
+      if (isTeacher && !isAdmin && !isSuper) {
+        const assignedStudentIds = await getTeacherAssignedStudentIds(user.id, user.courseIds);
+        if (!assignedStudentIds.includes(row.id)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu ai permisiuni pentru elevii din alte clase sau neasignați.",
+          });
+        }
       }
 
       const progressCourses = await db
@@ -226,6 +232,14 @@ export const studentRouter = router({
         conditions.push(eq(students.schoolId, user.schoolId));
       } else if (input?.schoolId) {
         conditions.push(eq(students.schoolId, input.schoolId));
+      }
+
+      if (isTeacher && !isAdmin && !isSuper) {
+        const assignedStudentIds = await getTeacherAssignedStudentIds(user.id, user.courseIds);
+        if (assignedStudentIds.length === 0) {
+          return [];
+        }
+        conditions.push(inArray(students.id, assignedStudentIds));
       }
 
       if (input?.search) {
@@ -375,11 +389,38 @@ export const studentRouter = router({
       await checkStudentCourseConflicts(db, input.courseIds, input.groupIds);
 
       const assignedSchoolId = isSuper ? (input.schoolId ?? user.schoolId ?? null) : user.schoolId;
-      if (!isSuper && !assignedSchoolId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Niciun campus școlar asociat utilizatorului.",
-        });
+      assertSchoolScope(user, assignedSchoolId);
+
+      if (input.courseIds && input.courseIds.length > 0 && assignedSchoolId) {
+        const foundCourses = await db
+          .select({ id: courses.id, schoolId: courses.schoolId })
+          .from(courses)
+          .where(inArray(courses.id, input.courseIds));
+        const foreignCourse = foundCourses.find(
+          (c) => c.schoolId && c.schoolId !== assignedSchoolId,
+        );
+        if (foreignCourse) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Cursul selectat aparține altei școli.",
+          });
+        }
+      }
+
+      if (input.groupIds && input.groupIds.length > 0 && assignedSchoolId) {
+        const foundGroups = await db
+          .select({ id: groups.id, schoolId: groups.schoolId })
+          .from(groups)
+          .where(inArray(groups.id, input.groupIds));
+        const foreignGroup = foundGroups.find(
+          (g) => g.schoolId && g.schoolId !== assignedSchoolId,
+        );
+        if (foreignGroup) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Grupa selectată aparține altei școli.",
+          });
+        }
       }
 
       // Require at least one contact phone number (student or parent)
@@ -542,8 +583,16 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți modifica un student din altă școală" });
+      assertSchoolScope(user, existing.schoolId, "Nu poți modifica un student din altă școală");
+
+      if (isTeacher && !isAdmin && !isSuper) {
+        const assignedStudentIds = await getTeacherAssignedStudentIds(user.id, user.courseIds);
+        if (!assignedStudentIds.includes(existing.id)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu ai permisiuni pentru elevii din alte clase.",
+          });
+        }
       }
 
       if (input.courseIds && input.courseIds.length > 1) {
@@ -553,6 +602,38 @@ export const studentRouter = router({
       const { id, courseIds, groupIds, ...data } = input;
       const targetSchoolId =
         isSuper && data.schoolId !== undefined ? data.schoolId : existing.schoolId;
+
+      if (courseIds && courseIds.length > 0 && targetSchoolId) {
+        const foundCourses = await db
+          .select({ id: courses.id, schoolId: courses.schoolId })
+          .from(courses)
+          .where(inArray(courses.id, courseIds));
+        const foreignCourse = foundCourses.find(
+          (c) => c.schoolId && c.schoolId !== targetSchoolId,
+        );
+        if (foreignCourse) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Cursul selectat aparține altei școli.",
+          });
+        }
+      }
+
+      if (groupIds && groupIds.length > 0 && targetSchoolId) {
+        const foundGroups = await db
+          .select({ id: groups.id, schoolId: groups.schoolId })
+          .from(groups)
+          .where(inArray(groups.id, groupIds));
+        const foreignGroup = foundGroups.find(
+          (g) => g.schoolId && g.schoolId !== targetSchoolId,
+        );
+        if (foreignGroup) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Grupa selectată aparține altei școli.",
+          });
+        }
+      }
       const targetName = data.name ?? existing.name;
 
       if (data.phone !== undefined || data.parentPhone !== undefined) {
@@ -840,8 +921,16 @@ export const studentRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Studentul nu a fost găsit" });
       }
 
-      if (!isSuper && existing.schoolId !== user.schoolId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Nu poți șterge un student din altă școală" });
+      assertSchoolScope(user, existing.schoolId, "Nu poți șterge un student din altă școală");
+
+      if (isTeacher && !isAdmin && !isSuper) {
+        const assignedStudentIds = await getTeacherAssignedStudentIds(user.id, user.courseIds);
+        if (!assignedStudentIds.includes(existing.id)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Nu ai permisiuni pentru elevii din alte clase.",
+          });
+        }
       }
 
       await (ctx.db || db).delete(students).where(eq(students.id, input.id));
@@ -899,6 +988,14 @@ export const studentRouter = router({
       // Enforce school-scoped access for ALL non-super users (admin AND teacher)
       if (!isSuper && user.schoolId) {
         whereConditions.push(eq(students.schoolId, user.schoolId));
+      }
+
+      if (isTeacher && !isAdmin && !isSuper) {
+        const assignedStudentIds = await getTeacherAssignedStudentIds(user.id, user.courseIds);
+        if (assignedStudentIds.length === 0) {
+          return [];
+        }
+        whereConditions.push(inArray(students.id, assignedStudentIds));
       }
 
       const matchingStudents = await db

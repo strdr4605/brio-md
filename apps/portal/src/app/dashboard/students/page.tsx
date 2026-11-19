@@ -58,9 +58,14 @@ export default function StudentiPage() {
     }
   };
 
-  const { data: students = [], isLoading } = trpc.student.list.useQuery(undefined, {
-    enabled: canManageStudents,
-  });
+  const [limit, setLimit] = useState(50);
+
+  const { data: students = [], isLoading, isFetching } = trpc.student.list.useQuery(
+    { limit },
+    {
+      enabled: canManageStudents,
+    },
+  );
   const { data: schools = [] } = trpc.user.listSchools.useQuery(undefined, {
     enabled: canManageStudents,
   });
@@ -199,6 +204,24 @@ export default function StudentiPage() {
           onDelete={handleDelete}
           deletePending={deleteMutation.isPending}
         />
+
+        {students.length >= limit && (
+          <div className="flex justify-center pt-2 pb-4">
+            <button
+              type="button"
+              data-testid="load-more-students-button"
+              onClick={() => setLimit((prev) => prev + 50)}
+              disabled={isFetching}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 text-sm font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isFetching ? (
+                <span>{t("common.loading", "Se încarcă...")}</span>
+              ) : (
+                <span>{t("students.loadMore", "Încarcă mai mulți studenți (+50)")}</span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Edit / Create Drawer */}

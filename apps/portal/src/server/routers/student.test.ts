@@ -17,6 +17,17 @@ vi.mock("../conflictChecker", () => ({
   checkStudentGroupConflicts: vi.fn(),
 }));
 
+vi.mock("../tenantGuards", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../tenantGuards")>();
+  return {
+    ...actual,
+    getTeacherAssignedStudentIds: vi.fn().mockImplementation((_userId) => {
+      // Mock assigned student IDs 1 and 10 for generic teacher test cases
+      return Promise.resolve([1, 10]);
+    }),
+  };
+});
+
 import { db } from "@/lib/db";
 
 describe("studentRouter", () => {
@@ -1051,6 +1062,174 @@ describe("studentRouter", () => {
 
       const result = await caller.search({ query: "Popescu" });
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("teacher scoping & multi-school IDOR protection (Issue #271)", () => {
+    it("rejects getById when teacher is not assigned to the student", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([
+                { id: 999, name: "Unassigned Student", schoolId: 1 },
+              ]),
+            }),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.getById({ id: 999 })).rejects.toThrow(
+        new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiuni pentru elevii din alte clase sau neasignați.",
+        }),
+      );
+    });
+
+    it("rejects update when teacher is not assigned to the student", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { id: 999, name: "Unassigned Student", schoolId: 1 },
+            ]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(
+        caller.update({ id: 999, name: "New Name" }),
+      ).rejects.toThrow(
+        new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiuni pentru elevii din alte clase.",
+        }),
+      );
+    });
+
+    it("rejects delete when teacher is not assigned to the student", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { id: 999, name: "Unassigned Student", schoolId: 1 },
+            ]),
+          }),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "3",
+          role: "teacher",
+          permissions: ["teach"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(caller.delete({ id: 999 })).rejects.toThrow(
+        new TRPCError({
+          code: "FORBIDDEN",
+          message: "Nu ai permisiuni pentru elevii din alte clase.",
+        }),
+      );
+    });
+
+    it("rejects create when course belongs to a different school", async () => {
+      (db.select as any).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            { id: 10, schoolId: 2 }, // School 2 instead of 1
+          ]),
+        }),
+      });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "admin",
+          permissions: ["admin"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(
+        caller.create({
+          name: "Cross-School Student",
+          phone: "069123456",
+          courseIds: [10],
+        }),
+      ).rejects.toThrow(
+        new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cursul selectat aparține altei școli.",
+        }),
+      );
+    });
+
+    it("rejects create when group belongs to a different school", async () => {
+      (db.select as any)
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              { id: 5, schoolId: 1 }, // course in school 1
+            ]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              { id: 20, schoolId: 2 }, // group in school 2
+            ]),
+          }),
+        });
+
+      const caller = studentRouter.createCaller({
+        user: {
+          id: "1",
+          role: "admin",
+          permissions: ["admin"],
+          courseIds: [],
+          schoolId: 1,
+        },
+      });
+
+      await expect(
+        caller.create({
+          name: "Cross-School Student Group",
+          phone: "069123456",
+          courseIds: [5],
+          groupIds: [20],
+        }),
+      ).rejects.toThrow(
+        new TRPCError({
+          code: "FORBIDDEN",
+          message: "Grupa selectată aparține altei școli.",
+        }),
+      );
     });
   });
 });
