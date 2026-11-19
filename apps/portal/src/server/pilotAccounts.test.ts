@@ -16,6 +16,17 @@ vi.mock("./conflictChecker", () => ({
   checkStudentGroupConflicts: vi.fn(),
 }));
 
+vi.mock("./tenantGuards", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./tenantGuards")>();
+  return {
+    ...actual,
+    getTeacherAssignedStudentIds: vi.fn().mockImplementation((_userId) => {
+      // Mock teacher's 15 assigned students in sandbox 03
+      return Promise.resolve(Array.from({ length: 15 }, (_, i) => i + 31));
+    }),
+  };
+});
+
 import { db } from "@/lib/db";
 import { studentRouter } from "./routers/student";
 
