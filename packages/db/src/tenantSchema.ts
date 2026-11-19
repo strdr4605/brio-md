@@ -31,6 +31,7 @@ export function getTenantSchemaDDL(schemaName: string): string[] {
     // 1. Students in this tenant
     `CREATE TABLE IF NOT EXISTS "${schema}"."students" (
       "id" serial PRIMARY KEY,
+      "school_id" integer,
       "name" varchar(255) NOT NULL,
       "phone" varchar(50) NOT NULL,
       "email" varchar(255),
@@ -39,15 +40,23 @@ export function getTenantSchemaDDL(schemaName: string): string[] {
       "birth_date" date,
       "age" integer,
       "status" varchar(50) DEFAULT 'active',
+      "info" text,
+      "class_id" integer,
+      "active" boolean DEFAULT true,
       "created_at" timestamp DEFAULT now()
     );`,
 
     // 2. Courses in this tenant
     `CREATE TABLE IF NOT EXISTS "${schema}"."courses" (
       "id" serial PRIMARY KEY,
+      "school_id" integer,
+      "teacher_id" integer,
       "name" varchar(255) NOT NULL,
       "description" text,
+      "level" varchar(50) DEFAULT 'beginner',
+      "total_sessions" integer DEFAULT 20,
       "monthly_fee" numeric(10, 2) DEFAULT 0,
+      "active" boolean DEFAULT true,
       "created_at" timestamp DEFAULT now()
     );`,
 

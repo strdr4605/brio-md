@@ -6,6 +6,10 @@ describe("getTenantDb", () => {
     const db = getTenantDb(null);
     expect(db).toBeDefined();
     expect(typeof db.select).toBe("function");
+
+    // Reuses cached instance without allocating new connections
+    const db2 = getTenantDb(null);
+    expect(db2).toBe(db);
   });
 
   it("returns a scoped Drizzle database client for a specific tenant ID", () => {
