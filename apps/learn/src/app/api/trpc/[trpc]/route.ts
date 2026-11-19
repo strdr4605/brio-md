@@ -5,58 +5,56 @@ import { db } from "@/lib/db";
 import { users } from "@brio-md/db";
 import { eq } from "drizzle-orm";
 
+export async function createLearnContext() {
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    return { user: null };
+  }
+
+  if (!session?.user || (session.user as any).expired) {
+    return { user: null };
+  }
+
+  const rawId = session.user.id;
+  const userId = typeof rawId === "string" ? parseInt(rawId, 10) : Number(rawId);
+  if (isNaN(userId) || userId <= 0) {
+    return { user: null };
+  }
+
+  const [dbUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!dbUser || !dbUser.active) {
+    return { user: null };
+  }
+
+  if (dbUser.lastChangedAt && (session.user as any).lastChangedAt) {
+    const sessionLastChanged = new Date((session.user as any).lastChangedAt);
+    if (dbUser.lastChangedAt > sessionLastChanged) {
+      return { user: null };
+    }
+  }
+
+  return {
+    user: {
+      id: String(dbUser.id),
+      email: dbUser.email || "",
+      name: dbUser.name || "",
+      role: dbUser.role || "teacher",
+      permissions: dbUser.permissions || [],
+      courseIds: dbUser.courseIds || [],
+      studentId: dbUser.studentId || null,
+      schoolId: dbUser.schoolId || null,
+    },
+  };
+}
+
 const handler = (req: Request) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: async () => {
-      let session = null;
-      try {
-        session = await auth();
-      } catch {
-        return { user: null };
-      }
-
-      if (!session?.user || session.user.expired) {
-        return { user: null };
-      }
-
-      let dbUser = null;
-      try {
-        const userId = parseInt(session.user.id as string, 10);
-        if (!isNaN(userId)) {
-          const [found] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-          dbUser = found;
-        }
-      } catch {
-        // Fallback to session user if DB read fails
-      }
-
-      return {
-        user: dbUser
-          ? {
-              id: String(dbUser.id),
-              email: dbUser.email || "",
-              name: dbUser.name || "",
-              role: dbUser.role || "teacher",
-              permissions: dbUser.permissions || [],
-              courseIds: dbUser.courseIds || [],
-              studentId: dbUser.studentId || null,
-              schoolId: dbUser.schoolId || null,
-            }
-          : {
-              id: String(session.user.id),
-              email: session.user.email || "",
-              name: session.user.name || "",
-              role: session.user.role || "teacher",
-              permissions: session.user.permissions || [],
-              courseIds: session.user.courseIds || [],
-              studentId: session.user.studentId || null,
-              schoolId: session.user.schoolId || null,
-            },
-      };
-    },
+    createContext: createLearnContext,
   });
 
 export { handler as GET, handler as POST };
