@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { assertSchoolScope } from "./tenantGuards";
 
 export function assertTeacherGroupAccess(
   group: { id: number; teacherId: number | null; schoolId?: number | null },
@@ -10,12 +11,7 @@ export function assertTeacherGroupAccess(
   const isSuper = permissions.includes("super") || role === "superadmin";
   const isAdmin = permissions.includes("admin") || role === "admin";
 
-  if (!isSuper && group.schoolId && user.schoolId && group.schoolId !== user.schoolId) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Nu poți accesa grupe din altă școală.",
-    });
-  }
+  assertSchoolScope(user, group.schoolId, "Nu poți accesa grupe din altă școală.");
 
   // Admins have global permission across all groups in their school
   if (isSuper || isAdmin) {
